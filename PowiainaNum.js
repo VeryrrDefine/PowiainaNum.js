@@ -59,6 +59,7 @@
     R.POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
     R.E_MAX_SAFE_INTEGER = "l0 s1 a[" + MAX_SAFE_INTEGER + ",[1,1,1,1]]";
     R.EE_MAX_SAFE_INTEGER = "l0 s1 a[" + MAX_SAFE_INTEGER + ",[1,2,1,1]]";
+    R.MAX_POWIAINANUM_VALUE = "l" + MAX_SAFE_INTEGER + " s1 a[" + MAX_SAFE_INTEGER + ",[" + MAX_SAFE_INTEGER + "," + MAX_SAFE_INTEGER + "," + MAX_SAFE_INTEGER + "," + MAX_SAFE_INTEGER + "]]";
     R.TETRATED_MAX_SAFE_INTEGER = "l0 s1 a[10000000000,[1," + (MAX_SAFE_INTEGER - 1).toString() + ",1,1]]";
     R.PENTATED_MAX_SAFE_INTEGER = "l0 s1 a[10000000000,[2," + (MAX_SAFE_INTEGER - 1).toString() + ",1,1]]";
 
@@ -1171,6 +1172,19 @@
                 }
                 b = true;
             }
+            if(x.array[x.array.length - 1][3] > MAX_SAFE_INTEGER) {
+                x.layer++;
+                x.array = [
+                    x.array[x.array.length - 1][3]
+                ];
+                b = true;
+              } else if(x.layer && x.array.length == 1) {
+                x.layer--;
+                x.array = [
+                  10
+                ];
+                b = true;
+              }
             while(x.array.length >= 2 && x.array[0] == 1 && x.array[1][1]) {
                 if(x.array[1][1] > 1) {
                     x.array[1][1]--;
@@ -1338,7 +1352,7 @@
                 else s += "(" + "meg"+this.array[i][3]+",eps"+this.array[i][2]+",10{"+this.array[i][0] + "})"+"^"+this.array[i][1] + " "
             }
             s += this.array[0]
-            s = (this.sign<0 ? "-" : "") + s
+            s = (this.sign<0 ? "-" : "")+(this.layer>0 ? `lay${this.layer.toFixed(0)} ` : "")+ s
         }
         return s
     }
