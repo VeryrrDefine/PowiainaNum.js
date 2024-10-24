@@ -807,7 +807,7 @@
         }
     }
     Q.arrow = function(x, z, y) {
-      return new ExpantaNum(x).arrow(z)(y);
+      return new PowiainaNum(x).arrow(z)(y);
     };
 
     //#endregion
