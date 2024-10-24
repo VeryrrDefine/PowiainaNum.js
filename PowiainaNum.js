@@ -5,7 +5,7 @@
 
 ; (function (globalScope) {
     var PowiainaNum = {
-        maxOps: 100,
+        maxOps: 50,
 
         // Specify what format is used when serializing for JSON.stringify
         // 
@@ -796,9 +796,7 @@
                 f !== 0 && r.lt(m) && i < 100; 
                 ++i) {
                 if(f > 0) {
-                    console.log(JSON.stringify(t.array),JSON.stringify(arrows_m1),JSON.stringify(r.array))
                     r = t.arrow(arrows_m1)(r, depth + 1);
-                    console.log(JSON.stringify(r.array))
                     --f;
                 }
             }
