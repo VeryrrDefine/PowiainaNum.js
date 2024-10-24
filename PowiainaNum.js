@@ -814,7 +814,7 @@
 
     //#endregion
 
-    //#region compareTo
+    //#region compareTo 
     P.compareTo = P.cmp = function (other) {
         if (PowiainaNum.debug > PowiainaNum.NORMAL) console.log("cmpare", this, other)
         if (!(other instanceof PowiainaNum)) other = new PowiainaNum(other);

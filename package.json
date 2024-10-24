@@ -1,0 +1,20 @@
+{
+  "name": "PowiainaNum.js",
+  "version": "0.1.0",
+  "description": "A JavaScript library that handles arithmetic for numbers as large as {10,9e15,1,1,1,2}.",
+  "main": "PowiainaNum.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VeryrrDefine/PowiainaNum.js.git"
+  },
+  "keywords": ["big numbers", "incremental game"],
+  "author": "VeryrrDefine",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/VeryrrDefine/PowiainaNum.js/issues"
+  },
+  "homepage": "https://github.com/VeryrrDefine/PowiainaNum.js#readme"
+}
