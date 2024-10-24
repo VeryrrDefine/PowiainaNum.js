@@ -23,22 +23,22 @@
 
 
     },
-    external = true,
+        external = true,
 
-    powiainaNumError = "[PowiainaNumError] ",
-    invalidArgument = powiainaNumError + "Invalid argument: ",
+        powiainaNumError = "[PowiainaNumError] ",
+        invalidArgument = powiainaNumError + "Invalid argument: ",
 
 
-    MAX_SAFE_INTEGER = 9007199254740991,
-    MAX_E = Math.log10(MAX_SAFE_INTEGER), //15.954589770191003
+        MAX_SAFE_INTEGER = 9007199254740991,
+        MAX_E = Math.log10(MAX_SAFE_INTEGER), //15.954589770191003
 
-    //PowiainaNum.prototype object
-    P = {},
+        //PowiainaNum.prototype object
+        P = {},
 
-    //PowiainaNum static object
-    Q = {},
+        //PowiainaNum static object
+        Q = {},
 
-    R = {};
+        R = {};
 
     //#region PowiainaNum constants
     R.ZERO = 0;
@@ -131,15 +131,15 @@
         var op1 = q.operator(1);
         var t;
         if (q.gt(PowiainaNum.E_MAX_SAFE_INTEGER) || q.div(p).gt(PowiainaNum.MAX_SAFE_INTEGER)) {
-        t = q;
-        t = n ? t.neg() : t;
+            t = q;
+            t = n ? t.neg() : t;
         } else if (!op1) {
-        t = new PowiainaNum(x.toNumber() - other.toNumber());
+            t = new PowiainaNum(x.toNumber() - other.toNumber());
         } else if (op1 == 1) {
-        var a = p.operator(1) ? p.operator(0) : Math.log10(p.operator(0));
-        t = new PowiainaNum(a + Math.log10(Math.pow(10, op0 - a) - 1));
-        t = PowiainaNum.pow(10, t)
-        t = n ? t.neg() : t;
+            var a = p.operator(1) ? p.operator(0) : Math.log10(p.operator(0));
+            t = new PowiainaNum(a + Math.log10(Math.pow(10, op0 - a) - 1));
+            t = PowiainaNum.pow(10, t)
+            t = n ? t.neg() : t;
         }
         p = q = null;
         return t;
@@ -199,13 +199,13 @@
         return new PowiainaNum(x).div(y);
     };
     P.reciprocate = P.rec = function () {
-    if (PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "^-1");
-    if (this.isNaN() || this.eq(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
-    if (this.abs().gt("2e323")) return PowiainaNum.ZERO.clone();
-    return new PowiainaNum(1 / this);
+        if (PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "^-1");
+        if (this.isNaN() || this.eq(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
+        if (this.abs().gt("2e323")) return PowiainaNum.ZERO.clone();
+        return new PowiainaNum(1 / this);
     };
     Q.reciprocate = Q.rec = function (x) {
-    return new PowiainaNum(x).rec();
+        return new PowiainaNum(x).rec();
     };
 
 
@@ -213,128 +213,128 @@
     //#endregion
 
     //#region power, root, logarithm, iteratedlog, iteratedexp, iterated slog
-        P.toPower = P.pow = function(other) {
-            other = new PowiainaNum(other);
-            if(PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "^" + other);
-            if(other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
-            if(other.eq(PowiainaNum.ONE)) return this.clone();
-            if(other.lt(PowiainaNum.ZERO)) return this.pow(other.neg()).rec();
-            if(this.lt(PowiainaNum.ZERO) && other.isint()) {
-            if(other.mod(2).lt(PowiainaNum.ONE)) return this.abs().pow(other);
+    P.toPower = P.pow = function (other) {
+        other = new PowiainaNum(other);
+        if (PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "^" + other);
+        if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
+        if (other.eq(PowiainaNum.ONE)) return this.clone();
+        if (other.lt(PowiainaNum.ZERO)) return this.pow(other.neg()).rec();
+        if (this.lt(PowiainaNum.ZERO) && other.isint()) {
+            if (other.mod(2).lt(PowiainaNum.ONE)) return this.abs().pow(other);
             return this.abs().pow(other).neg();
-            }
-            if(this.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
-            if(this.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
-            if(this.eq(PowiainaNum.ZERO)) return PowiainaNum.ZERO.clone();
-            if(this.max(other).gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) return this.max(other);
-            if(this.eq(10)) {
-            if(other.gt(PowiainaNum.ZERO)) {
+        }
+        if (this.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
+        if (this.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
+        if (this.eq(PowiainaNum.ZERO)) return PowiainaNum.ZERO.clone();
+        if (this.max(other).gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) return this.max(other);
+        if (this.eq(10)) {
+            if (other.gt(PowiainaNum.ZERO)) {
                 other.operatorE(1, (other.operatorE(1) + 1) || 1);
                 other.normalize();
                 return other;
             } else {
                 return new PowiainaNum(Math.pow(10, other.toNumber()));
             }
-            }
-            if(other.lt(PowiainaNum.ONE)) return this.root(other.rec());
-            var n = Math.pow(this.toNumber(), other.toNumber());
-            if(n <= MAX_SAFE_INTEGER) return new PowiainaNum(n);
-            return PowiainaNum.pow(10, this.log10().mul(other));   
         }
-        Q.toPower = Q.pow = function(x, y) {
-            return new PowiainaNum(x).pow(y);
-        };
-        P.exponential = P.exp = function() {
-            return PowiainaNum.pow(Math.E, this);
-        };
-        Q.exponential = Q.exp = function(x) {
-            return PowiainaNum.pow(Math.E, x);
-        };
-        P.squareRoot = P.sqrt = function() {
-            return this.root(2);
-        };
-        Q.squareRoot = Q.sqrt = function(x) {
-            return new PowiainaNum(x).root(2);
-        };
-        P.cubeRoot = P.cbrt = function() {
-            return this.root(3);
-        };
-        Q.cubeRoot = Q.cbrt = function(x) {
-            return new PowiainaNum(x).root(3);
-        };
-        P.root = function(other) {
-            other = new PowiainaNum(other);
-            if(PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "root" + other);
-            if(other.eq(PowiainaNum.ONE)) return this.clone();
-            if(other.lt(PowiainaNum.ZERO)) return this.root(other.neg()).rec();
-            if(other.lt(PowiainaNum.ONE)) return this.pow(other.rec());
-            if(this.lt(PowiainaNum.ZERO) && other.isint() && other.mod(2).eq(PowiainaNum.ONE)) return this.neg().root(other).neg();
-            if(this.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
-            if(this.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
-            if(this.eq(PowiainaNum.ZERO)) return PowiainaNum.ZERO.clone();
-            if(this.max(other).gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) return this.gt(other) ? this.clone() : PowiainaNum.ZERO.clone();
-            return PowiainaNum.pow(10, this.log10().div(other));
-        };
-        Q.root = function(x, y) {
-            return new PowiainaNum(x).root(y);
-        };
-        P.generalLogarithm = P.log10 = function() {
-            var x = this.clone();
-            if(PowiainaNum.debug >= PowiainaNum.NORMAL) console.log("log" + this);
-            if(x.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
-            if(x.eq(PowiainaNum.ZERO)) return PowiainaNum.NEGATIVE_INFINITY.clone();
-            if(x.lte(PowiainaNum.MAX_SAFE_INTEGER)) return new PowiainaNum(Math.log10(x.toNumber()));
-            if(!x.isFinite()) return x;
-            if(x.gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) return x;
-            x.operatorE(1, x.operatorE(1) - 1);
-            return x.normalize();
-        };
-        Q.generalLogarithm = Q.log10 = function(x) {
-            return new PowiainaNum(x).log10();
-        };
-        P.logarithm = P.logBase = function(base) {
-            if(base === undefined) base = Math.E;
-            return this.log10().div(PowiainaNum.log10(base));
-        };
-        Q.logarithm = Q.logBase = function(x, base) {
-            return new PowiainaNum(x).logBase(base);
-        };
-        P.naturalLogarithm = P.log = P.ln = function() {
-          return this.logBase(Math.E);
-        };
-        Q.naturalLogarithm = Q.log = Q.ln = function(x) {
-          return new PowiainaNum(x).ln();
-        };
-        //Implementation of functions from break_eternity.js
-        P.iteratedexp = function (other, payload) {
-            return this.tetr(other, payload);
-        };
-        Q.iteratedexp = function (x, other, payload) {
-            return new PowiainaNum(x).iteratedexp(other, payload);
-        };
-        //This implementation is highly inaccurate and slow, and probably be given custom code
-        P.iteratedlog = function (base, other) {
-            if (base === undefined) base = 10;
-            if (other === undefined) other = PowiainaNum.ONE.clone();
-            var t = this.clone();
-            base = new PowiainaNum(base);
-            other = new PowiainaNum(other);
-            if (other.eq(PowiainaNum.ZERO)) return t;
-            if (other.eq(PowiainaNum.ONE)) return t.logBase(base);
-            return base.tetr(t.slog(base).sub(other));
-        };
-        Q.iteratedlog = function (x, y, z) {
-            return new PowiainaNum(x).iteratedlog(y, z);
-        };
-        P.iteratedslog = function (other) {
-            if (other === undefined) other = PowiainaNum.ONE.clone();
-            var t = this.clone();
-            other = new PowiainaNum(other);
-            if (other.eq(PowiainaNum.ZERO)) return t;
-            if (other.eq(PowiainaNum.ONE)) return t.slog();
-            return E(10).pent(t.mlog().sub(other))
-        };
-        //#endregion
+        if (other.lt(PowiainaNum.ONE)) return this.root(other.rec());
+        var n = Math.pow(this.toNumber(), other.toNumber());
+        if (n <= MAX_SAFE_INTEGER) return new PowiainaNum(n);
+        return PowiainaNum.pow(10, this.log10().mul(other));
+    }
+    Q.toPower = Q.pow = function (x, y) {
+        return new PowiainaNum(x).pow(y);
+    };
+    P.exponential = P.exp = function () {
+        return PowiainaNum.pow(Math.E, this);
+    };
+    Q.exponential = Q.exp = function (x) {
+        return PowiainaNum.pow(Math.E, x);
+    };
+    P.squareRoot = P.sqrt = function () {
+        return this.root(2);
+    };
+    Q.squareRoot = Q.sqrt = function (x) {
+        return new PowiainaNum(x).root(2);
+    };
+    P.cubeRoot = P.cbrt = function () {
+        return this.root(3);
+    };
+    Q.cubeRoot = Q.cbrt = function (x) {
+        return new PowiainaNum(x).root(3);
+    };
+    P.root = function (other) {
+        other = new PowiainaNum(other);
+        if (PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "root" + other);
+        if (other.eq(PowiainaNum.ONE)) return this.clone();
+        if (other.lt(PowiainaNum.ZERO)) return this.root(other.neg()).rec();
+        if (other.lt(PowiainaNum.ONE)) return this.pow(other.rec());
+        if (this.lt(PowiainaNum.ZERO) && other.isint() && other.mod(2).eq(PowiainaNum.ONE)) return this.neg().root(other).neg();
+        if (this.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
+        if (this.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
+        if (this.eq(PowiainaNum.ZERO)) return PowiainaNum.ZERO.clone();
+        if (this.max(other).gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) return this.gt(other) ? this.clone() : PowiainaNum.ZERO.clone();
+        return PowiainaNum.pow(10, this.log10().div(other));
+    };
+    Q.root = function (x, y) {
+        return new PowiainaNum(x).root(y);
+    };
+    P.generalLogarithm = P.log10 = function () {
+        var x = this.clone();
+        if (PowiainaNum.debug >= PowiainaNum.NORMAL) console.log("log" + this);
+        if (x.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
+        if (x.eq(PowiainaNum.ZERO)) return PowiainaNum.NEGATIVE_INFINITY.clone();
+        if (x.lte(PowiainaNum.MAX_SAFE_INTEGER)) return new PowiainaNum(Math.log10(x.toNumber()));
+        if (!x.isFinite()) return x;
+        if (x.gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) return x;
+        x.operatorE(1, x.operatorE(1) - 1);
+        return x.normalize();
+    };
+    Q.generalLogarithm = Q.log10 = function (x) {
+        return new PowiainaNum(x).log10();
+    };
+    P.logarithm = P.logBase = function (base) {
+        if (base === undefined) base = Math.E;
+        return this.log10().div(PowiainaNum.log10(base));
+    };
+    Q.logarithm = Q.logBase = function (x, base) {
+        return new PowiainaNum(x).logBase(base);
+    };
+    P.naturalLogarithm = P.log = P.ln = function () {
+        return this.logBase(Math.E);
+    };
+    Q.naturalLogarithm = Q.log = Q.ln = function (x) {
+        return new PowiainaNum(x).ln();
+    };
+    //Implementation of functions from break_eternity.js
+    P.iteratedexp = function (other, payload) {
+        return this.tetr(other, payload);
+    };
+    Q.iteratedexp = function (x, other, payload) {
+        return new PowiainaNum(x).iteratedexp(other, payload);
+    };
+    //This implementation is highly inaccurate and slow, and probably be given custom code
+    P.iteratedlog = function (base, other) {
+        if (base === undefined) base = 10;
+        if (other === undefined) other = PowiainaNum.ONE.clone();
+        var t = this.clone();
+        base = new PowiainaNum(base);
+        other = new PowiainaNum(other);
+        if (other.eq(PowiainaNum.ZERO)) return t;
+        if (other.eq(PowiainaNum.ONE)) return t.logBase(base);
+        return base.tetr(t.slog(base).sub(other));
+    };
+    Q.iteratedlog = function (x, y, z) {
+        return new PowiainaNum(x).iteratedlog(y, z);
+    };
+    P.iteratedslog = function (other) {
+        if (other === undefined) other = PowiainaNum.ONE.clone();
+        var t = this.clone();
+        other = new PowiainaNum(other);
+        if (other.eq(PowiainaNum.ZERO)) return t;
+        if (other.eq(PowiainaNum.ONE)) return t.slog();
+        return E(10).pent(t.mlog().sub(other))
+    };
+    //#endregion
 
     //#region lambertw
 
@@ -348,10 +348,10 @@
         var w;
         if (!Number.isFinite(z)) return z;
         if (principal) {
-        if (z === 0) return z;
-        if (z === 1) return OMEGA;
-        if (z < 10) w = 0;
-        else w = Math.log(z) - Math.log(Math.log(z));
+            if (z === 0) return z;
+            if (z === 1) return OMEGA;
+            if (z < 10) w = 0;
+            else w = Math.log(z) - Math.log(Math.log(z));
         } else {
             if (z === 0) return -Infinity;
             if (z <= -0.1) w = -2;
@@ -375,18 +375,18 @@
         var w;
         if (!z.isFinite()) return z;
         if (principal) {
-        if (z.eq(PowiainaNum.ZERO)) return z;
-        if (z.eq(PowiainaNum.ONE)) return new PowiainaNum(OMEGA);
+            if (z.eq(PowiainaNum.ZERO)) return z;
+            if (z.eq(PowiainaNum.ONE)) return new PowiainaNum(OMEGA);
             w = PowiainaNum.ln(z);
         } else {
-        if (z.eq(PowiainaNum.ZERO)) return PowiainaNum.NEGATIVE_INFINITY.clone();
+            if (z.eq(PowiainaNum.ZERO)) return PowiainaNum.NEGATIVE_INFINITY.clone();
             w = PowiainaNum.ln(z.neg());
         }
         for (var i = 0; i < 100; ++i) {
             var ew = w.neg().exp();
             var wewz = w.sub(z.mul(ew));
             var dd = w.add(PowiainaNum.ONE).sub(w.add(2).mul(wewz).div(PowiainaNum.mul(2, w).add(2)));
-            if (dd.eq(PowiainaNum.ZERO)) return w; 
+            if (dd.eq(PowiainaNum.ZERO)) return w;
             var wn = w.sub(wewz.div(dd));
             if (PowiainaNum.abs(wn.sub(w)).lt(PowiainaNum.abs(wn).mul(tol))) return wn;
             w = wn;
@@ -452,7 +452,7 @@
         }
         if (other.eq(PowiainaNum.ONE.neg())) return PowiainaNum.ZERO.clone();
         if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
-        if (other.eq(PowiainaNum.ONE)) return t;
+        if (other.eq(PowiainaNum.ONE)) return t.clone();
         if (other.eq(2)) return t.pow(t);
         if (t.eq(2)) {
             if (other.eq(3)) return new PowiainaNum(16);
@@ -512,8 +512,8 @@
         if (!x.isFinite()) return x;
         if (x.gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) return x;
         if (x.gt(PowiainaNum.EE_MAX_SAFE_INTEGER)) {
-        x.operator(1, x.operator(1) - 1);
-        return x;
+            x.operator(1, x.operator(1) - 1);
+            return x;
         }
         var l = x.ln();
         return l.div(l.lambertw());
@@ -540,7 +540,7 @@
             if (x.gt(a)) return PowiainaNum.NaN.clone();
         }
         if (x.max(base).gt("10^^^" + MAX_SAFE_INTEGER)) {
-        if (x.gt(base)) return x;
+            if (x.gt(base)) return x;
             return PowiainaNum.ZERO.clone();
         }
         if (x.max(base).gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) {
@@ -570,7 +570,7 @@
             }
         }
         if (x.gt(10))
-        return new PowiainaNum(r);
+            return new PowiainaNum(r);
     };
     Q.slog = function (x, y) {
         return new PowiainaNum(x).slog(y);
@@ -592,18 +592,18 @@
 
             r.array = []
             r.array.push(...other.array);
-            r.array.push([1,1,2,1]);
-            
-        }else{
+            r.array.push([1, 1, 2, 1]);
+
+        } else {
             r = PowiainaNum()
 
             r.array = [10]
-            r.array.push(["x",other.toNumber()-1,1,1]);
+            r.array.push(["x", other.toNumber() - 1, 1, 1]);
 
         }
         return r.normalize();
     };
-    Q.expansion = Q.eps = function (x, other){
+    Q.expansion = Q.eps = function (x, other) {
         return PowiainaNum(x).expansion(other)
     }
     P.multiExpansion = P.mulEps = function (other) {
@@ -621,18 +621,18 @@
 
             r.array = []
             r.array.push(...other.array);
-            r.array.push([2,1,2,1]);
-            
-        }else{
+            r.array.push([2, 1, 2, 1]);
+
+        } else {
             r = PowiainaNum()
 
             r.array = [10]
-            r.array.push([1,other.toNumber()-1,2,1]);
-            
+            r.array.push([1, other.toNumber() - 1, 2, 1]);
+
         }
         return r.normalize();
     }
-    Q.multiExpansion = Q.mulEps = function (x, other){
+    Q.multiExpansion = Q.mulEps = function (x, other) {
         return PowiainaNum(x).multiExpansion(other);
     }
     P.powerExpansion = P.powEps = function (other) {
@@ -650,25 +650,25 @@
 
             r.array = []
             r.array.push(...other.array);
-            r.array.push([3,1,2,1]);
-            
-        }else{
+            r.array.push([3, 1, 2, 1]);
+
+        } else {
             r = PowiainaNum()
 
             r.array = [10]
-            r.array.push([2,other.toNumber()-1,2,1]);
-            
+            r.array.push([2, other.toNumber() - 1, 2, 1]);
+
         }
         return r.normalize();
     }
-    Q.powerExpansion = Q.powEps = function (x, other){
+    Q.powerExpansion = Q.powEps = function (x, other) {
         return PowiainaNum(x).powerExpansion(other);
     }
 
     //#endregion
 
     //#region explosion
-    P.explosion = P.els = function (other){
+    P.explosion = P.els = function (other) {
         var t = this.clone();
         other = new PowiainaNum(other);
         var r;
@@ -683,40 +683,152 @@
 
             r.array = []
             r.array.push(...other.array);
-            r.array.push([1,1,3,1]);
-            
-        }else{
+            r.array.push([1, 1, 3, 1]);
+
+        } else {
             r = PowiainaNum()
 
             r.array = [10]
-            r.array.push(["x",other.toNumber()-1,2,1]);
+            r.array.push(["x", other.toNumber() - 1, 2, 1]);
 
         }
         return r.normalize();
     };
 
-    Q.explosion = P.els = function (x, other){
+    Q.explosion = P.els = function (x, other) {
         return PowiainaNum(x).explosion(other);
     }
 
     //#endregion
     //#endregion
 
+    //#region arrow, pentate
+    P.pentate = function (other){
+        return this.arrow(3)(other);
+    }
+    Q.pentate = function (x, other){
+        return PowiainaNum.arrow(x,3,other);
+    }
+    /**
+     * 
+     * @param {Number|PowiainaNum|String} other arrow count
+     * @returns {Function} a function can be called(x), this function returns {this,other,x}
+     */
+    P.arrow = function (other){
+        var t = this.clone();
+        arrows = new PowiainaNum(other);
+        if(!arrows.isint() || arrows.lt(PowiainaNum.ZERO)) return function(other) {
+          return PowiainaNum.NaN.clone();
+        };
+        if(arrows.eq(PowiainaNum.ZERO)) return function(other) {
+          return t.mul(other);
+        };
+        if(arrows.eq(PowiainaNum.ONE)) return function(other) {
+          return t.pow(other);
+        };
+        if(arrows.eq(2)) return function(other) {
+          return t.tetr(other);
+        };
+        return function(other){
+            var depth;
+            if(arguments.length == 2) depth = arguments[1]; //must hide
+            else depth = 0;
+            other = new PowiainaNum(other);
+            var r;
+            if(PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(t + "{" + arrows + "}" + other);
+            if(t.isNaN() || other.isNaN()) return PowiainaNum.NaN.clone();
+            if(other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
+            if(t.eq(PowiainaNum.ZERO)) {
+                if(other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
+                return PowiainaNum.NaN.clone();
+            }
+            if(t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
+            if(other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
+            if(other.eq(PowiainaNum.ONE)) return t.clone();
+
+            // arrow > 9e15, that using 10{x}, x=arrow;
+            if (arrows.gt(PowiainaNum.MAX_SAFE_INTEGER)){
+                r = PowiainaNum(arrows);
+                r.array.push(["x",1,1,1]);
+                r.normalize();
+                return r;
+            }
+
+            let arrowsNum = arrows.toNumber();
+            // arrow < 9e15
+
+            // 10{x}2 = 10{x-1}10
+            if(other.eq(2)) return t.arrow(arrowsNum - 1)(t, depth + 1);
+            
+            // 我不到啊
+            if(t.max(other).gt("10{" + (arrowsNum + 1) + "}" + MAX_SAFE_INTEGER)) return t.max(other);
+
+            // this = 10{1919810}1e16 > 10{1919810}9.007e15 
+            // or t{arrow}other, other>9.007e15
+            if(t.gt("10{" + arrowsNum + "}" + MAX_SAFE_INTEGER) || other.gt(PowiainaNum.MAX_SAFE_INTEGER)) {
+                
+                // this = 10{1919810}1e16 > 10{1919810}9.007e15 
+                if(t.gt("10{" + arrowsNum + "}" + MAX_SAFE_INTEGER)) {
+                  r = t.clone();
+                  r.operatorE(arrowsNum, r.operatorE(arrowsNum) - 1);
+                  r.normalize();
+                } else if(t.gt("10{" + (arrowsNum - 1) + "}" + MAX_SAFE_INTEGER)) {
+                  r = new PowiainaNum(t.operatorE(arrowsNum - 1));
+                } else {
+                  r = PowiainaNum.ZERO;
+                }
+                var j = r.add(other);
+                j.operatorE(arrowsNum, (j.operatorE(arrowsNum) || 0) + 1);
+                j.normalize();
+                return j;
+            }
+            if(depth >= PowiainaNum.maxOps + 40) {
+                r = PowiainaNum(10);
+                r.array=[10,[arrowsNum,1,1,1]];
+                return r;
+            }
+            var y = other.toNumber();
+            var f = Math.floor(y);
+            var arrows_m1 = arrows.sub(PowiainaNum.ONE);
+            r = t.arrow(arrows_m1)(y - f, depth + 1);
+            for(var i = 0, 
+                m = new PowiainaNum("10{" + (arrowsNum - 1) + "}" + MAX_SAFE_INTEGER); 
+                f !== 0 && r.lt(m) && i < 100; 
+                ++i) {
+                if(f > 0) {
+                    console.log(JSON.stringify(t.array),JSON.stringify(arrows_m1),JSON.stringify(r.array))
+                    r = t.arrow(arrows_m1)(r, depth + 1);
+                    console.log(JSON.stringify(r.array))
+                    --f;
+                }
+            }
+            if(i == 100) f = 0;
+            r.operatorE(arrowsNum - 1, (r.operatorE(arrowsNum - 1) + f) || f);
+            r.normalize();
+            return r;
+        }
+    }
+    Q.arrow = function(x, z, y) {
+      return new ExpantaNum(x).arrow(z)(y);
+    };
+
+    //#endregion
+
     //#endregion
 
     //#region compareTo
     P.compareTo = P.cmp = function (other) {
-        if (PowiainaNum.debug > PowiainaNum.NORMAL) console.log("cmpare",this,other)
+        if (PowiainaNum.debug > PowiainaNum.NORMAL) console.log("cmpare", this, other)
         if (!(other instanceof PowiainaNum)) other = new PowiainaNum(other);
         if (isNaN(this.array[0]) || isNaN(other.array[0])) return NaN
         if (this.array[0] == Infinity && other.array[0] != Infinity) return this.sign;
         if (this.array[0] != Infinity && other.array[0] == Infinity) return -other.sign;
-        if (this.array.length == 1 && other.array.length == 1 && this.array[0] == other.array[0]) return 0;
         if (this.sign != other.sign) return this.sign;
+        if (this.array.length == 1 && other.array.length == 1 && this.array[0] == other.array[0]) return 0;
         if (other.array[0] == 0) {
-            if (this.sign > 0){
+            if (this.sign > 0) {
                 return 1
-            }else if (this.sign < 0){
+            } else if (this.sign < 0) {
                 return -1
             }
         }
@@ -731,9 +843,9 @@
             do {
                 g = this.array[this.array.length - i];
                 h = other.array[other.array.length - i];
-                if (typeof g == "number") e = [0,g,1,1];
+                if (typeof g == "number") e = [0, g, 1, 1];
                 else e = g;
-                if (typeof h == "number") f = [0,h,1,1];
+                if (typeof h == "number") f = [0, h, 1, 1];
                 else f = h;
                 if (e[3] > f[3] || (e[3] == f[3] && (
                     (e[2] == "x" && f[2] != "x") || e[2] > f[2] || (e[2] == f[2] && (
@@ -750,7 +862,7 @@
                     ))
                 ))) { r = -1; break; }
                 i++
-            }while (i < l)
+            } while (i < l)
             if (r === undefined) {
                 if (this.array.length == other.array.length) {
                     if (this.array[0] > other.array[0]) {
@@ -791,31 +903,31 @@
         if (this.sign == -1) return this.abs().isint();
         if (this.gt(PowiainaNum.MAX_SAFE_INTEGER)) return true;
         return Number.isInteger(this.toNumber());
-      };
-      Q.isInteger = Q.isint = function (x) {
+    };
+    Q.isInteger = Q.isint = function (x) {
         return new PowiainaNum(x).isint();
-      };
-      P.floor = function () {
+    };
+    P.floor = function () {
         if (this.isInteger()) return this.clone();
         return new PowiainaNum(Math.floor(this.toNumber()));
-      };
-      Q.floor = function (x) {
+    };
+    Q.floor = function (x) {
         return new PowiainaNum(x).floor();
-      };
-      P.ceiling = P.ceil = function () {
+    };
+    P.ceiling = P.ceil = function () {
         if (this.isInteger()) return this.clone();
         return new PowiainaNum(Math.ceil(this.toNumber()));
-      };
-      Q.ceiling = Q.ceil = function (x) {
+    };
+    Q.ceiling = Q.ceil = function (x) {
         return new PowiainaNum(x).ceil();
-      };
-      P.round = function () {
+    };
+    P.round = function () {
         if (this.isInteger()) return this.clone();
         return new PowiainaNum(Math.round(this.toNumber()));
-      };
-      Q.round = function (x) {
+    };
+    Q.round = function (x) {
         return new PowiainaNum(x).round();
-      };
+    };
     //#endregion
 
     //#region from ExpantaNum.js comparing
@@ -926,7 +1038,7 @@
         if (!isFinite(k)) throw Error(invalidArgument + "Index k out of range.");
         var a = this.array;
         var min = 0, max = a.length - 1;
-        if (a.length == 1){
+        if (a.length == 1) {
             if (0 > i) return -0.5
             if (0 == i) return 0
             if (0 < i) return 0.5
@@ -952,9 +1064,9 @@
             if (a[mid][3] < k || a[mid][2] < j || a[mid][0] < i) min = mid;
             if (a[mid][3] > k || a[mid][2] > j || a[mid][0] > i) max = mid;
         }
-        if (min == 0 && i == 0){
+        if (min == 0 && i == 0) {
             return min;
-        }else{
+        } else {
             return a[min][0] == i ? min : min + 0.5;
         }
     }
@@ -1001,7 +1113,7 @@
 
     P.operatorE = function (i, value) {
 
-        if (typeof i != "number") i = Number(i);
+        if (i != "x" && typeof i != "number") i = Number(i);
         if (i != "x" && !isFinite(i)) throw Error(invalidArgument + "Index i out of range.");
 
         if (value === undefined) return this.getOperator(i, 1, 1);
@@ -1009,7 +1121,18 @@
 
     }
     //#endregion
-
+    //#region operator
+    P.getMaxFirstOperatorIndex = function (j = 1, k = 1) {
+        // returns [x,anything,j,k] that x is max.
+        for (let i = this.array.length - 1; i >= 1; i--) {
+            if (this.array[i][2] == j && this.array[i][3] == k) {
+                return i;
+            }
+        }
+        // can not find this operator with [x,anything,j,k]
+        return -1
+    }
+    //#endregion
     //#region isFinite isInfinite isNaN
 
 
@@ -1043,12 +1166,12 @@
         return new PowiainaNum(x).abs();
     };
     P.negate = P.neg = function () {
-      var x = this.clone();
-      x.sign = x.sign * -1;
-      return x;
+        var x = this.clone();
+        x.sign = x.sign * -1;
+        return x;
     };
     Q.negate = Q.neg = function (x) {
-      return new PowiainaNum(x).neg();
+        return new PowiainaNum(x).neg();
     };
     //#endregion
 
@@ -1148,19 +1271,28 @@
                     return 1
                 })(a, b)
             })
+            for (i=1;i<x.array.length;++i){
+                // check 0 repeat count
+                if (x.array[i][0] !== 0 && (x.array[i][1] === 0 || x.array[i][1] === null || x.array[i][1] === undefined)) {
+                    x.array.splice(i, 1);
+                    --i;
+                    continue;
+                }
+
+            }
 
             if (!x.array.length) x.array = [0]; // if no array set zero
             if (x.array.length > PowiainaNum.maxOps) x.array.splice(1, x.array.length - PowiainaNum.maxOps); // max operators check
 
             if (x.array[0] > MAX_SAFE_INTEGER) { // check >9e15 first number
-                if (x.array.length >= 2 && x.array[1][0] == 1  && x.array[1][2] == 1&& x.array[1][3] == 1) {
+                if (x.array.length >= 2 && x.array[1][0] == 1 && x.array[1][2] == 1 && x.array[1][3] == 1) {
                     x.array[1][1]++;
                 } else {
                     x.array.splice(1, 0, [1, 1, 1, 1]);
                 }
                 x.array[0] = Math.log10(x.array[0])
             }
-            if (x.array[0] < MAX_E && x.array[1] !== undefined && 
+            if (x.array[0] < MAX_E && x.array[1] !== undefined &&
                 x.array[1][0] == 1 && x.array[1][1] >= 1 &&
                 x.array[1][2] == 1 && x.array[1][3] == 1) { // check < 9e15
 
@@ -1172,33 +1304,33 @@
                 }
                 b = true;
             }
-            if(x.array[x.array.length - 1][3] > MAX_SAFE_INTEGER) {
+            if (x.array[x.array.length - 1][3] > MAX_SAFE_INTEGER) {
                 x.layer++;
                 x.array = [
                     x.array[x.array.length - 1][3]
                 ];
                 b = true;
-              } else if(x.layer && x.array.length == 1) {
+            } else if (x.layer && x.array.length == 1) {
                 x.layer--;
                 x.array = [
-                  10
+                    10
                 ];
                 b = true;
-              }
-            while(x.array.length >= 2 && x.array[0] == 1 && x.array[1][1]) {
-                if(x.array[1][1] > 1) {
+            }
+            while (x.array.length >= 2 && x.array[0] == 1 && x.array[1][1]) {
+                if (x.array[1][1] > 1) {
                     x.array[1][1]--;
                 } else {
                     x.array.splice(1, 1);
                 }
                 x.array[0] = 10;
             }
-            if (x.array.length >= 2 && x.array[0] < MAX_SAFE_INTEGER && x.array[1][0] >=2 && x.array[1][1]==1) {
-                
-                x.array.splice(1, 1, [x.array[1][0]-1,x.array[0]-1,1,1]);
-                
+            if (x.array.length >= 2 && x.array[0] < MAX_SAFE_INTEGER && x.array[1][0] >= 2 && x.array[1][1] == 1) {
+
+                x.array.splice(1, 1, [x.array[1][0] - 1, x.array[0] - 1, 1, 1]);
+
                 x.array[0] = 10;
-                b=true
+                b = true
             }
             for (i = 1; i < x.array.length - 1; ++i) {
                 if (x.array[i][0] == x.array[i + 1][0] && x.array[i][2] == x.array[i + 1][2] && x.array[i][3] == x.array[i + 1][3]) {
@@ -1210,28 +1342,28 @@
                 }
 
             }
-            if (x.array.length>=2&&x.array[1][0]!=1&&x.array[1][0]!="x" && x.array[1][0] < 1000){
-                if (x.array[0]) x.array.splice(1,0,[x.array[1][0]-1,x.array[0],x.array[1][2] ,x.array[1][3]]);
-                    x.array[0]=1;
-                if (x.array[2][1]>1){
+            if (x.array.length >= 2 && x.array[1][0] != 1 && x.array[1][0] != "x" && x.array[1][0] < 1000) {
+                if (x.array[0]) x.array.splice(1, 0, [x.array[1][0] - 1, x.array[0], x.array[1][2], x.array[1][3]]);
+                x.array[0] = 1;
+                if (x.array[2][1] > 1) {
                     x.array[2][1]--;
-                }else{
-                    x.array.splice(2,1);
+                } else {
+                    x.array.splice(2, 1);
                 } //  && x.array[1][2] == 1 && x.array[1][3] == 1
-                b=true;
+                b = true;
             }
-            if (x.array.length>=2 && x.array[1][2] >= 2 && x.array[1][0] == 1 && x.array[0] < MAX_SAFE_INTEGER){
-                
-                if (x.array[1][1]==1){
-                    x.array.splice(1, 1, ["x", x.array[0]-1, x.array[1][2]-1, x.array[1][3]])
+            if (x.array.length >= 2 && x.array[1][2] >= 2 && x.array[1][0] == 1 && x.array[0] < MAX_SAFE_INTEGER) {
+
+                if (x.array[1][1] == 1) {
+                    x.array.splice(1, 1, ["x", x.array[0] - 1, x.array[1][2] - 1, x.array[1][3]])
                     x.array[0] = 10
-                    b=true;
-                }else if (x.array[1][1] > 1){
+                    b = true;
+                } else if (x.array[1][1] > 1) {
                     repeatLast = x.array[1][1];
-                    x.array.splice(1, 1, ["x", x.array[0]-1, x.array[1][2]-1, x.array[1][3]])
-                    x.array.push([1,repeatLast-1,2,1])
+                    x.array.splice(1, 1, ["x", x.array[0] - 1, x.array[1][2] - 1, x.array[1][3]])
+                    x.array.push([1, repeatLast - 1, 2, 1])
                     x.array[0] = 10
-                    b=true;
+                    b = true;
                 }
             }
             for (i = 1; i < x.array.length; ++i) {
@@ -1239,11 +1371,11 @@
                     // check {}brace >9e15
                     if (i != x.array.length - 1 && x.array[i + 1][2] == "x") {
                         x.array[i + 1][1]++;
-                    } else if (x.array[i][2] != "x"){
+                    } else if (x.array[i][2] != "x") {
                         x.array.splice(i + 1, 0, [1, 1, "x", x.array[i][3]]);
 
-                    } else if (x.array[i][2] == "x"){
-                        x.array.splice(i + 1, 0, [1, 1, 1, x.array[i][3]]+1);
+                    } else if (x.array[i][2] == "x") {
+                        x.array.splice(i + 1, 0, [1, 1, 1, x.array[i][3]] + 1);
 
                     }
                     x.array[0] = x.array[i][2] + 1;
@@ -1251,16 +1383,16 @@
                     --i
                     b = true;
                 }
-                if (i<1) i=1;
+                if (i < 1) i = 1;
                 if (x.array[i][1] > MAX_SAFE_INTEGER) {
                     // check repeat count >9e15
                     if (i != x.array.length - 1 && x.array[i + 1][0] == "x") {
                         x.array[i + 1][1]++;
-                    } else if (x.array[i][0] != "x"){
+                    } else if (x.array[i][0] != "x") {
                         x.array.splice(i + 1, 0, [x.array[i][0] + 1, 1, x.array[i][2], x.array[i][3]]);
 
-                    } else if (x.array[i][0] == "x"){
-                        x.array.splice(i + 1, 0, [1, 1, x.array[i][2]+1, x.array[i][3]]);
+                    } else if (x.array[i][0] == "x") {
+                        x.array.splice(i + 1, 0, [1, 1, x.array[i][2] + 1, x.array[i][3]]);
 
                     }
                     x.array[0] = x.array[i][1] + 1;
@@ -1268,7 +1400,7 @@
                     --i
                     b = true;
                 }
-                if (i<1) i=1;/*
+                if (i < 1) i = 1;/*
                 if (x.array[i][2] > MAX_SAFE_INTEGER) {
                     x.array[0] = x.array[i][2] + 1;
                     
@@ -1282,14 +1414,8 @@
                     --i
                     b = true;
                 }*/
-                // check 0 repeat count
-                if (x.array[i][0] !== 0 && (x.array[i][1] === 0 || x.array[i][1] === null || x.array[i][1] === undefined)) {
-                    x.array.splice(i, 1);
-                    --i;
-                    continue;
-                }
-                if (i<1) i=1;
-                if (x.array[i][0] > MAX_SAFE_INTEGER){
+                if (i < 1) i = 1;
+                if (x.array[i][0] > MAX_SAFE_INTEGER) {
                     x.array[0] = x.array[i][0] + 1;
                     if (i != x.array.length - 1 && x.array[i + 1][0] == "x") {
                         x.array[i + 1][1]++;
@@ -1297,8 +1423,8 @@
                         x.array.splice(i + 1, 0, ["x", 1, x.array[i][2], x.array[i][3]]);
                     }
                     x.array.splice(1, i);
-                    
-                    b=true;
+
+                    b = true;
                 }
 
             }
@@ -1317,11 +1443,11 @@
         }
         return number
     }
-    Q.overflow = function (num, start, power, meta = 1){
-        return PowiainaNum(num).overflow(start,power,meta)
+    Q.overflow = function (num, start, power, meta = 1) {
+        return PowiainaNum(num).overflow(start, power, meta)
     }
 
-    P.toJSON = function() {
+    P.toJSON = function () {
         if (PowiainaNum.serializeMode == PowiainaNum.JSON) {
             var a = [];
             a.push(this.array[0])
@@ -1332,7 +1458,7 @@
                 sign: this.sign
             };
         } else if (PowiainaNum.serializeMode == PowiainaNum.STRING) {
-             return this.toString(1);
+            return this.toString(1);
         }
 
     }
@@ -1342,17 +1468,17 @@
         if (isNaN(this.array[0])) return "NaN";
         if (!isFinite(this.array[0])) return "Infinity";
         var s = "";
-        if (formatType == 1){
+        if (formatType == 1) {
             s = "l" + (this.layer.toString()) + " s" + (this.sign.toString()) + " a" + JSON.stringify(this.array)
-        }else if (formatType == 0){
-            for (let i =this.array.length-1;i>0; i--) {
+        } else if (formatType == 0) {
+            for (let i = this.array.length - 1; i > 0; i--) {
 
-                if (this.array[i][3] == 1 && this.array[i][2] == 1) s += "(" + "10{"+this.array[i][0] + "})"+"^"+this.array[i][1] + " "
-                else if (this.array[i][3] == 1)s += "(" + "eps"+this.array[i][2]+",10{"+this.array[i][0] + "})"+"^"+this.array[i][1] + " "
-                else s += "(" + "meg"+this.array[i][3]+",eps"+this.array[i][2]+",10{"+this.array[i][0] + "})"+"^"+this.array[i][1] + " "
+                if (this.array[i][3] == 1 && this.array[i][2] == 1) s += "(" + "10{" + this.array[i][0] + "})" + "^" + this.array[i][1] + " "
+                else if (this.array[i][3] == 1) s += "(" + "eps" + this.array[i][2] + ",10{" + this.array[i][0] + "})" + "^" + this.array[i][1] + " "
+                else s += "(" + "meg" + this.array[i][3] + ",eps" + this.array[i][2] + ",10{" + this.array[i][0] + "})" + "^" + this.array[i][1] + " "
             }
             s += this.array[0]
-            s = (this.sign<0 ? "-" : "")+(this.layer>0 ? `lay${this.layer.toFixed(0)} ` : "")+ s
+            s = (this.sign < 0 ? "-" : "") + (this.layer > 0 ? `lay${this.layer.toFixed(0)} ` : "") + s
         }
         return s
     }
@@ -1404,7 +1530,7 @@
             ];
             else {
                 x.array = [
-                  0
+                    0
                 ];
                 var a, b, c, d, i;
 
@@ -1418,7 +1544,7 @@
                         a = input.search(/[^J]/);
                         Klayer = a;
                         input = input.substring(a);
-                    } 
+                    }
                 }
                 while (input) {
                     if (/^\(?10[\^\{]/.test(input)) {
@@ -1468,7 +1594,7 @@
                             x.array[0] = a;
                             if (Number.isInteger(d)) x.array[1][1] += c;
                             else x.array.splice(1, 0, [arrows, c, 1, 1]);
-                            
+
                         }
                     } else {
                         break;
@@ -1480,15 +1606,15 @@
                 for (let i = a.length - 1; i >= 0; --i) {
                     //The things that are already there
                     if (b[0] < MAX_E && b[1] === 0) {
-                    b[0] = Math.pow(10, c * b[0]);
-                    } else if (c == -1) {
-                    if (b[1] === 0) {
                         b[0] = Math.pow(10, c * b[0]);
-                    } else if (b[1] == 1 && b[0] <= Math.log10(Number.MAX_VALUE)) {
-                        b[0] = Math.pow(10, c * Math.pow(10, b[0]));
-                    } else {
-                        b[0] = 0;
-                    }
+                    } else if (c == -1) {
+                        if (b[1] === 0) {
+                            b[0] = Math.pow(10, c * b[0]);
+                        } else if (b[1] == 1 && b[0] <= Math.log10(Number.MAX_VALUE)) {
+                            b[0] = Math.pow(10, c * Math.pow(10, b[0]));
+                        } else {
+                            b[0] = 0;
+                        }
                         b[1] = 0;
                     } else {
                         b[1]++;
@@ -1497,15 +1623,15 @@
                     var decimalPointPos = a[i].indexOf(".");
                     var intPartLen = decimalPointPos == -1 ? a[i].length : decimalPointPos;
                     if (b[1] === 0) {
-                    if (intPartLen >= LONG_STRING_MIN_LENGTH) b[0] = Math.log10(b[0]) + log10LongString(a[i].substring(0, intPartLen)), b[1] = 1;
-                    else if (a[i]) b[0] *= Number(a[i]);
+                        if (intPartLen >= LONG_STRING_MIN_LENGTH) b[0] = Math.log10(b[0]) + log10LongString(a[i].substring(0, intPartLen)), b[1] = 1;
+                        else if (a[i]) b[0] *= Number(a[i]);
                     } else {
-                    d = intPartLen >= LONG_STRING_MIN_LENGTH ? log10LongString(a[i].substring(0, intPartLen)) : a[i] ? Math.log10(Number(a[i])) : 0;
-                    if (b[1] == 1) {
-                        b[0] += d;
-                    } else if (b[1] == 2 && b[0] < MAX_E + Math.log10(d)) {
-                        b[0] += Math.log10(1 + Math.pow(10, Math.log10(d) - b[0]));
-                    }
+                        d = intPartLen >= LONG_STRING_MIN_LENGTH ? log10LongString(a[i].substring(0, intPartLen)) : a[i] ? Math.log10(Number(a[i])) : 0;
+                        if (b[1] == 1) {
+                            b[0] += d;
+                        } else if (b[1] == 2 && b[0] < MAX_E + Math.log10(d)) {
+                            b[0] += Math.log10(1 + Math.pow(10, Math.log10(d) - b[0]));
+                        }
                     }
                     //Carrying
                     if (b[0] < MAX_E && b[1]) {
@@ -1520,15 +1646,15 @@
                 if (b[1]) {
                     if (x.array.length >= 2 && x.array[1][0] == 1) x.array[1][1] += b[1];
                     else x.array.splice(1, 0, [1, b[1], 1, 1]);
-                }  
-                if (Klayer>0){
-                    x.array.push(["x",Klayer,1,1])
+                }
+                if (Klayer > 0) {
+                    x.array.push(["x", Klayer, 1, 1])
                 }
             }
             if (negateIt) x.sign *= -1;
             x.normalize();
             return x;
-            
+
         }
     }
     P.toNumber = function () {
