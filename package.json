@@ -10,11 +10,17 @@
     "type": "git",
     "url": "git+https://github.com/VeryrrDefine/PowiainaNum.js.git"
   },
-  "keywords": ["big numbers", "incremental game"],
+  "keywords": [
+    "big numbers",
+    "incremental game"
+  ],
   "author": "VeryrrDefine",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/VeryrrDefine/PowiainaNum.js/issues"
   },
-  "homepage": "https://github.com/VeryrrDefine/PowiainaNum.js#readme"
+  "homepage": "https://github.com/VeryrrDefine/PowiainaNum.js#readme",
+  "dependencies": {
+    "ts": "^0.2.2"
+  }
 }
