@@ -1350,12 +1350,14 @@
                 b = true;
             }
             while (x.array.length >= 2 && x.array[0] == 1 && x.array[1][1]) {
+                // [1, [sth, 1, sth, sth]]
                 if (x.array[1][1] > 1) {
                     x.array[1][1]--;
                 } else {
                     x.array.splice(1, 1);
                 }
                 x.array[0] = 10;
+                b = true;
             }
             if (x.array.length >= 2 && x.array[0] < MAX_SAFE_INTEGER && x.array[1][0] >= 2 && x.array[1][1] == 1) {
                 // [1e9, [2, 1, sth, sth]]
@@ -1403,6 +1405,7 @@
                     x.array[0] = 10;
                     x.array[2][1]--;
                 }
+                b = true;
             }
             if (x.array.length >= 2 && x.array[1][2] >= 2 && x.array[1][0] == 1 && x.array[0] < MAX_SAFE_INTEGER) {
                 // [8e15, [1, sth, >=2, sth]]
@@ -1550,6 +1553,9 @@
     }
 
     var LONG_STRING_MIN_LENGTH = 17;
+    var log10LongString = function log10LongString(str) {
+      return Math.log10(Number(str.substring(0, LONG_STRING_MIN_LENGTH))) + (str.length - LONG_STRING_MIN_LENGTH);
+    }
     Q.fromString = function (input) {
         if (typeof input != "string") throw Error(invalidArgument + "Expected String");
         if (input[0] == "l") {
