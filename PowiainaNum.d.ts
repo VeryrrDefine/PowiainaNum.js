@@ -118,6 +118,10 @@ export default class PowiainaNum {
 
     static hyper(z: PowiainaNumSource): (x:PowiainaNumSource,y:PowiainaNumSource)=>PowiainaNum;
 
+    expansion(other: PowiainaNumSource): PowiainaNum;
+    static expansion(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+    eps(other: PowiainaNumSource): PowiainaNum;
+    static eps(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
 
     compareTo(other: PowiainaNumSource): -1|0|1;
     cmp(other: PowiainaNumSource): -1|0|1;

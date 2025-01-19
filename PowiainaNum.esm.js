@@ -3,7 +3,7 @@
 
 //const ExpantaNum = require("../hyper-volume-incremental-v1/assets/scripts/technical/ExpantaNum");
 
-; (function (globalScope) {
+; export default (function (globalScope) {
     var PowiainaNum = {
         maxOps: 50,
 
@@ -1865,28 +1865,7 @@
 
     PowiainaNum.default = PowiainaNum.PowiainaNum = PowiainaNum;
 
-    // Export.
-
-    // AMD. Asynchronous Module Definition
-
-    if (typeof define == 'function' && define.amd) {
-        define(function () {
-            return PowiainaNum
-        })
-
-
-        // Node and other environments that support module.exports.
-    } else if (typeof module != 'undefined' && module.exports) {
-        module.exports = PowiainaNum;
-        // Browser
-    } else {
-        if (!globalScope) {
-            globalScope = typeof self != 'undefined' && self && self.self == self
-                ? self : Function('return this')();
-        }
-        globalScope.PowiainaNum = PowiainaNum;
-    }
-
+    return PowiainaNum;
     //#endregion
 
 })(this);

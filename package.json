@@ -1,8 +1,9 @@
 {
   "name": "powiaina_num.js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A JavaScript library that handles arithmetic for numbers as large as {10,9e15,1,1,1,2}.",
   "main": "PowiainaNum.js",
+  "module": "PowiainaNum.esm.js",
   "scripts": {
     "lint": "eslint ."
   },
@@ -24,6 +25,6 @@
   },
   "homepage": "https://github.com/VeryrrDefine/PowiainaNum.js#readme",
   "devDependencies": {
-    "eslint": "^9.18.0"
+    "eslint": "^8.39.0"
   }
 }
