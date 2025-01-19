@@ -65,6 +65,9 @@
 
     R.GRAHAMS_NUMBER = "l0 s1 a[3638334640023.7783,[1,7625597484984,1,1],[3,1,1,1],[\"x\",63,1,1]]"
 
+    // sample, Throotriadekol == {100, 100, 100, 99, 12}
+    // At there 100 => 10, {10, 10, 10, 99, 12}
+    R.THROOTRIADEKOL = "l0 s1 a [10,[10,1,99,12]]"
     //#endregion
 
     //#region calculating
@@ -1333,7 +1336,7 @@
                 }
                 b = true;
             }
-            if (x.array[x.array.length - 1][3] > MAX_SAFE_INTEGER) {
+            if (x.array[x.array.length - 1][3] > MAX_SAFE_INTEGER) { // check layer++
                 x.layer++;
                 x.array = [
                     x.array[x.array.length - 1][3]
@@ -1355,8 +1358,8 @@
                 x.array[0] = 10;
             }
             if (x.array.length >= 2 && x.array[0] < MAX_SAFE_INTEGER && x.array[1][0] >= 2 && x.array[1][1] == 1) {
-                
-                x.array.splice(1, 1, [x.array[1][0] - 1, x.array[0] - 1, 1, 1]);
+                // [1e9, [2, 1, sth, sth]]
+                x.array.splice(1, 1, [x.array[1][0] - 1, x.array[0] - 1, x.array[1][2], x.array[1][3]]);
 
                 x.array[0] = 10;
                 b = true
@@ -1372,6 +1375,7 @@
 
             }
             if (x.array.length >= 2 && x.array[1][0] != 1 && x.array[1][0] != "x" && x.array[1][0] < 1000) {
+                // [sth, [2, sth, sth, sth]]
                 if (x.array[0]) x.array.splice(1, 0, [x.array[1][0] - 1, x.array[0], x.array[1][2], x.array[1][3]]);
                 x.array[0] = 1;
                 if (x.array[2][1] > 1) {
@@ -1401,7 +1405,7 @@
                 }
             }
             if (x.array.length >= 2 && x.array[1][2] >= 2 && x.array[1][0] == 1 && x.array[0] < MAX_SAFE_INTEGER) {
-
+                // [8e15, [1, sth, >=2, sth]]
                 if (x.array[1][1] == 1) {
                     x.array.splice(1, 1, ["x", x.array[0] - 1, x.array[1][2] - 1, x.array[1][3]])
                     x.array[0] = 10
