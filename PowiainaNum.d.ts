@@ -3,26 +3,27 @@ export default class PowiainaNum {
 
     constructor(value?: PowiainaNumSource);
 
-    static ZERO: PowiainaNum;
-    static ONE: PowiainaNum;
-    static NaN: PowiainaNum;
-    static E: PowiainaNum;
-    static LN2: PowiainaNum;
-    static LN10: PowiainaNum;
-    static LOG2E: PowiainaNum;
-    static LOG10E: PowiainaNum;
-    static PI: PowiainaNum;
-    static SQRT1_2: PowiainaNum;
-    static SQRT2: PowiainaNum;
-    static MAX_SAFE_INTEGER: PowiainaNum;
-    static MIN_SAFE_INTEGER: PowiainaNum;
-    static NEGATIVE_INFINITY: PowiainaNum;
-    static POSITIVE_INFINITY: PowiainaNum;
-    static E_MAX_SAFE_INTEGER: PowiainaNum;
-    static EE_MAX_SAFE_INTEGER: PowiainaNum;
-    static TETRATED_MAX_SAFE_INTEGER: PowiainaNum;
-    static PENTATED_MAX_SAFE_INTEGER: PowiainaNum;
-    static GRAHAMS_NUMBER: PowiainaNum;
+    static readonly ZERO: PowiainaNum;
+    static readonly ONE: PowiainaNum;
+    static readonly NaN: PowiainaNum;
+    static readonly E: PowiainaNum;
+    static readonly LN2: PowiainaNum;
+    static readonly LN10: PowiainaNum;
+    static readonly LOG2E: PowiainaNum;
+    static readonly LOG10E: PowiainaNum;
+    static readonly PI: PowiainaNum;
+    static readonly SQRT1_2: PowiainaNum;
+    static readonly SQRT2: PowiainaNum;
+    static readonly MAX_SAFE_INTEGER: PowiainaNum;
+    static readonly MIN_SAFE_INTEGER: PowiainaNum;
+    static readonly NEGATIVE_INFINITY: PowiainaNum;
+    static readonly POSITIVE_INFINITY: PowiainaNum;
+    static readonly E_MAX_SAFE_INTEGER: PowiainaNum;
+    static readonly EE_MAX_SAFE_INTEGER: PowiainaNum;
+    static readonly TETRATED_MAX_SAFE_INTEGER: PowiainaNum;
+    static readonly PENTATED_MAX_SAFE_INTEGER: PowiainaNum;
+    static readonly GRAHAMS_NUMBER: PowiainaNum;
+    static readonly THROOTRIADEKOL: PowiainaNum;
 
     plus(other: PowiainaNumSource): PowiainaNum;
     static plus(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
@@ -87,7 +88,7 @@ export default class PowiainaNum {
     static iteratedexp(x: PowiainaNumSource, other: PowiainaNumSource, payload?: PowiainaNumSource): PowiainaNum;
 
     iteratedlog(base: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
-    static iteratedlog(x: PowiainaNumSource, y: PowiainaNumSource, z: PowiainaNumSource);
+    static iteratedlog(x: PowiainaNumSource, y: PowiainaNumSource, z: PowiainaNumSource): PowiainaNum;
 
     iteratedslog(other: PowiainaNumSource): PowiainaNum;
 
@@ -104,9 +105,19 @@ export default class PowiainaNum {
 
     pentate(other: PowiainaNumSource): PowiainaNum;
     static pentate(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+    pent(other: PowiainaNumSource): PowiainaNum;
+    static pent(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
 
     arrow(other: PowiainaNumSource): (other: PowiainaNumSource)=>(PowiainaNum); 
     static arrow(x: PowiainaNumSource, z: PowiainaNumSource, y: PowiainaNumSource): PowiainaNum;
+
+    add1J(): PowiainaNum;
+
+    chain(other: PowiainaNumSource, arrows: PowiainaNumSource): PowiainaNum;
+    static chain(x: PowiainaNumSource, y: PowiainaNumSource, z: PowiainaNumSource): PowiainaNumSource
+
+    static hyper(z: PowiainaNumSource): (x:PowiainaNumSource,y:PowiainaNumSource)=>PowiainaNum;
+
 
     compareTo(other: PowiainaNumSource): -1|0|1;
     cmp(other: PowiainaNumSource): -1|0|1;
