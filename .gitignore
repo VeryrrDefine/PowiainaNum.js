@@ -5,3 +5,4 @@ npm.bat
 node.bat
 bibaodaimatiquanloudou.js
 test*
+.eslintrc.cjs
