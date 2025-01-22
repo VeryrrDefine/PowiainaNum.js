@@ -4,6 +4,8 @@
 //const ExpantaNum = require("../hyper-volume-incremental-v1/assets/scripts/technical/ExpantaNum");
 
 ; (function (globalScope) {
+    "use strict";
+
     function deepCopyProps(source, target) {
         for (let key in source) {
             if (source.hasOwnProperty(key)) {
@@ -701,37 +703,6 @@
         }
         return r.normalize();
     }
-    Q.expansionArrow = Q.epsArrow = function (x, arrow) {
-        other = new PowiainaNum(x)
-        arrow = new PowiainaNum(arrow)
-        if (other.lte(PowiainaNum.ZERO) || !other.isint()) return PowiainaNum.NaN.clone();
-        if (!arrow.isint() || arrow.lt(1)) return PowiainaNum.NaN.clone();
-        if (other.eq(PowiainaNum.ONE)) return t.clone();
-        var r;
-        if (arrow.lt(MAX_SAFE_INTEGER)) {
-            if (other.gt("l0 s1 a[10000000000,[" + (arrow.toNumber().toString()) + "," + (MAX_SAFE_INTEGER - 1).toString() + ",1,1]]")) {
-                return other.clone();
-            }
-            else if (other.gt(PowiainaNum.MAX_SAFE_INTEGER)) {
-                r = PowiainaNum()
-
-                r.array = []
-                r.array.push(...other.array);
-                r.array.push([arrow.toNumber(), 1, 2, 1]);
-
-            } else {
-                r = PowiainaNum()
-
-                r.array = [10]
-                r.array.push([arrow.toNumber() - 1, other.toNumber() - 1, 2, 1]);
-
-            }
-        } else {
-            r = PowiainaNum(arrow)
-            r.array.push(["x", 1, 2, 1]);
-        }
-        return r.normalize();
-    }
     Q.multiExpansion = Q.mulEps = function (x, other) {
         return PowiainaNum(x).multiExpansion(other);
     }
@@ -763,6 +734,37 @@
     }
     Q.powerExpansion = Q.powEps = function (x, other) {
         return PowiainaNum(x).powerExpansion(other);
+    }
+    Q.expansionArrow = Q.epsArrow = function (x, arrow) {
+        var other = new PowiainaNum(x)
+        var arrow = new PowiainaNum(arrow)
+        if (other.lte(PowiainaNum.ZERO) || !other.isint()) return PowiainaNum.NaN.clone();
+        if (!arrow.isint() || arrow.lt(1)) return PowiainaNum.NaN.clone();
+        if (other.eq(PowiainaNum.ONE)) return t.clone();
+        var r;
+        if (arrow.lt(MAX_SAFE_INTEGER)) {
+            if (other.gt("l0 s1 a[10000000000,[" + (arrow.toNumber().toString()) + "," + (MAX_SAFE_INTEGER - 1).toString() + ",2,1]]")) {
+                return other.clone();
+            }
+            else if (other.gt(PowiainaNum.MAX_SAFE_INTEGER)) {
+                r = PowiainaNum()
+
+                r.array = []
+                r.array.push(...other.array);
+                r.array.push([arrow.toNumber(), 1, 2, 1]);
+
+            } else {
+                r = PowiainaNum()
+
+                r.array = [10]
+                r.array.push([arrow.toNumber() - 1, other.toNumber() - 1, 2, 1]);
+
+            }
+        } else {
+            r = PowiainaNum(arrow)
+            r.array.push(["x", 1, 2, 1]);
+        }
+        return r.normalize();
     }
 
     //#endregion
@@ -797,6 +799,37 @@
 
     Q.explosion = P.els = function (x, other) {
         return PowiainaNum(x).explosion(other);
+    }
+    Q.explosionArrow = Q.elsArrow = function (x, arrow) {
+        var other = new PowiainaNum(x)
+        var arrow = new PowiainaNum(arrow)
+        if (other.lte(PowiainaNum.ZERO) || !other.isint()) return PowiainaNum.NaN.clone();
+        if (!arrow.isint() || arrow.lt(1)) return PowiainaNum.NaN.clone();
+        if (other.eq(PowiainaNum.ONE)) return t.clone();
+        var r;
+        if (arrow.lt(MAX_SAFE_INTEGER)) {
+            if (other.gt("l0 s1 a[10000000000,[" + (arrow.toNumber().toString()) + "," + (MAX_SAFE_INTEGER - 1).toString() + ",3,1]]")) {
+                return other.clone();
+            }
+            else if (other.gt(PowiainaNum.MAX_SAFE_INTEGER)) {
+                r = PowiainaNum()
+
+                r.array = []
+                r.array.push(...other.array);
+                r.array.push([arrow.toNumber(), 1, 3, 1]);
+
+            } else {
+                r = PowiainaNum()
+
+                r.array = [10]
+                r.array.push([arrow.toNumber() - 1, other.toNumber() - 1, 3, 1]);
+
+            }
+        } else {
+            r = PowiainaNum(arrow)
+            r.array.push(["x", 1, 3, 1]);
+        }
+        return r.normalize();
     }
 
     //#endregion
@@ -1647,7 +1680,7 @@
         return Math.log10(Number(str.substring(0, LONG_STRING_MIN_LENGTH))) + (str.length - LONG_STRING_MIN_LENGTH);
     }
     Q.fromString = function (input, nocache=false) {
-        originalInput = input;
+        var originalInput = input;
         if (typeof input != "string") throw Error(invalidArgument + "Expected String");
         if (C[input] && !nocache) {
             var x = new PowiainaNum();

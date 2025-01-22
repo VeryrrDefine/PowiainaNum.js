@@ -118,15 +118,40 @@ export default class PowiainaNum {
 
     static hyper(z: PowiainaNumSource): (x:PowiainaNumSource,y:PowiainaNumSource)=>PowiainaNum;
 
+
     expansion(other: PowiainaNumSource): PowiainaNum;
     static expansion(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
     eps(other: PowiainaNumSource): PowiainaNum;
     static eps(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+    
+    multiExpansion(other: PowiainaNumSource): PowiainaNum;
+    static multiExpansion(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+    mulEps(other: PowiainaNumSource): PowiainaNum;
+    static mulEps(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+
+
+    powerExpansion(other: PowiainaNumSource): PowiainaNum;
+    static powerExpansion(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+    powEps(other: PowiainaNumSource): PowiainaNum;
+    static powEps(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+
+    static expansionArrow(other: PowiainaNumSource, array: PowiainaNumSource):PowiainaNum;
+    static epsArrow(other: PowiainaNumSource, array: PowiainaNumSource):PowiainaNum;
+
+    
+    explosion(other: PowiainaNumSource): PowiainaNum;
+    static explosion(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+    els(other: PowiainaNumSource): PowiainaNum;
+    static els(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
 
     compareTo(other: PowiainaNumSource): -1|0|1;
     cmp(other: PowiainaNumSource): -1|0|1;
     static compareTo(x: PowiainaNumSource,y: PowiainaNumSource): -1|0|1;
     static cmp(x: PowiainaNumSource, y: PowiainaNumSource): -1|0|1;
+
+    static explosionArrow(other: PowiainaNumSource, array: PowiainaNumSource):PowiainaNum;
+    static elsArrow(other: PowiainaNumSource, array: PowiainaNumSource):PowiainaNum;
+
 
     isInteger(): boolean;
     isint(): boolean;
