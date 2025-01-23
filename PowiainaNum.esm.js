@@ -1677,7 +1677,7 @@
         return Math.log10(Number(str.substring(0, LONG_STRING_MIN_LENGTH))) + (str.length - LONG_STRING_MIN_LENGTH);
     }
     Q.fromString = function (input, nocache=false) {
-        originalInput = input;
+        var originalInput = input;
         if (typeof input != "string") throw Error(invalidArgument + "Expected String");
         if (C[input] && !nocache) {
             var x = new PowiainaNum();
