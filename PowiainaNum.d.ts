@@ -205,6 +205,10 @@ export default class PowiainaNum {
     max(other: PowiainaNumSource): PowiainaNum;
     static maximum(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
     static max(x: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+
+    clone(): PowiainaNum;
+
+    
     array: Array<number|Array<number>>;
     layer: number;
     sign: 1|0|-1;
