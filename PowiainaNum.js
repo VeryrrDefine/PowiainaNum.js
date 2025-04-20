@@ -842,6 +842,20 @@
     Q.pent = Q.pentate = function (x, other) {
         return PowiainaNum.arrow(x, 3, other);
     }
+
+    
+    P.overflow = function(start, power, meta = 1) {
+        var number = this.clone()
+        var power1 = new PowiainaNum(power)
+        var meta1 = new PowiainaNum(meta)
+        var start1 = new PowiainaNum(start)
+        if(number.gte(start1)) {
+            var s = start1.iteratedlog(10, meta1)
+            number = E(10).iteratedexp(meta1, number.iteratedlog(10, meta1).div(s).pow(power1).mul(s));
+        }
+        return number
+    }
+
     /**
      * 
      * @param {Number|PowiainaNum|String} other arrow count
