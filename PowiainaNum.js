@@ -1,7 +1,6 @@
 //Code snippets and templates from ExpantaNum.js
+//Limit {10, 9e15, 1, 1, 1, 2}
 
-
-//const ExpantaNum = require("../hyper-volume-incremental-v1/assets/scripts/technical/ExpantaNum");
 
 ; (function (globalScope) {
     "use strict";
@@ -56,19 +55,14 @@
         //PowiainaNum string cache object
         C = {
             "0" : {array: [0], layer: 0, sign: 0},
-            "1" : {array: [1], layer: 0, sign: 0},
-            "2" : {array: [2], layer: 0, sign: 0},
-            "3" : {array: [3], layer: 0, sign: 0},
-            "4" : {array: [4], layer: 0, sign: 0},
-            /*get "5"(){
-                return {array: [5], layer: 0, sign: 0}
-            },
-            set "5"(x){
-            },*/
-            "6" : {array: [6], layer: 0, sign: 0},
-            "7" : {array: [7], layer: 0, sign: 0},
-            "8" : {array: [8], layer: 0, sign: 0},
-            "9" : {array: [9], layer: 0, sign: 0},
+            "1" : {array: [1], layer: 0, sign: 1},
+            "2" : {array: [2], layer: 0, sign: 1},
+            "3" : {array: [3], layer: 0, sign: 1},
+            "4" : {array: [4], layer: 0, sign: 1},
+            "6" : {array: [6], layer: 0, sign: 1},
+            "7" : {array: [7], layer: 0, sign: 1},
+            "8" : {array: [8], layer: 0, sign: 1},
+            "9" : {array: [9], layer: 0, sign: 1},
             "10" : {array: [10], layer: 0, sign: 0},
         },
         //PowiainaNum.prototype object
@@ -250,7 +244,7 @@
         if (PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "^-1");
         if (this.isNaN() || this.eq(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
         if (this.abs().gt("2e323")) return PowiainaNum.ZERO.clone();
-        return new PowiainaNum(1 / this);
+        return PowiainaNum.div(1, this);
     };
     Q.reciprocate = Q.rec = function (x) {
         return new PowiainaNum(x).rec();
