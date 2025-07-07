@@ -123,25 +123,29 @@
         if (x.sign == -1) return x.neg().add(other.neg()).neg();
         if (other.sign == -1) return x.sub(other.neg());
 
-        if (x.eq(PowiainaNum.ZERO)) return other; // 0+x
-        if (other.eq(PowiainaNum.ZERO)) return x;
+        if (x.eq(PowiainaNum.ZERO)) return other; // 0+x=x
+        if (other.eq(PowiainaNum.ZERO)) return x; // x+0=x
         if (x.isNaN() || other.isNaN() || x.isInfinite() && other.isInfinite() && x.eq(other.neg())) return PowiainaNum.NaN.clone();
         if (x.isInfinite()) return x;
         if (other.isInfinite()) return other;
 
         var p = x.min(other); // who is smallest
         var q = x.max(other); // who is biggest
-        var op0 = q.operatorE(0);
+        var op0 = q.operatorE(0); 
         var op1 = q.operatorE(1);
 
         var t;
 
         if (q.gt(PowiainaNum.E_MAX_SAFE_INTEGER) || q.div(p).gt(PowiainaNum.MAX_SAFE_INTEGER)) {
-            t = q;
+            t = q; // q>e9e15, plus calculating is 'meaningless', q/p>9e15, q+p = q because floating loss,
         } else if (!op1) {
+        // thereis not 10^ signs, add directly
             t = new PowiainaNum(x.toNumber() + other.toNumber());
         } else if (op1 == 1) {
-            var a = p.operator(1) ? p.operator(0) : Math.log10(p.operator(0));
+            var a = p.operator(1) ? p.operator(0) : Math.log10(p.operator(0)); // a is a variable: if has 10^ operator, use x from 10^x, else use log10(x)
+            // a is p's log10
+            
+            // It calculates the final results of log10
             t = new PowiainaNum(a + Math.log10(Math.pow(10, op0 - a) + 1));
             t = PowiainaNum.pow(10, t);
         }

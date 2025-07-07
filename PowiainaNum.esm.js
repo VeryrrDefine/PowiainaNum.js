@@ -247,7 +247,7 @@
         if (PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "^-1");
         if (this.isNaN() || this.eq(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
         if (this.abs().gt("2e323")) return PowiainaNum.ZERO.clone();
-        return new PowiainaNum(1 / this);
+        return PowiainaNum.div(1, this);
     };
     Q.reciprocate = Q.rec = function (x) {
         return new PowiainaNum(x).rec();
