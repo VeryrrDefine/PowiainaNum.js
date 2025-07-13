@@ -74,7 +74,7 @@
         R = {};
 
     //#region PowiainaNum constants
-    R.ZERO = 0;
+    R.ZERO = "l0 s1 a[Infinity] r1";
     R.ONE = 1;
     R.NaN = NaN;
 
@@ -1645,7 +1645,8 @@
             return {
                 array: a,
                 layer: this.layer,
-                sign: this.sign
+                sign: this.sign,
+                small: this.small,
             };
         } else if (PowiainaNum.serializeMode == PowiainaNum.STRING) {
             return this.toString(1);
@@ -1659,7 +1660,7 @@
         if (!isFinite(this.array[0])) return "Infinity";
         var s = "";
         if (formatType == 1) {
-            s = "l" + (this.layer.toString()) + " s" + (this.sign.toString()) + " a" + JSON.stringify(this.array)
+            s = "l" + (this.layer.toString()) + " s" + (this.sign.toString()) + " a" + JSON.stringify(this.array) + " r" + (this.small>=1 ? 1 : 0)
         } else if (formatType == 0) {
             for (let i = this.array.length - 1; i > 0; i--) {
                 /*if (this.array[i][0] == "x" && this.array[i][2] == 1 && this.array[i][3] == 1){
@@ -1704,6 +1705,7 @@
             let temp1 = input.indexOf("l");
             let temp2 = input.indexOf("s");
             let temp3 = input.indexOf("a");
+            let temp4 = input.indexOf("r");
             if (temp2 == -1 || temp3 == -1) {
                 console.warn(powiainaNumError + "Malformed input: " + input);
                 return PowiainaNum.NaN.clone();
@@ -1712,10 +1714,12 @@
             let sign = Number(input.slice(temp2 + 1, temp3 - 1))
             let array = JSON.parse(input.slice(temp3 + 1, input.length))
 
+            let small = temp4==-1 ? 0 : (input[temp4+1]=="1" ? 1 : 0)
             var x = PowiainaNum();
             x.layer = layer;
             x.sign = sign;
             x.array = array;
+            x.small = small;
             x.normalize();
             return x;
         } else {
@@ -1904,6 +1908,7 @@
         temp.array = array;
         temp.sign = this.sign;
         temp.layer = this.layer;
+        temp.small = this.small;
         return temp;
     };
 
@@ -1916,7 +1921,7 @@
             if (!(x instanceof PowiainaNum)) return new PowiainaNum(input);
             x.constructor = PowiainaNum;
 
-            var temp, temp2, temp3;
+            var temp, temp2, temp3, temp4;
 
             if (typeof input == "number") {
                 temp = PowiainaNum.fromNumber(input);
@@ -1933,15 +1938,18 @@
                 temp = [NaN];
                 temp2 = 1;
                 temp3 = 0;
+                temp4 = 0;
             }
             if (typeof temp2 == "undefined") {
                 x.array = temp.array;
                 x.sign = temp.sign;
                 x.layer = temp.layer;
+                x.small = temp.small;
             } else {
                 x.array = temp;
                 x.sign = temp2;
-                x.layer = temp3
+                x.layer = temp3;
+                x.small = temp4;
             }
         }
         PowiainaNum.prototype = P;
