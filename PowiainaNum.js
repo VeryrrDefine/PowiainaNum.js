@@ -4,7 +4,6 @@
 
 ; (function (globalScope) {
     "use strict";
-
     function deepCopyProps(source, target) {
         for (let key in source) {
             if (source.hasOwnProperty(key)) {
@@ -39,7 +38,7 @@
         // NONE   0 Show no information.
         // NORMAL 1 Show operations.
         // ALL    2 Show everything.
-        debug: 0,
+        debug: 1,
 
 
     },
@@ -74,7 +73,7 @@
         R = {};
 
     //#region PowiainaNum constants
-    R.ZERO = "l0 s1 a[Infinity] r1";
+    R.ZERO = "l0 s1 a[\"Infinity\"] r1";
     R.ONE = 1;
     R.NaN = NaN;
 
@@ -208,6 +207,7 @@
         if (x.isInfinite()) return x;
         if (other.isInfinite()) return other;
         if (x.max(other).gt(PowiainaNum.EE_MAX_SAFE_INTEGER)) return x.max(other);
+        if (other.small) return x.div(other.rec())
         var n = x.toNumber() * other.toNumber();
         if (n <= MAX_SAFE_INTEGER) return new PowiainaNum(n);
         return PowiainaNum.pow(10, x.log10().add(other.log10()));
@@ -231,10 +231,10 @@
         if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
         if (x.isInfinite()) return x;
         if (other.isInfinite()) return PowiainaNum.ZERO.clone();
+        if (other.small) return x.mul(other.rec())
         if (x.max(other).gt(PowiainaNum.EE_MAX_SAFE_INTEGER)) return x.gt(other) ? x.clone() : PowiainaNum.ZERO.clone();
         var n = x.toNumber() / other.toNumber();
         if (n <= MAX_SAFE_INTEGER) return new PowiainaNum(n);
-
         var pw = PowiainaNum.pow(10, x.log10().sub(other.log10()));
 
         var fp = pw.floor();
@@ -247,8 +247,11 @@
     P.reciprocate = P.rec = function () {
         if (PowiainaNum.debug >= PowiainaNum.NORMAL) console.log(this + "^-1");
         if (this.isNaN() || this.eq(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
-        if (this.abs().gt("2e323")) return PowiainaNum.ZERO.clone();
-        return PowiainaNum.div(1, this);
+        if (!(this.isFinite())) return PowiainaNum.ZERO.clone();
+        let a = this.clone();
+        a.small = 1-a.small;
+        a.normalize();
+        return a;
     };
     Q.reciprocate = Q.rec = function (x) {
         return new PowiainaNum(x).rec();
@@ -332,6 +335,7 @@
         if (x.lte(PowiainaNum.MAX_SAFE_INTEGER)) return new PowiainaNum(Math.log10(x.toNumber()));
         if (!x.isFinite()) return x;
         if (x.gt(PowiainaNum.TETRATED_MAX_SAFE_INTEGER)) return x;
+        if (x.small) return x.rec().log10().neg()
         x.operatorE(1, x.operatorE(1) - 1);
         return x.normalize();
     };
@@ -979,17 +983,22 @@
         if (PowiainaNum.debug > PowiainaNum.NORMAL) console.log("cmpare", this, other)
         if (!(other instanceof PowiainaNum)) other = new PowiainaNum(other);
         if (isNaN(this.array[0]) || isNaN(other.array[0])) return NaN
-        if (this.array[0] == Infinity && other.array[0] != Infinity) return this.sign;
-        if (this.array[0] != Infinity && other.array[0] == Infinity) return -other.sign;
+      if (this.array[0] == Infinity && this.small==0 && other.array[0] != Infinity) return this.sign;
+        if (this.array[0] != Infinity && other.array[0] == Infinity && other.small==0) return -other.sign;
         if (this.sign != other.sign) return this.sign;
         if (this.array.length == 1 && other.array.length == 1 && this.array[0] == other.array[0]) return 0;
-        if (other.array[0] == 0) {
+        if (other.array[0] == Infinity && other.small) {
+            if (this.array[0]===Infinity && this.small) return 0
             if (this.sign > 0) {
                 return 1
             } else if (this.sign < 0) {
                 return -1
             }
         }
+
+        if (this.small&& other.small==0) return -1;
+        if (other.small&&this.small==0) return 1;
+        if (this.small&&other.small) return PowiainaNum.cmp(other.rec(), this.rec())
         var m = this.sign;
         var r;
         if (this.layer > other.layer) r = 1
@@ -1299,13 +1308,13 @@
 
 
     P.isFinite = function () {
-        return isFinite(this.array[0]);
+        return (this.array[0] == Infinity && this.small) || (isFinite(this.array[0]));
     };
     Q.isFinite = function (x) {
         return new PowiainaNum(x).isFinite();
     };
     P.isInfinite = function () {
-        return this.array[0] == Infinity;
+        return !(this.isFinite());
     };
     Q.isInfinite = function (x) {
         return new PowiainaNum(x).isInfinite();
@@ -1360,6 +1369,18 @@
             return x;
         }
         if (Number.isInteger(x.layer)) x.layer = Math.floor(x.layer);
+        if (x.array.length == 1){
+          if (x.array[0]<1 && x.array[0]>=5.562684646268003e-309) {
+            x.array[0] = 1/(x.array[0]);
+            x.small = 1-x.small;
+          } else if (x.array[0]< 5.562684646268003e-309 && x.array[0]>0){
+            x.small = 1-x.small;
+            x.array = [-Math.log10(x.array[0]),[1,1,1,1]]
+          } else if (x.array[0]==0) {
+            x.small = 1-x.small;
+            x.array = [Infinity]
+          }
+        }
         var maxWhileTime = 500;
         var whileTimeRuns = 0
         for (var i = 1; i < x.array.length; ++i) {
@@ -1658,6 +1679,11 @@
     P.toString = function (formatType = 0) {
         if (isNaN(this.array[0])) return "NaN";
         if (!isFinite(this.array[0])) return "Infinity";
+        if (this.small) return "rec:"+(function(t){
+          let a= t.clone();
+          a.small = 0;
+          return a
+        })(this).toString();
         var s = "";
         if (formatType == 1) {
             s = "l" + (this.layer.toString()) + " s" + (this.sign.toString()) + " a" + JSON.stringify(this.array) + " r" + (this.small>=1 ? 1 : 0)
@@ -1712,7 +1738,11 @@
             }
             let layer = Number(input.slice(temp1 + 1, temp2 - 1))
             let sign = Number(input.slice(temp2 + 1, temp3 - 1))
-            let array = JSON.parse(input.slice(temp3 + 1, input.length))
+            let array = JSON.parse(input.slice(temp3 + 1, temp4==-1?input.length:temp4-1)).map((x)=>{
+                if (x==="Infinity") return Infinity
+                if (x==="NaN") return NaN
+                return x;
+            })// replace "Infinity" to Infinity because JSON.parse cannot support Number infinity.
 
             let small = temp4==-1 ? 0 : (input[temp4+1]=="1" ? 1 : 0)
             var x = PowiainaNum();
