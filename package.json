@@ -1,11 +1,16 @@
 {
   "name": "powiaina_num.js",
-  "version": "0.1.12",
+  "version": "0.2.0-beta.1",
   "description": "A JavaScript library that handles arithmetic for numbers as large as {10,9e15,1,1,1,2}.",
-  "main": "PowiainaNum.js",
-  "module": "PowiainaNum.esm.js",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/types/index.d.ts",
+  "type": "module",
   "scripts": {
-    "lint": "eslint ."
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "fix": "prettier --write ."
   },
   "repository": {
     "type": "git",
@@ -25,6 +30,13 @@
   },
   "homepage": "https://github.com/VeryrrDefine/PowiainaNum.js#readme",
   "devDependencies": {
-    "eslint": "^8.39.0"
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "eslint": "^8.39.0",
+    "rollup": "^4.45.0",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "typescript": "^5.8.3"
   }
 }
