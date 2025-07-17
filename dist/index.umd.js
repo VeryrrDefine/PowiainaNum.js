@@ -4,14 +4,12 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.PowiainaNum = factory());
 })(this, (function () { 'use strict';
 
-  function compareTuples() {
-      var tuples = [];
-      for (var _i = 0; _i < arguments.length; _i++) {
-          tuples[_i] = arguments[_i];
-      }
-      for (var i = 0; i < Math.min(tuples[0].length, tuples[1].length); i++) {
-          var a = tuples[0][i];
-          var b = tuples[1][i];
+  const MSI = Math.pow(2, 53) - 1;
+  const MSI_LOG10 = Math.log10(MSI);
+  function compareTuples(...tuples) {
+      for (let i = 0; i < Math.min(tuples[0].length, tuples[1].length); i++) {
+          const a = tuples[0][i];
+          const b = tuples[1][i];
           if (a < b)
               return -1;
           if (a > b)
@@ -19,116 +17,234 @@
       }
       return 0;
   }
-  var PowiainaNum = /** @class */ (function () {
-      function PowiainaNum(arg1) {
+  class PowiainaNum {
+      constructor(arg1) {
           this.array = [{ arrow: 0, expans: 1, megota: 1, repeat: NaN }];
           this.small = 0;
           this.sign = 0;
           this.layer = 0;
-          if (typeof arg1 == "number") {
-              var obj = PowiainaNum.fromNumber(arg1);
+          if (typeof arg1 == "undefined") ;
+          else if (typeof arg1 == "number") {
+              let obj = PowiainaNum.fromNumber(arg1);
               this.resetFromObject(obj);
           }
-          if (typeof arg1 == "object") {
-              var obj = PowiainaNum.fromObject(arg1);
+          else if (typeof arg1 == "object") {
+              let obj = PowiainaNum.fromObject(arg1);
               this.resetFromObject(obj);
           }
+          else ;
+      }
+      /**
+       * Addition
+       * @returns the sum of `this` and `other`
+       */
+      add(other) {
+          let x = this.clone();
+          let y = new PowiainaNum(other);
+          // inf + -inf = nan
+          if ((x.eq(PowiainaNum.POSITIVE_INFINITY) && y.eq(PowiainaNum.NEGATIVE_INFINITY))
+              || (x.eq(PowiainaNum.NEGATIVE_INFINITY) && y.eq(PowiainaNum.POSITIVE_INFINITY)))
+              return PowiainaNum.NaN.clone();
+          // inf & nan check
+          if (!x.isFinite())
+              return x.clone();
+          if (!y.isFinite())
+              return y.clone();
+          // if x or y = 0, return other.
+          if (x.isZero())
+              return y.clone();
+          if (y.isZero())
+              return x.clone();
+          // x+ -x = 0
+          if (x.sign == -y.sign && (function () {
+              let a = x.abs();
+              let b = y.abs();
+              return a.eq(b);
+          })())
+              return PowiainaNum.ZERO.clone();
+          // calculate anything > e9e15 or <e-9e15, take absval bigger.
+          if (x.abs().lt(PowiainaNum.E_MSI_REC) || x.abs().gt(PowiainaNum.E_MSI)
+              || y.abs().lt(PowiainaNum.E_MSI_REC) || y.abs().gt(PowiainaNum.E_MSI)) {
+              return x.maxabs(y);
+          }
+          if (x.sign == -1) {
+              return x.neg().add(y.neg()).neg();
+          }
+          let a, b; //a=bigger, b=smaller
+          if (x.cmpabs(y) > 0) {
+              a = x;
+              b = y;
+          }
+          else {
+              b = x;
+              a = y;
+          }
+          if (!a.small && !b.small && !a.getOperator(1) && !b.getOperator(1)) {
+              return new PowiainaNum(a.getOperator(0) + b.getOperator(0));
+          }
+          const alog10 = (a.small ? -1 : 1) * (a.getOperator(1) ? a.getOperator(0) : Math.log10(a.getOperator(0)));
+          const blog10 = (b.small ? -1 : 1) * (b.getOperator(1) ? b.getOperator(0) : Math.log10(b.getOperator(0)));
+          if (alog10 - blog10 > MSI_LOG10)
+              return a;
+          const offset = -Math.floor(alog10); //a number can make a+off in [0,1)
+          let r, l = 0;
+          if (a.sign == 1 && b.sign == -1) {
+              l = Math.log10(Math.pow(10, (alog10 + offset)) - Math.pow(10, (blog10 + offset))) - offset;
+          }
+          if (a.sign == 1 && b.sign == 1) {
+              l = Math.log10(Math.pow(10, (alog10 + offset)) + Math.pow(10, (blog10 + offset))) - offset;
+          }
+          r = new PowiainaNum();
+          r.sign = 1;
+          if (l > MSI_LOG10 || l < -MSI_LOG10) {
+              r.setOperator(1, 1);
+              r.setOperator(Math.log10(Math.abs(l)), 1);
+          }
+          else {
+              r.setOperator(Math.pow(10, Math.abs(l)), 0);
+          }
+          r.small = l < 0 ? 1 : 0;
+          return r;
+      }
+      abs() {
+          let obj = this.clone();
+          if (obj.sign < 0)
+              obj.sign *= -1;
+          return obj;
+      }
+      max(x) { const other = new PowiainaNum(x); return this.lt(other) ? other.clone() : this.clone(); }
+      min(x) { const other = new PowiainaNum(x); return this.gte(other) ? other.clone() : this.clone(); }
+      maxabs(x) { const other = new PowiainaNum(x).abs(); return this.abs().lt(other) ? other.clone() : this.clone(); }
+      minabs(x) { const other = new PowiainaNum(x).abs(); return this.abs().gt(other) ? other.clone() : this.clone(); }
+      cmpabs(x) { const other = new PowiainaNum(x).abs(); return this.abs().cmp(other); }
+      neg() {
+          let a = this.clone();
+          a.sign *= -1;
+          a.normalize();
+          return a;
+      }
+      /**
+       * @returns if this<other, return -1, if this=other, return 0, if this>other, return 1, if this!<=>, return 2
+       */
+      compare(x) {
+          const other = new PowiainaNum(x);
+          if (this.isNaN() || other.isNaN())
+              return 2;
+          if (this.sign < other.sign)
+              return -1;
+          if (this.sign > other.sign)
+              return 1;
+          //this.sign = other.sign
+          const allneg = this.sign == -1 && other.sign == -1;
+          if (this.small == 1 && other.small == 0)
+              return -1 * (allneg ? -1 : 1);
+          if (other.small == 1 && this.small == 0)
+              return 1 * (allneg ? -1 : 1);
+          let resultreverse = 1;
+          if (this.small == 1 && other.small == 1)
+              resultreverse *= -1;
+          if (allneg)
+              resultreverse *= -1;
+          let result = 0;
+          for (let i = 0; this.array.length - 1 - i >= 0 && other.array.length - 1 - i >= 0; i++) {
+              let op1 = this.array[this.array.length - 1 - i];
+              let op2 = other.array[other.array.length - 1 - i];
+              let cmp = compareTuples([op1.megota, op1.expans, op1.arrow, op1.repeat], [op2.megota, op2.expans, op2.arrow, op2.repeat]);
+              if (cmp == 1) {
+                  result = 1;
+                  break;
+              }
+              else if (cmp == -1) {
+                  result = -1;
+                  break;
+              }
+          }
+          return (result * resultreverse) + 1 - 1;
+      }
+      cmp(other) {
+          return this.compare(other);
+      }
+      eq(other) { return this.cmp(other) === 0; }
+      neq(other) { return this.cmp(other) !== 0; }
+      lt(other) { return this.cmp(other) === -1; }
+      lte(other) { return this.cmp(other) <= 0; }
+      gt(other) { return this.cmp(other) == 1; }
+      gte(other) {
+          let t = this.cmp(other);
+          return t == 0 || t == 1;
+      }
+      isNaN() {
+          return isNaN(this.getOperator(0));
+      }
+      isZero() {
+          return Boolean(this.small && !isFinite(this.getOperator(0)));
+      }
+      isFinite() {
+          return Boolean(this.small != 0 || isFinite(this.getOperator(0))) && !this.isNaN();
+      }
+      isInfinite() {
+          return Boolean(this.small == 0 && !isFinite(this.getOperator(0))) || this.isNaN();
       }
       /**
        * Normalize functions will make this number convert into standard format.(it also change `this`, like [].sort)
        * @returns normalized number
        */
-      PowiainaNum.prototype.normalize = function () {
+      normalize() {
           return this;
-      };
+      }
       /**
-       *
        * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
        */
-      PowiainaNum.prototype.getOperatorIndex = function (arrow, expans, megota) {
-          if (expans === void 0) { expans = 1; }
-          if (megota === void 0) { megota = 1; }
-          for (var i = 0; i < this.array.length; i++) {
-              var cmp = (compareTuples([megota, expans, arrow], [this.array[i].megota, this.array[i].expans, this.array[i].arrow]));
+      getOperatorIndex(arrow, expans = 1, megota = 1) {
+          for (let i = 0; i < this.array.length; i++) {
+              let cmp = compareTuples([megota, expans, arrow], [this.array[i].megota, this.array[i].expans, this.array[i].arrow]);
               if (cmp == 0)
                   return i; // I find it was [xx,xxx,*xxx*,xxx]!
               if (cmp == 1)
                   return i - 0.5; // It's between [xx, xx,xx*,?,*xx]!
           }
           return this.array.length - 0.5;
-      };
+      }
       /**
        * @returns number repeats of operators with given arguments.
        */
-      PowiainaNum.prototype.getOperator = function (arrow, expans, megota) {
-          if (expans === void 0) { expans = 1; }
-          if (megota === void 0) { megota = 1; }
-          var index = this.getOperatorIndex(arrow, expans, megota);
-          if (!(this.array[index]))
+      getOperator(arrow, expans = 1, megota = 1) {
+          const index = this.getOperatorIndex(arrow, expans, megota);
+          if (!this.array[index])
               return 0;
           return this.array[index].repeat;
-      };
+      }
       /**
        * Modify the repeat of operator
        * @param number val the repeat of operator will modify to array.
        * @returns bool Is the operators array changed?
        */
-      PowiainaNum.prototype.setOperator = function (val, arrow, expans, megota) {
-          if (expans === void 0) { expans = 1; }
-          if (megota === void 0) { megota = 1; }
-          var index = this.getOperatorIndex(arrow, expans, megota);
-          if (!(this.array[index])) {
+      setOperator(val, arrow, expans = 1, megota = 1) {
+          const index = this.getOperatorIndex(arrow, expans, megota);
+          if (!this.array[index]) {
               this.array.splice(Math.floor(index), 0, {
-                  arrow: arrow,
-                  expans: expans,
-                  megota: megota,
-                  valuereplaced: (expans === Infinity ? 1 : arrow == Infinity ? 0 : -1),
-                  repeat: val
+                  arrow,
+                  expans,
+                  megota,
+                  valuereplaced: expans === Infinity ? 1 : arrow == Infinity ? 0 : -1,
+                  repeat: val,
               });
               return true;
           }
           this.array[index].repeat = val;
           return false;
-      };
-      PowiainaNum.fromNumber = function (x) {
-          var obj = new PowiainaNum(); // NaN
-          if (x < 0)
-              obj.sign = -1; // negative
-          else if (x == 0)
-              obj.sign = 0;
-          else if (x > 0)
-              obj.sign = 1;
-          var y = Math.abs(x);
-          if (y < 1) {
-              obj.small = 1;
-              obj.setOperator(1 / y, 0);
-          }
-          else {
-              obj.setOperator(y, 0);
-          }
-          obj.normalize();
+      }
+      /**
+       * @returns PowiainaNum a PowiainaNum object which deep copied from `this` object.
+       */
+      clone() {
+          let obj = new PowiainaNum();
+          obj.resetFromObject(this);
           return obj;
-      };
-      PowiainaNum.fromObject = function (powlikeObject) {
-          var obj = new PowiainaNum();
-          obj.array = [];
-          for (var i = 0; i < powlikeObject.array.length; i++) {
-              obj.array[i] = {
-                  arrow: powlikeObject.array[i].arrow,
-                  expans: powlikeObject.array[i].expans,
-                  megota: powlikeObject.array[i].megota,
-                  repeat: powlikeObject.array[i].repeat,
-                  valuereplaced: powlikeObject.array[i].valuereplaced,
-              };
-          }
-          obj.small = powlikeObject.small;
-          obj.sign = powlikeObject.sign;
-          obj.layer = powlikeObject.layer;
-          return obj;
-      };
-      PowiainaNum.prototype.resetFromObject = function (powlikeObject) {
+      }
+      resetFromObject(powlikeObject) {
           this.array = [];
-          for (var i = 0; i < powlikeObject.array.length; i++) {
+          for (let i = 0; i < powlikeObject.array.length; i++) {
               this.array[i] = {
                   arrow: powlikeObject.array[i].arrow,
                   expans: powlikeObject.array[i].expans,
@@ -141,31 +257,119 @@
           this.sign = powlikeObject.sign;
           this.layer = powlikeObject.layer;
           return this;
-      };
-      PowiainaNum.ZERO = new PowiainaNum({
-          array: [{
-                  arrow: 0,
-                  expans: 1,
-                  megota: 1,
-                  repeat: Infinity
-              }],
-          small: 1,
-          layer: 0,
-          sign: 0,
-      });
-      PowiainaNum.ONE = new PowiainaNum({
-          array: [{
-                  arrow: 0,
-                  expans: 1,
-                  megota: 1,
-                  repeat: 1
-              }],
-          small: 0,
-          layer: 0,
-          sign: 1,
-      });
-      return PowiainaNum;
-  }());
+      }
+      static fromNumber(x) {
+          let obj = new PowiainaNum(); // NaN
+          if (x < 0)
+              obj.sign = -1; // negative
+          else if (x == 0)
+              obj.sign = 0;
+          else if (x > 0)
+              obj.sign = 1;
+          let y = Math.abs(x);
+          if (y < 1) {
+              obj.small = 1;
+              obj.setOperator(1 / y, 0);
+          }
+          else {
+              obj.setOperator(y, 0);
+          }
+          obj.normalize();
+          return obj;
+      }
+      static fromObject(powlikeObject) {
+          let obj = new PowiainaNum();
+          obj.array = [];
+          for (let i = 0; i < powlikeObject.array.length; i++) {
+              obj.array[i] = {
+                  arrow: powlikeObject.array[i].arrow,
+                  expans: powlikeObject.array[i].expans,
+                  megota: powlikeObject.array[i].megota,
+                  repeat: powlikeObject.array[i].repeat,
+                  valuereplaced: powlikeObject.array[i].valuereplaced,
+              };
+          }
+          obj.small = powlikeObject.small;
+          obj.sign = powlikeObject.sign;
+          obj.layer = powlikeObject.layer;
+          return obj;
+      }
+  }
+  PowiainaNum.ZERO = new PowiainaNum({
+      array: [
+          {
+              arrow: 0,
+              expans: 1,
+              megota: 1,
+              repeat: Infinity,
+          },
+      ],
+      small: 1,
+      layer: 0,
+      sign: 0,
+  });
+  PowiainaNum.ONE = new PowiainaNum({
+      array: [
+          {
+              arrow: 0,
+              expans: 1,
+              megota: 1,
+              repeat: 1,
+          },
+      ],
+      small: 0,
+      layer: 0,
+      sign: 1,
+  });
+  PowiainaNum.MSI = new PowiainaNum(MSI);
+  PowiainaNum.MSI_REC = (function () {
+      let obj = new PowiainaNum(MSI);
+      obj.small = 1;
+      return obj;
+  })();
+  PowiainaNum.E_MSI = new PowiainaNum({
+      array: [
+          {
+              arrow: 0,
+              expans: 1,
+              megota: 1,
+              repeat: MSI,
+          },
+          { arrow: 1, expans: 1, megota: 1, repeat: 1 }
+      ],
+      small: 0,
+      layer: 0,
+      sign: 1,
+  });
+  PowiainaNum.E_MSI_REC = new PowiainaNum({
+      array: [
+          {
+              arrow: 0,
+              expans: 1,
+              megota: 1,
+              repeat: MSI,
+          },
+          { arrow: 1, expans: 1, megota: 1, repeat: 1 }
+      ],
+      small: 1,
+      layer: 0,
+      sign: 1,
+  });
+  PowiainaNum.POSITIVE_INFINITY = new PowiainaNum(Infinity);
+  PowiainaNum.NEGATIVE_INFINITY = new PowiainaNum(-Infinity);
+  PowiainaNum.NaN = new PowiainaNum({
+      array: [
+          {
+              arrow: 0,
+              expans: 1,
+              megota: 1,
+              repeat: NaN,
+          },
+      ],
+      small: 0,
+      layer: 0,
+      sign: 0,
+  });
 
   return PowiainaNum;
 
