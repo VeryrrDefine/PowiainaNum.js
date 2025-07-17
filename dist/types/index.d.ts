@@ -23,7 +23,10 @@ export default class PowiainaNum implements IPowiainaNum {
      * @returns the sum of `this` and `other`
      */
     add(other: PowiainaNumSource): PowiainaNum;
+    sub(a: PowiainaNumSource): PowiainaNum;
+    mul(other: PowiainaNumSource): PowiainaNum;
     abs(): PowiainaNum;
+    log10(): PowiainaNum;
     max(x: PowiainaNumSource): PowiainaNum;
     min(x: PowiainaNumSource): PowiainaNum;
     maxabs(x: PowiainaNumSource): PowiainaNum;

@@ -64,6 +64,7 @@ class PowiainaNum {
         if (x.sign == -1) {
             return x.neg().add(y.neg()).neg();
         }
+        // if ((x.sign==1&&y.sign==-1&&x.lt(y.abs()))  ) return y.neg().add(x.neg()).neg();
         let a, b; //a=bigger, b=smaller
         if (x.cmpabs(y) > 0) {
             a = x;
@@ -73,21 +74,25 @@ class PowiainaNum {
             b = x;
             a = y;
         }
-        if (!a.small && !b.small && !a.getOperator(1) && !b.getOperator(1)) {
-            return new PowiainaNum(a.getOperator(0) + b.getOperator(0));
+        let mult = 1;
+        if (!a.small && !b.small && !a.getOperator(1) && !b.getOperator(1) && a.sign == b.sign) {
+            return new PowiainaNum((a.getOperator(0) + b.getOperator(0)) * a.sign);
         }
         const alog10 = (a.small ? -1 : 1) * (a.getOperator(1) ? a.getOperator(0) : Math.log10(a.getOperator(0)));
         const blog10 = (b.small ? -1 : 1) * (b.getOperator(1) ? b.getOperator(0) : Math.log10(b.getOperator(0)));
         if (alog10 - blog10 > MSI_LOG10)
             return a;
         const offset = -Math.floor(alog10); //a number can make a+off in [0,1)
-        let r, l = 0;
-        if (a.sign == 1 && b.sign == -1) {
-            l = Math.log10(Math.pow(10, (alog10 + offset)) - Math.pow(10, (blog10 + offset))) - offset;
+        let r, l = 0, t;
+        t = a.sign * (Math.pow(10, (alog10 + offset))) + b.sign * Math.pow(10, (blog10 + offset));
+        if (t > 0)
+            l = Math.log10(t) - offset;
+        if (t < 0) {
+            l = Math.log10(-t) - offset;
+            mult *= -1;
         }
-        if (a.sign == 1 && b.sign == 1) {
-            l = Math.log10(Math.pow(10, (alog10 + offset)) + Math.pow(10, (blog10 + offset))) - offset;
-        }
+        if (t == 0)
+            throw Error("Encounter a calculate error");
         r = new PowiainaNum();
         r.sign = 1;
         if (l > MSI_LOG10 || l < -MSI_LOG10) {
@@ -98,6 +103,49 @@ class PowiainaNum {
             r.setOperator(Math.pow(10, Math.abs(l)), 0);
         }
         r.small = l < 0 ? 1 : 0;
+        r.sign *= mult;
+        return r;
+    }
+    sub(a) {
+        return this.add(new PowiainaNum(a).neg());
+    }
+    mul(other) {
+        let x = this.clone();
+        let y = new PowiainaNum(other);
+        // inf * -inf = -inf
+        if ((x.eq(PowiainaNum.POSITIVE_INFINITY) && y.eq(PowiainaNum.NEGATIVE_INFINITY)) || (y.eq(PowiainaNum.POSITIVE_INFINITY) && x.eq(PowiainaNum.NEGATIVE_INFINITY)))
+            return PowiainaNum.NEGATIVE_INFINITY.clone();
+        if ((x.isInfinite() && y.eq(PowiainaNum.ZERO)) && (y.isInfinite() && x.eq(PowiainaNum.ZERO)))
+            return PowiainaNum.NaN.clone();
+        if (x.eq(PowiainaNum.NEGATIVE_INFINITY) && y.eq(PowiainaNum.NEGATIVE_INFINITY))
+            return PowiainaNum.POSITIVE_INFINITY.clone();
+        // inf & nan check
+        if (!x.isFinite())
+            return x.clone();
+        if (!y.isFinite())
+            return y.clone();
+        if (x.isZero() || y.isZero())
+            return PowiainaNum.ZERO.clone();
+        // x* x^-1 = 0
+        if (x.small == 1 - y.small && (function () {
+            let a = x.abs();
+            let b = y.abs();
+            return a.eq(b);
+        })())
+            return (function () {
+                let a = new PowiainaNum(1);
+                a.sign = x.sign * y.sign;
+                return a;
+            })();
+        let r;
+        r = x.log10().add(y.log10());
+        if (r.small) {
+            if (r.lt(PowiainaNum.MSI_REC))
+                return PowiainaNum.ONE;
+            return new PowiainaNum(Math.pow(10, (Math.pow(r.getOperator(0), -1))));
+        }
+        r.setOperator(r.getOperator(1) + 1, 1);
+        r.normalize();
         return r;
     }
     abs() {
@@ -105,6 +153,18 @@ class PowiainaNum {
         if (obj.sign < 0)
             obj.sign *= -1;
         return obj;
+    }
+    log10() {
+        if (this.small) {
+            let x = this.clone();
+            x.small = 1 - x.small;
+            return x.log10().neg();
+        }
+        if (this.getOperator(1) == 0)
+            return new PowiainaNum(Math.log10(this.getOperator(0)));
+        let x = this.clone();
+        x.setOperator(x.getOperator(1) - 1, 1);
+        return x;
     }
     max(x) { const other = new PowiainaNum(x); return this.lt(other) ? other.clone() : this.clone(); }
     min(x) { const other = new PowiainaNum(x); return this.gte(other) ? other.clone() : this.clone(); }
@@ -184,6 +244,25 @@ class PowiainaNum {
      * @returns normalized number
      */
     normalize() {
+        //TODO: normalize
+        let renormalize = true;
+        do {
+            renormalize = false;
+            console.log("renormalize");
+            this.array.sort(function (a, b) {
+                return compareTuples([a.megota, a.expans, a.arrow], [b.megota, b.expans, b.arrow]);
+            });
+            if (this.getOperator(1) >= 1 && this.getOperator(0) <= MSI_LOG10) {
+                this.setOperator(this.getOperator(1) - 1, 1);
+                this.setOperator(Math.pow(10, (this.getOperator(0))), 0);
+                renormalize = true;
+                if (this.getOperator(0) > MSI) {
+                    this.setOperator(this.getOperator(1) + 1, 1);
+                    this.setOperator(Math.log10(this.getOperator(0)), 0);
+                    renormalize = true;
+                }
+            }
+        } while (renormalize);
         return this;
     }
     /**
@@ -191,7 +270,7 @@ class PowiainaNum {
      */
     getOperatorIndex(arrow, expans = 1, megota = 1) {
         for (let i = 0; i < this.array.length; i++) {
-            let cmp = compareTuples([megota, expans, arrow], [this.array[i].megota, this.array[i].expans, this.array[i].arrow]);
+            let cmp = compareTuples([this.array[i].megota, this.array[i].expans, this.array[i].arrow], [megota, expans, arrow]);
             if (cmp == 0)
                 return i; // I find it was [xx,xxx,*xxx*,xxx]!
             if (cmp == 1)
@@ -223,9 +302,11 @@ class PowiainaNum {
                 valuereplaced: expans === Infinity ? 1 : arrow == Infinity ? 0 : -1,
                 repeat: val,
             });
+            // this.normalize()
             return true;
         }
         this.array[index].repeat = val;
+        // this.normalize()
         return false;
     }
     /**
