@@ -248,7 +248,6 @@ class PowiainaNum {
         let renormalize = true;
         do {
             renormalize = false;
-            console.log("renormalize");
             this.array.sort(function (a, b) {
                 return compareTuples([a.megota, a.expans, a.arrow], [b.megota, b.expans, b.arrow]);
             });
