@@ -7,7 +7,8 @@
   "module": "dist/PowiainaNum.esm.js",
   "exports": {
     "import": "./dist/PowiainaNum.esm.js",
-    "require": "./dist/PowiainaNum.js"
+    "require": "./dist/PowiainaNum.js",
+    "types": "./dist/index.d.ts"
   },
   "unpkg": "dist/PowiainaNum.min.js",
   "types": "dist/index.d.ts",
