@@ -1,13 +1,14 @@
 {
   "name": "powiaina_num.js",
-  "version": "0.2.0-alpha.1",
+  "version": "0.2.0-alpha.2",
   "description": "A JavaScript library that handles arithmetic for numbers as large as {10,9e15,1,1,1,2}.",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/types/index.d.ts",
   "type": "module",
+  "main": "dist/PowiainaNum.js",
+  "module": "dist/PowiainaNum.esm.js",
+  "unpkg": "dist/PowiainaNum.min.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "build": "bili",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fix": "prettier --write ."
@@ -23,6 +24,9 @@
     "number",
     "decimal"
   ],
+  "files": [
+    "dist"
+  ],
   "author": "VeryrrDefine",
   "license": "MIT",
   "bugs": {
@@ -30,13 +34,9 @@
   },
   "homepage": "https://github.com/VeryrrDefine/PowiainaNum.js#readme",
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^12.1.4",
-    "eslint": "^8.39.0",
-    "rollup": "^4.45.0",
+    "prettier": "^3.6.2",
     "rollup-plugin-typescript2": "^0.36.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "bili": "^5.0.5"
   }
 }
