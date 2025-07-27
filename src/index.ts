@@ -249,10 +249,17 @@ export default class PowiainaNum implements IPowiainaNum {
     return r;
   }
 
+  public static add(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).add(other);
+  }
+
   public sub(a: PowiainaNumSource): PowiainaNum {
     return this.add(new PowiainaNum(a).neg());
   }
 
+  public static sub(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).sub(other);
+  }
   public mul(other: PowiainaNumSource): PowiainaNum {
     let x = this.clone();
     let y = new PowiainaNum(other);
@@ -303,12 +310,18 @@ export default class PowiainaNum implements IPowiainaNum {
     r.sign = (x.sign * y.sign) as 0 | -1 | 1;
     return r;
   }
+  public static mul(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).mul(other);
+  }
 
   public div(other: PowiainaNumSource): PowiainaNum {
     const x = new PowiainaNum(other).rec();
     return this.mul(x);
   }
-
+  public static div(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).div(other);
+  }
+  
   public pow10(): PowiainaNum {
     const r = this.clone();
     // inf & nan check
@@ -351,6 +364,9 @@ export default class PowiainaNum implements IPowiainaNum {
   public pow_base(x: PowiainaNumSource): PowiainaNum {
     const a = new PowiainaNum(x);
     return a.pow(this);
+  }
+  public static pow(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).pow(other);
   }
 
   public root(x: PowiainaNumSource): PowiainaNum {
