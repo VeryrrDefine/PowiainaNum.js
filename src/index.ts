@@ -75,6 +75,7 @@ function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
     valuereplaced: a == Infinity ? 0 : e == Infinity ? 1 : -1,
   };
 }
+
 function compareTuples<T extends Array<any>>(...tuples: [T, T]): -1 | 0 | 1 {
   for (let i = 0; i < Math.min(tuples[0].length, tuples[1].length); i++) {
     const a = tuples[0][i];
@@ -84,6 +85,7 @@ function compareTuples<T extends Array<any>>(...tuples: [T, T]): -1 | 0 | 1 {
   }
   return 0;
 }
+
 function log10LongString(str: string) {
   return (
     Math.log10(Number(str.substring(0, LONG_STRING_MIN_LENGTH))) +
@@ -116,6 +118,156 @@ function deepCopyProps(source: any, target: any) {
       }
     }
   }
+}
+
+// Code from break_eternity.js
+function f_gamma(n: number) {
+  if (!isFinite(n)) {
+    return n;
+  }
+
+  if (n < -50) {
+    if (n === Math.trunc(n)) {
+      return Number.NEGATIVE_INFINITY;
+    }
+
+    return 0;
+  }
+
+  var scal1 = 1;
+
+  while (n < 10) {
+    scal1 = scal1 * n;
+    ++n;
+  }
+
+  n -= 1;
+  var l = 0.9189385332046727; //0.5*Math.log(2*Math.PI)
+
+  l = l + (n + 0.5) * Math.log(n);
+  l = l - n;
+  var n2 = n * n;
+  var np = n;
+  l = l + 1 / (12 * np);
+  np = np * n2;
+  l = l - 1 / (360 * np);
+  np = np * n2;
+  l = l + 1 / (1260 * np);
+  np = np * n2;
+  l = l - 1 / (1680 * np);
+  np = np * n2;
+  l = l + 1 / (1188 * np);
+  np = np * n2;
+  l = l - 691 / (360360 * np);
+  np = np * n2;
+  l = l + 7 / (1092 * np);
+  np = np * n2;
+  l = l - 3617 / (122400 * np);
+  return Math.exp(l) / scal1;
+};
+
+var _EXPN1 = 0.36787944117144232159553; // exp(-1)
+
+var OMEGA = 0.56714329040978387299997; // W(1, 0)
+//from https://math.stackexchange.com/a/465183
+// The evaluation can become inaccurate very close to the branch point
+// Evaluates W(x, 0) if principal is true, W(x, -1) if principal is false
+function f_lambertw(z: number, t=1e-10, pr=true) {
+  var tol = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1e-10;
+  var principal = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+  var w;
+  var wn;
+
+  if (!Number.isFinite(z)) {
+    return z;
+  }
+
+  if (principal) {
+    if (z === 0) {
+      return z;
+    }
+
+    if (z === 1) {
+      return OMEGA;
+    }
+
+    if (z < 10) {
+      w = 0;
+    } else {
+      w = Math.log(z) - Math.log(Math.log(z));
+    }
+  } else {
+    if (z === 0) return -Infinity;
+
+    if (z <= -0.1) {
+      w = -2;
+    } else {
+      w = Math.log(-z) - Math.log(-Math.log(-z));
+    }
+  }
+
+  for (var i = 0; i < 100; ++i) {
+    wn = (z * Math.exp(-w) + w * w) / (w + 1);
+
+    if (Math.abs(wn - w) < tol * Math.abs(wn)) {
+      return wn;
+    } else {
+      w = wn;
+    }
+  }
+
+  throw Error("Iteration failed to converge: ".concat(z.toString())); //return Number.NaN;
+}; 
+
+
+//from https://github.com/scipy/scipy/blob/8dba340293fe20e62e173bdf2c10ae208286692f/scipy/special/lambertw.pxd
+// The evaluation can become inaccurate very close to the branch point
+// at ``-1/e``. In some corner cases, `lambertw` might currently
+// fail to converge, or can end up on the wrong branch.
+// Evaluates W(x, 0) if principal is true, W(x, -1) if principal is false
+function d_lambertw(z: PowiainaNum, t=1e-10, pr=true) {
+  var tol = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1e-10;
+  var principal = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+  var w;
+  var ew, wewz, wn;
+
+  if (z.isInfinite()) return z
+
+  if (principal) {
+    if (z.eq(PowiainaNum.ZERO)) {
+      return PowiainaNum.ZERO.clone();
+    }
+
+    if (z.eq(PowiainaNum.ONE)) {
+      //Split out this case because the asymptotic series blows up
+      return PowiainaNum.fromNumber(OMEGA);
+    } //Get an initial guess for Halley's method
+
+
+    w = z.log();
+  } else {
+    if (z.eq(PowiainaNum.ZERO)) {
+      return PowiainaNum.NEGATIVE_INFINITY.clone();
+    } //Get an initial guess for Halley's method
+
+
+    w = z.neg().log();
+  } //Halley's method; see 5.9 in [1]
+
+
+  for (var i = 0; i < 100; ++i) {
+    ew = w.neg().exp();
+    wewz = w.sub(z.mul(ew));
+    wn = w.sub(wewz.div(w.add(1).sub(w.add(2).mul(wewz).div(w.mul(2).add(2)))));
+
+    if (wn.sub(w).abs().lt(wn.abs().mul(tol))) {
+      return wn;
+    } else {
+      w = wn;
+    }
+  }
+
+  throw Error("Iteration failed to converge: ".concat(z.toString())); //return Decimal.dNaN;
 }
 
 export default class PowiainaNum implements IPowiainaNum {
@@ -385,16 +537,135 @@ export default class PowiainaNum implements IPowiainaNum {
     x.normalize();
     return x;
   }
-  public log(base: PowiainaNumSource): PowiainaNum {
+  public log(base: PowiainaNumSource=Math.E): PowiainaNum {
     // log_a b = log_x b / log_x a;
     const other = new PowiainaNum(base);
     return this.log10().div(other.log10());
+  }
+  public static exp(x: PowiainaNumSource): PowiainaNum {
+    let y = new PowiainaNum(x);
+    return y.pow_base(Math.E);
+  }
+  public exp(): PowiainaNum{
+    return this.pow_base(Math.E)
   }
   public mod(x: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(x);
 
     const division = this.div(other);
     return division.sub(division.floor()).mul(other);
+  }
+
+  /**
+   * For positive integers, X factorial (written as X!) equals X * (X - 1) * (X - 2) *... * 3 * 2 * 1. 0! equals 1.
+   * This can be extended to real numbers (except for negative integers) via the gamma function, which is what this function does.
+   */
+  //[Code from break_eternity.js]
+  public factorial(): PowiainaNum {
+    if (this.abs().lt(MSI)) {
+      return this.add(1).gamma();
+    }  else if (this.abs().lt(PowiainaNum.E_MSI)) {
+      return PowiainaNum.exp(this.mul(this.log10().sub(1)));
+    } else {
+      return PowiainaNum.exp(this);
+    }
+  }
+  /**
+   * The gamma function extends the idea of factorials to non-whole numbers using some calculus.
+   * Gamma(x) is defined as the integral of t^(x-1) * e^-t dt from t = 0 to t = infinity,
+   * and gamma(x) = (x - 1)! for nonnegative integer x, so the factorial for non-whole numbers is defined using the gamma function.
+   */
+  //[Code from break_eternity.js]
+  //from HyperCalc source code  
+  public gamma() {
+    if (this.small) {
+      return this.rec();
+    } else if (this.lte(MSI)) {
+      if (this.lt(24)) {
+        return PowiainaNum.fromNumber(f_gamma(this.sign * this.getOperator(0)));
+      }
+
+      var t = this.getOperator(0) - 1;
+      var l = 0.9189385332046727; //0.5*Math.log(2*Math.PI)
+
+      l = l + (t + 0.5) * Math.log(t);
+      l = l - t;
+      var n2 = t * t;
+      var np = t;
+      var lm = 12 * np;
+      var adj = 1 / lm;
+      var l2 = l + adj;
+
+      if (l2 === l) {
+        return PowiainaNum.exp(l);
+      }
+
+      l = l2;
+      np = np * n2;
+      lm = 360 * np;
+      adj = 1 / lm;
+      l2 = l - adj;
+
+      if (l2 === l) {
+        return PowiainaNum.exp(l);
+      }
+
+      l = l2;
+      np = np * n2;
+      lm = 1260 * np;
+      var lt = 1 / lm;
+      l = l + lt;
+      np = np * n2;
+      lm = 1680 * np;
+      lt = 1 / lm;
+      l = l - lt;
+      return PowiainaNum.exp(l);
+    } else if (this.gt(MSI)) {
+      return PowiainaNum.exp(this.mul(this.log().sub(1)));
+    } else {
+      return PowiainaNum.exp(this);
+    }
+  }
+
+  /**
+     * The Lambert W function, also called the omega function or product logarithm, is the solution W(x) === x*e^x.
+     * https://en.wikipedia.org/wiki/Lambert_W_function
+     *
+     * This is a multi-valued function in the complex plane, but only two branches matter for real numbers: the "principal branch" W0, and the "non-principal branch" W_-1.
+     * W_0 works for any number >= -1/e, but W_-1 only works for nonpositive numbers >= -1/e.
+     * The "principal" parameter, which is true by default, decides which branch we're looking for: W_0 is used if principal is true, W_-1 is used if principal is false.
+     */
+  //Code from break_eternity.js
+  //Some special values, for testing: https://en.wikipedia.org/wiki/Lambert_W_function#Special_values
+  public lambertw(): PowiainaNum {
+    var principal = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+    if (this.lt(-0.3678794411710499)) {
+      return PowiainaNum.NaN.clone(); //complex
+    } else if (principal) {
+      if (this.abs().lt("1e-300")) return new PowiainaNum(this);else if (this.small) {
+        return PowiainaNum.fromNumber(f_lambertw(this.toNumber()));
+      } else if (this.layer === 0) {
+        return PowiainaNum.fromNumber(f_lambertw(this.sign * this.getOperator(0)));
+      } else if (this.lt("eee15")) {
+        return d_lambertw(this);
+      } else {
+        // Numbers this large would sometimes fail to converge using d_lambertw, and at this size this.ln() is close enough
+        return this.log();
+      }
+    } else {
+      if (this.sign === 1) {
+        return PowiainaNum.NaN.clone(); //complex
+      }
+
+      if (this.layer === 0) {
+        return PowiainaNum.fromNumber(f_lambertw(this.sign * this.getOperator(0), 1e-10, false));
+      } else if (this.layer == 1) {
+        return d_lambertw(this, 1e-10, false);
+      } else {
+        return this.neg().rec().lambertw().neg();
+      }
+    }
   }
   public max(x: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(x);
@@ -850,6 +1121,9 @@ export default class PowiainaNum implements IPowiainaNum {
     return obj;
   }
   public static fromString(input: string) {
+    if (!isPowiainaNum.test(input)) {
+      throw powiainaNumError+"malformed input: "+input
+    }
     var x = new PowiainaNum();
     var negateIt = false;
     var recipIt = false;
@@ -1036,6 +1310,29 @@ export default class PowiainaNum implements IPowiainaNum {
     obj.layer = powlikeObject.layer;
     return obj;
   }
+  /**
+   * A property arary value for version 0.1.x PowiainaNum.
+   */
+  get arr01() {
+    let res: [number, ...(([number, number, number, number]|["x", number, number, number]|[number, number, "x", number])[])] 
+    = [0];
+    for (let i = 0; i < this.array.length; i++) {
+      if (i==0) res[0] = this.array[i].repeat;
+      else {
+        // @ts-ignore
+        res[i]=[0,0,0,0]
+        // @ts-ignore
+        res[i][0] =this.array[i].arrow == Infinity ? "x" : this.array[i].arrow;
+        // @ts-ignore
+        res[i][1] =this.array[i].repeat;
+        // @ts-ignore
+        res[i][2] =this.array[i].expans == Infinity ? "x" : this.array[i].expans;
+        // @ts-ignore
+        res[i][3] =this.array[i].megota;
+      }
+    }
+    return res;
+  }
   public static readonly ZERO = new PowiainaNum({
     array: [
       {
@@ -1096,6 +1393,15 @@ export default class PowiainaNum implements IPowiainaNum {
     layer: 0,
     sign: 1,
   });
+
+  public static readonly TRITRI = new PowiainaNum({
+    small: false,layer:0,sign:1,
+    array: [
+      newOperator(3638334640023.7783, 0, 1, 1),
+      newOperator(7625587484984, 1, 1, 1)
+    ]
+  })
+
   public static readonly POSITIVE_INFINITY = new PowiainaNum(Infinity);
   public static readonly NEGATIVE_INFINITY = new PowiainaNum(-Infinity);
   public static readonly NaN = new PowiainaNum({
