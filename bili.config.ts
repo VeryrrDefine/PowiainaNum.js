@@ -8,7 +8,7 @@ const config: Config = {
   },
   output: {
     format: ["umd", "umd-min", "esm", "cjs"],
-    moduleName: "Decimal",
+    moduleName: "PowiainaNum",
     sourceMap: false,
     fileName: (context, defaultFileName) => {
       switch (context.format) {

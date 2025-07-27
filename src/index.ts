@@ -22,47 +22,7 @@ const MSI_LOG10 = 15.954589770191003 as const;
 const MSI_REC = 1.1102230246251568e-16 as const;
 const LONG_STRING_MIN_LENGTH = 17 as const;
 const isPowiainaNum =
-  /^[-\+]*(Infinity|NaN|(J+|J\^\d+(((\.\d*)?([Ee][-\+]*))\d*)?)?(10(\^+|\{[1-9]\d*(,[1-9]\d*)?(,[1-9]\d*)?\})|\(10(\^+|\{[1-9]\d*\})\)\^[1-9]\d*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
-/* 
-/^
-	[-\+]*
-	(Infinity|NaN|
-		(J+|
-			J\^\d+(
-				(
-					(\.\d*)?
-					([Ee][-\+]*)
-				)\d*
-			)? // J...J, J^a.bbe+c
-		)?
-		(
-			10(
-				\^+|
-				\{[1-9]\d*(,[1-9]\d*)?(,[1-9]\d*)?\}
-			)|
-			\(10(
-				\^+|
-				\{[1-9]\d*\}
-			)\)\^[1-9]\d* 
-			// parses 10^...^ or 10{114}
-		)*
-		(
-			(
-				\d+(
-					\.\d*
-				)?|
-				\d*\.\d+
-			)?
-			([Ee][-\+]*) // parses a.bbbeccc
-		)*
-		(
-			0|
-			\d+(\.\d*)?|
-			\d*\.\d+ //parses pure numbers
-		)
-	)
-$/
-*/
+  /^[-\+]*(Infinity|NaN|(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d* )*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
 
 export type PowiainaNumSource = number | string | IPowiainaNum | PowiainaNum;
 
@@ -525,12 +485,22 @@ export default class PowiainaNum implements IPowiainaNum {
     let other = new PowiainaNum(x);
     return this.pow(other.rec());
   }
+  public static root(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).root(other);
+  }
 
   public sqrt(): PowiainaNum {
     return this.pow(0.5);
   }
+  
+  public static sqrt(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).sqrt();
+  }
   public cbrt(): PowiainaNum {
     return this.root(3);
+  }
+  public static cbrt(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).cbrt();
   }
 
   public abs(): PowiainaNum {
@@ -553,10 +523,16 @@ export default class PowiainaNum implements IPowiainaNum {
     x.normalize();
     return x;
   }
+  public static log10(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).log10();
+  }
   public log(base: PowiainaNumSource=Math.E): PowiainaNum {
     // log_a b = log_x b / log_x a;
     const other = new PowiainaNum(base);
     return this.log10().div(other.log10());
+  }
+  public static log(t: PowiainaNumSource, base: PowiainaNumSource=Math.E): PowiainaNum {
+    return new PowiainaNum(t).log(base);
   }
   public static exp(x: PowiainaNumSource): PowiainaNum {
     let y = new PowiainaNum(x);
@@ -585,6 +561,9 @@ export default class PowiainaNum implements IPowiainaNum {
     } else {
       return PowiainaNum.exp(this);
     }
+  }
+  public static factorial(x: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(x).factorial();
   }
   /**
    * The gamma function extends the idea of factorials to non-whole numbers using some calculus.
@@ -642,6 +621,9 @@ export default class PowiainaNum implements IPowiainaNum {
       return PowiainaNum.exp(this);
     }
   }
+  public static gamma(x: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(x).gamma();
+  }
 
   /**
      * The Lambert W function, also called the omega function or product logarithm, is the solution W(x) === x*e^x.
@@ -653,7 +635,7 @@ export default class PowiainaNum implements IPowiainaNum {
      */
   //Code from break_eternity.js
   //Some special values, for testing: https://en.wikipedia.org/wiki/Lambert_W_function#Special_values
-  public lambertw(): PowiainaNum {
+  public lambertw(princ=true): PowiainaNum {
     var principal = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
     if (this.lt(-0.3678794411710499)) {
@@ -683,6 +665,12 @@ export default class PowiainaNum implements IPowiainaNum {
       }
     }
   }
+  
+  public static lambertw(x: PowiainaNumSource,principal=true): PowiainaNum {
+    return new PowiainaNum(x).lambertw(principal);
+  }
+
+
   public max(x: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(x);
     return this.lt(other) ? other.clone() : this.clone();
@@ -1417,7 +1405,7 @@ export default class PowiainaNum implements IPowiainaNum {
       newOperator(7625587484984, 1, 1, 1)
     ]
   })
-
+  public static readonly GRAHAMS_NUMBER = new PowiainaNum("(10{!})^63 10^^^(10^)^7625597484984 3638334640023.7783")
   public static readonly POSITIVE_INFINITY = new PowiainaNum(Infinity);
   public static readonly NEGATIVE_INFINITY = new PowiainaNum(-Infinity);
   public static readonly NaN = new PowiainaNum({
