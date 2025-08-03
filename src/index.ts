@@ -439,16 +439,16 @@ export default class PowiainaNum implements IPowiainaNum {
     // inf & nan check
     if (!this.isFinite()) return this.clone();
 
-    if (r.lt(0)) {
+    if (r.isneg()) {
       // 10^(-x) = 1/(10^x)
       r.sign *= -1;
       return r.pow10().rec();
     }
     if (r.small) {
       if (r.lt(PowiainaNum.MSI_REC)) return PowiainaNum.ONE;
-      return new PowiainaNum(10 ** (r.getOperator(0) ** -1));
+      return new PowiainaNum(10 ** (r.array[0].repeat ** -1));
     }
-    r.setOperator(r.getOperator(1) + 1, 1);
+    r.setOperator((r.array[1]?.repeat ?? 0) + 1, 1);
     r.normalize();
     return r;
   }
@@ -459,7 +459,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (!this.isFinite()) return this.clone();
 
     if (this.eq(10)) return other.pow10();
-    if (this.lt(0)) {
+    if (this.isneg()) {
       if (!other.isInt()) return PowiainaNum.NaN.clone();
       let r = this.abs().pow(other);
       r.sign = (function () {
@@ -469,6 +469,13 @@ export default class PowiainaNum implements IPowiainaNum {
       })();
 
       return r;
+    }
+    let a = this.toNumber();
+    let b = this.toNumber();
+    let t = a**b
+    if (!isFinite(t)) {
+      // optimize?
+      return PowiainaNum.fromNumber(t);
     }
     // log10(a^b) = b log10(a)
     return this.log10().mul(other).pow10();
@@ -509,7 +516,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return obj;
   }
   public log10(): PowiainaNum {
-    if (this.lt(0)) return PowiainaNum.NaN.clone();
+    if (this.isneg()) return PowiainaNum.NaN.clone();
     if (this.isZero()) return PowiainaNum.NEGATIVE_INFINITY.clone();
     if (this.small) {
       let x = this.clone();
@@ -657,7 +664,7 @@ export default class PowiainaNum implements IPowiainaNum {
       }
 
       if (this.layer === 0) {
-        return PowiainaNum.fromNumber(f_lambertw(this.sign * this.getOperator(0), 1e-10, false));
+        return PowiainaNum.fromNumber(f_lambertw(this.sign * this.array[0].repeat, 1e-10, false));
       } else if (this.layer == 1) {
         return d_lambertw(this, 1e-10, false);
       } else {
@@ -712,7 +719,7 @@ export default class PowiainaNum implements IPowiainaNum {
       else return PowiainaNum.ONE.neg().clone();
     }
     let r = this.abs();
-    r.setOperator(Math[this.sign == 1 ? "floor" : "ceil"](r.getOperator(0)), 0);
+    r.array[0].repeat =  Math[this.sign == 1 ? "floor" : "ceil"](r.getOperator(0));
     return r;
   }
   public ceil(): PowiainaNum {
@@ -722,7 +729,7 @@ export default class PowiainaNum implements IPowiainaNum {
       else return PowiainaNum.ZERO.clone();
     }
     let r = this.abs();
-    r.setOperator(Math[this.sign == 1 ? "ceil" : "floor"](r.getOperator(0)), 0);
+    r.array[0].repeat = Math[this.sign == 1 ? "ceil" : "floor"](r.getOperator(0))
     r.sign = this.sign;
     return r;
   }
@@ -738,7 +745,7 @@ export default class PowiainaNum implements IPowiainaNum {
       }
     }
     let r = this.abs();
-    r.setOperator(Math.round(r.getOperator(0)), 0);
+    r.array[0].repeat=Math.round(r.array[0].repeat);
     r.sign = this.sign;
     return r;
   }
@@ -827,9 +834,17 @@ export default class PowiainaNum implements IPowiainaNum {
   isInt(): boolean {
     if (this.isZero()) return true;
     if (!this.small && Number.isInteger(this.getOperator(0))) return true;
-    if (this.abs().gte(2 ** 52)) return true;
+    if (this.abs().gte(MSI/2)) return true;
     return false;
   }
+
+  ispos(): boolean {
+    return this.sign>0;
+  }
+  isneg(): boolean{
+    return this.sign<0;
+  }
+
   static isNaN(x: PowiainaNumSource): boolean {
     return new PowiainaNum(x).isNaN();
   }
@@ -925,7 +940,6 @@ export default class PowiainaNum implements IPowiainaNum {
       if (x.array.length > PowiainaNum.maxOps)
         x.array.splice(1, x.array.length - PowiainaNum.maxOps); // max operators check
       if (this.getOperator(1) >= 1 && this.getOperator(0) < MSI_LOG10) {
-        console.log(this.array);
         this.setOperator(this.getOperator(1) - 1, 1);
         this.setOperator(10 ** this.getOperator(0), 0);
         renormalize = true;
@@ -996,6 +1010,11 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
    */
   getOperatorIndex(arrow: number, expans = 1, megota = 1) {
+    if (this.array.length==1 && arrow==0) return 0;
+    if (this.array.length==1 && arrow==1) return 0.5;
+    if (this.array.length==2 && arrow==1) return 1;
+    if (this.array.length==2 && arrow==0) return 0;
+
     for (let i = 0; i < this.array.length; i++) {
       let cmp = compareTuples(
         [this.array[i].megota, this.array[i].expans, this.array[i].arrow],
