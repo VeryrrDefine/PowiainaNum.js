@@ -444,6 +444,9 @@ export default class PowiainaNum implements IPowiainaNum {
       r.sign *= -1;
       return r.pow10().rec();
     }
+    if (r.lte(308.25471555991675)) {
+      return PowiainaNum.fromNumber(10**(r.toNumber()))
+    }
     if (r.small) {
       if (r.lt(PowiainaNum.MSI_REC)) return PowiainaNum.ONE;
       return new PowiainaNum(10 ** (r.array[0].repeat ** -1));
@@ -471,9 +474,9 @@ export default class PowiainaNum implements IPowiainaNum {
       return r;
     }
     let a = this.toNumber();
-    let b = this.toNumber();
+    let b = other.toNumber();
     let t = a**b
-    if (!isFinite(t)) {
+    if (isFinite(t)) {
       // optimize?
       return PowiainaNum.fromNumber(t);
     }
@@ -523,10 +526,10 @@ export default class PowiainaNum implements IPowiainaNum {
       x.small = !x.small;
       return x.log10().neg();
     }
-    if (this.getOperator(1) == 0)
-      return new PowiainaNum(Math.log10(this.getOperator(0)));
+    if (this.array[1]?.repeat ??0 == 0)
+      return new PowiainaNum(Math.log10(this.array[0].repeat));
     let x = this.clone();
-    x.setOperator(x.getOperator(1) - 1, 1);
+    x.array[1].repeat = x.array[1].repeat - 1;
     x.normalize();
     return x;
   }
@@ -1084,8 +1087,10 @@ export default class PowiainaNum implements IPowiainaNum {
     if (this.sign == -1) return -this.neg().toNumber();
     if (this.small) return 1 / this.rec().toNumber();
 
-    if (this.getOperator(1) == 0) return this.getOperator(0);
-    else if (this.getOperator(1) == 1) return 10 ** this.getOperator(0);
+    if (this.array.length>2) return Infinity;
+    
+    if (this.array.length==1) return this.array[0].repeat;
+    else if (this.array.length==2 && this.array[1].arrow == 1&& this.array[1].expans == 1&& this.array[1].megota == 1&& this.array[1].repeat == 1) return 10 ** this.getOperator(0);
     return NaN;
   }
   toString(): string {
@@ -1147,11 +1152,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return obj;
   }
   public static fromString(input: string) {
-    if (!isPowiainaNum.test(input)) {
-      throw powiainaNumError+"malformed input: "+input
-    }
     var x = new PowiainaNum();
-
     // Judge the string was a number
     // @ts-ignore
     if (!isNaN(Number(input))){
@@ -1161,6 +1162,10 @@ export default class PowiainaNum implements IPowiainaNum {
         return x;
       }
     }
+    if (!isPowiainaNum.test(input)) {
+      throw powiainaNumError+"malformed input: "+input
+    }
+
 
     var negateIt = false;
     var recipIt = false;
@@ -1427,6 +1432,20 @@ export default class PowiainaNum implements IPowiainaNum {
       { arrow: 1, expans: 1, megota: 1, repeat: 1 },
     ],
     small: true,
+    layer: 0,
+    sign: 1,
+  });
+  public static readonly TETRATED_MSI = new PowiainaNum({
+    array: [
+      {
+        arrow: 0,
+        expans: 1,
+        megota: 1,
+        repeat: MSI,
+      },
+      { arrow: 1, expans: 1, megota: 1, repeat: MSI },
+    ],
+    small: false,
     layer: 0,
     sign: 1,
   });
