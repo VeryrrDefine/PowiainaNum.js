@@ -241,6 +241,7 @@ export default class PowiainaNum implements IPowiainaNum {
     this.sign = 0;
     this.layer = 0;
     if (typeof arg1 == "undefined") {
+
     } else if (typeof arg1 == "number") {
       let obj = PowiainaNum.fromNumber(arg1);
       this.resetFromObject(obj);
@@ -318,19 +319,19 @@ export default class PowiainaNum implements IPowiainaNum {
     if (
       !a.small &&
       !b.small &&
-      !a.getOperator(1) &&
-      !b.getOperator(1) &&
+      !a.array[1]?.repeat &&
+      !b.array[1]?.repeat &&
       a.sign == b.sign
     ) {
-      return new PowiainaNum((a.getOperator(0) + b.getOperator(0)) * a.sign);
+      return new PowiainaNum((a.array[0].repeat + b.array[0].repeat) * a.sign);
     }
 
     const alog10 =
       (a.small ? -1 : 1) *
-      (a.getOperator(1) ? a.getOperator(0) : Math.log10(a.getOperator(0)));
+      (a.array[1]?.repeat ? a.array[0].repeat : Math.log10(a.array[0].repeat));
     const blog10 =
       (b.small ? -1 : 1) *
-      (b.getOperator(1) ? b.getOperator(0) : Math.log10(b.getOperator(0)));
+      (b.array[1]?.repeat ? b.array[0].repeat : Math.log10(b.array[0].repeat));
     if (alog10 - blog10 > MSI_LOG10) return a;
 
     const offset = -Math.floor(alog10); //a number can make a+off in [0,1)
@@ -351,10 +352,9 @@ export default class PowiainaNum implements IPowiainaNum {
 
     r.sign = 1;
     if (l > MSI_LOG10 || l < -MSI_LOG10) {
-      r.setOperator(1, 1);
-      r.setOperator(Math.log10(Math.abs(l)), 1);
+      r.array=[newOperator(l,0),newOperator(1,1)]
     } else {
-      r.setOperator(10 ** Math.abs(l), 0);
+      r.array=[newOperator(10**l,0)]
     }
     r.small = l < 0 ? true : false;
     r.sign *= mult;
@@ -830,6 +830,9 @@ export default class PowiainaNum implements IPowiainaNum {
     if (this.abs().gte(2 ** 52)) return true;
     return false;
   }
+  static isNaN(x: PowiainaNumSource): boolean {
+    return new PowiainaNum(x).isNaN();
+  }
   /**
    * Normalize functions will make this number convert into standard format.(it also change `this`, like [].sort)
    * @returns normalized number
@@ -1112,16 +1115,16 @@ export default class PowiainaNum implements IPowiainaNum {
     let y = Math.abs(x);
     if (y >= MSI_REC && y < 1) {
       obj.small = true;
-      obj.setOperator(1 / y, 0);
+      obj.array = [newOperator(1/y, 0)]
     } else if (y < MSI_REC) {
       obj.small = true;
-      obj.setOperator(-Math.log10(y), 0);
-      obj.setOperator(1, 1);
-    } else {
-      obj.setOperator(y, 0);
+      obj.array = [newOperator(-Math.log10(y), 0), newOperator(1, 1)]
+    } else if (y<=MSI){
+      obj.array = [newOperator(y,0)]
+    } else{
+      obj.setOperator(Math.log10(y), 0);
+      obj.array = [newOperator(Math.log10(y),0), newOperator(1,1)]
     }
-
-    obj.normalize();
     return obj;
   }
   public static fromString(input: string) {
@@ -1129,6 +1132,17 @@ export default class PowiainaNum implements IPowiainaNum {
       throw powiainaNumError+"malformed input: "+input
     }
     var x = new PowiainaNum();
+
+    // Judge the string was a number
+    // @ts-ignore
+    if (!isNaN(Number(input))){
+      // @ts-ignore
+      if (isFinite(Number(input))) {
+        x.resetFromObject(PowiainaNum.fromNumber(Number(input)));
+        return x;
+      }
+    }
+
     var negateIt = false;
     var recipIt = false;
     if (input[0] == "-" || input[0] == "+") {
