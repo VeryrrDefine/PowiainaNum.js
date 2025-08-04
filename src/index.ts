@@ -354,7 +354,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (l > MSI_LOG10 || l < -MSI_LOG10) {
       r.array=[newOperator(l,0),newOperator(1,1)]
     } else {
-      r.array=[newOperator(10**l,0)]
+      r.array=[newOperator(10**Math.abs(l),0)]
     }
     r.small = l < 0 ? true : false;
     r.sign *= mult;
@@ -513,6 +513,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(t).cbrt();
   }
 
+
   public abs(): PowiainaNum {
     let obj = this.clone();
     if (obj.sign < 0) obj.sign *= -1;
@@ -526,7 +527,7 @@ export default class PowiainaNum implements IPowiainaNum {
       x.small = !x.small;
       return x.log10().neg();
     }
-    if (this.array[1]?.repeat ??0 == 0)
+    if (this.array.length==1)
       return new PowiainaNum(Math.log10(this.array[0].repeat));
     let x = this.clone();
     x.array[1].repeat = x.array[1].repeat - 1;
@@ -680,6 +681,40 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(x).lambertw(principal);
   }
 
+  public static tetrate_10(other2: PowiainaNumSource): PowiainaNum {
+    const other = new PowiainaNum(other2);
+  
+    const height_int = other.trunc().toNumber();
+    const height_frac = other.sub(height_int).toNumber();
+
+    if (other.gt(PowiainaNum.PENTATED_MSI)) 
+      return other.clone();
+    else if (other.gt(PowiainaNum.MSI)) {
+      other.setOperator(other.getOperator(2)+1, 2);
+    } else if (other.lt(-2)) 
+      return PowiainaNum.NaN.clone();
+    else if (other.lt(-1)) {
+      return other.add(2).log10();
+    }
+    else if (other.lt(0)) {
+      return other.add(1);
+    }else if (other.lt(1)) {
+      return other.pow10() // 10^x
+    }else if (height_int==1) 
+      return PowiainaNum.pow(10,PowiainaNum.pow(10,height_frac));
+    else if (height_int==2) 
+      return PowiainaNum.pow(10,PowiainaNum.pow(10,PowiainaNum.pow(10,height_frac)));
+    else {
+      const remain = height_int-2;
+      let a = PowiainaNum.pow(10,PowiainaNum.pow(10,PowiainaNum.pow(10,height_frac)));
+      a.setOperator(a.getOperator(1)+remain, 1);
+      return a;
+    }
+    // 1--2, 10-<1e10, 10^10^0->1
+    // 2--3, 1e10-<e1e10, 10^10^10^0->1
+    return PowiainaNum.NaN.clone();
+  }
+
 
   public max(x: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(x);
@@ -751,6 +786,10 @@ export default class PowiainaNum implements IPowiainaNum {
     r.array[0].repeat=Math.round(r.array[0].repeat);
     r.sign = this.sign;
     return r;
+  }
+  public trunc() {
+    const y = this.clone();
+    return y.gte(0) ? y.floor() : y.ceil();
   }
   /**
    * @returns if this<other, return -1, if this=other, return 0, if this>other, return 1, if this!<=>, return 2
@@ -1134,7 +1173,12 @@ export default class PowiainaNum implements IPowiainaNum {
 
     if (x < 0)
       obj.sign = -1; // negative
-    else if (x == 0) obj.sign = 0;
+    else if (x == 0) {
+      obj.sign = 0
+      obj.small =true;
+      obj.array=[newOperator(Infinity, 0)];
+      return obj;
+    }
     else if (x > 0) obj.sign = 1;
     let y = Math.abs(x);
     if (y >= MSI_REC && y < 1) {
@@ -1444,6 +1488,21 @@ export default class PowiainaNum implements IPowiainaNum {
         repeat: MSI,
       },
       { arrow: 1, expans: 1, megota: 1, repeat: MSI },
+    ],
+    small: false,
+    layer: 0,
+    sign: 1,
+  });
+  public static readonly PENTATED_MSI = new PowiainaNum({
+    array: [
+      {
+        arrow: 0,
+        expans: 1,
+        megota: 1,
+        repeat: MSI,
+      },
+      { arrow: 1, expans: 1, megota: 1, repeat: MSI },
+      { arrow: 2, expans: 1, megota: 1, repeat: MSI },
     ],
     small: false,
     layer: 0,
