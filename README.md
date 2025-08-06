@@ -16,7 +16,8 @@ The library exports a class,
 Create a PowiainaNum.js object like this:
 
 ```javascript
-import PowiainaNum from "powiaina_num.js";
+import PowiainaNum from "powiaina_num.js"; // static import 
+const { default: PowiainaNum } = await import("powiaina_num.js") // dynamic import
 
 let a = new PowiainaNum(); // create PN.js number with NaN
 let b = new PowiainaNum(3); // create PN.js number with number 3
