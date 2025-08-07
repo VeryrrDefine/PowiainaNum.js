@@ -333,6 +333,11 @@ export default class PowiainaNum implements IPowiainaNum {
     )
       return PowiainaNum.ZERO.clone();
 
+    // Run pure number calculates in there
+    if (x.abs().lt(MSI) && y.abs().lt(MSI)) {
+      return PowiainaNum.fromNumber(x.toNumber() + y.toNumber());
+    }
+
     // calculate anything > e9e15 or <e-9e15, take absval bigger.
     if (
       x.abs().lt(PowiainaNum.E_MSI_REC) ||
@@ -492,6 +497,7 @@ export default class PowiainaNum implements IPowiainaNum {
       if (r.lt(PowiainaNum.MSI_REC)) return PowiainaNum.ONE;
       return new PowiainaNum(10 ** (r.array[0].repeat ** -1));
     }
+    if (r.gt(PowiainaNum.TETRATED_MSI)) return r;
     r.setOperator((r.array[1]?.repeat ?? 0) + 1, 1);
     r.normalize();
     return r;
@@ -687,6 +693,8 @@ export default class PowiainaNum implements IPowiainaNum {
     }
     if (this.array.length==1)
       return new PowiainaNum(Math.log10(this.array[0].repeat));
+
+    if (this.gte(PowiainaNum.TETRATED_MSI)) return this.clone();
     let x = this.clone();
     x.array[1].repeat = x.array[1].repeat - 1;
     x.normalize();
@@ -877,6 +885,83 @@ export default class PowiainaNum implements IPowiainaNum {
     // 2--3, 1e10-<e1e10, 10^10^10^0->1
     return PowiainaNum.NaN.clone();*/
   }
+
+  public arrow(arrows2: PowiainaNumSource): (other: PowiainaNumSource, depth?: number)=>PowiainaNum {
+    const t = this.clone();
+    const arrows = new PowiainaNum(arrows2);
+    if (!arrows.isInt()||arrows.lt(PowiainaNum.ZERO)) {
+      console.warn("The arrow is <0 or not a integer, the returned function will return NaN.")
+      return function () {return PowiainaNum.NaN.clone()};
+    }
+    if (arrows.eq(0)) return function (other) { return t.mul(other) };
+    if (arrows.eq(1)) return function (other) { return t.pow(other) };
+    if (arrows.eq(2)) return function (other) { return t.tetrate(other) };
+    return function (other2, depth=0) {
+      const other = new PowiainaNum(other2);
+      let ctt = PowiainaNum.arrowFuncMap.get(`${t.toString()} ${arrows.toString()} ${other.toString()}`);
+      if (ctt) return ctt.clone();
+
+      let res = (function (){
+        let r;
+        if (t.isNaN() ||other.isNaN()) return PowiainaNum.NaN.clone();
+        if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
+        if (t.eq(PowiainaNum.ZERO)) {
+          if (other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
+          return PowiainaNum.NaN.clone();
+        }
+        if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
+        if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
+        if (other.eq(PowiainaNum.ONE)) return t.clone();
+        if (arrows.gt(PowiainaNum.MSI)) {
+          r=arrows.clone();
+          r.setOperator(r.getOperator(Infinity)+1, Infinity)
+          return r;
+        }
+        let arrowsNum = arrows.toNumber();
+        if (other.eq(2)) return t.arrow(arrowsNum-1)(t, depth+1);
+        if (t.max(other).gt(PowiainaNum.arrowMSI(arrowsNum+1))) return t.max(other);
+        if (t.gt(PowiainaNum.arrowMSI(arrowsNum))|| other.gt(MSI)) {
+          if (t.gt(PowiainaNum.arrowMSI(arrowsNum))) {
+            r = t.clone();
+            r.setOperator(r.getOperator(arrowsNum)-1, arrowsNum);
+            r.normalize();
+          } else if (t.gt(PowiainaNum.arrowMSI(arrowsNum-1))) {
+            r = new PowiainaNum(t.getOperator(arrowsNum-1));
+          } else {
+            r=PowiainaNum.ZERO;
+          }
+          var j = r.add(other);
+          j.setOperator(j.getOperator(arrowsNum)+1, arrowsNum);
+          j.normalize();
+          return j;
+        }
+        if (depth >= PowiainaNum.maxOps + 10) {
+          return new PowiainaNum([[0,10], [arrowsNum,1]]);
+        }
+        const y =other.toNumber();
+        let f = Math.floor(y);
+        const arrows_m1 = arrows.sub(PowiainaNum.ONE);
+        r = t.arrow(arrows_m1)(y-f,depth+1);
+        let i = 0;
+        for (let m=PowiainaNum.arrowMSI(arrowsNum-1); f!==0&&r.lt(m) &&i<100;i++) {
+          if (f>0) {
+            r=t.arrow(arrows_m1)(r,depth+1);
+            --f;
+          }
+        }
+        if(i==100) f=0;
+        r.setOperator(r.getOperator(arrowsNum-1)+f, arrowsNum-1);
+        r.normalize();
+        return r;
+      })();
+      PowiainaNum.arrowFuncMap.set(`${t.toString()} ${arrows.toString()} ${other.toString()}`, res.clone());
+      return res;
+    }
+  }
+  public chain(other: PowiainaNumSource, arrows: PowiainaNumSource) {
+    return this.arrow(arrows)(other);
+  }
+
 
 
   public max(x: PowiainaNumSource): PowiainaNum {
@@ -1244,7 +1329,9 @@ export default class PowiainaNum implements IPowiainaNum {
     } while (renormalize);
     return this;
   }
-
+  private static arrowMSI(arrowsNum: number): PowiainaNum {
+    return new PowiainaNum(`10${arrowsNum}${MSI}`);
+  }
   /**
    * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
    */
@@ -1434,7 +1521,6 @@ export default class PowiainaNum implements IPowiainaNum {
         
         // Handle mantissa to ME
         mantissaME[1] = Number(exponent ? exponent : "0");
-        console.log(mantissa)
         // Is regular number gte 1:
         if (Number(mantissa)>=1) {
           // check The mantissa is very long?
@@ -1448,17 +1534,14 @@ export default class PowiainaNum implements IPowiainaNum {
           // If not , count how many zeros until reached non-zero numbers
           let zeros= countLeadingZerosAfterDecimal(mantissa);
           mantissa = mantissa.substring(mantissa.search(/[1-9]/));
-          console.log(mantissa)
           mantissa = mantissa.charAt(0) + "." + mantissa.substring(1);
           zeros+=1;
           mantissaME[0] = Number(mantissa);
           mantissaME[1] += -zeros;
-        console.log(mantissaME)
         }
         // We'll get [a, b] which respents a*10^b;
         // actually b < 0; So we can ^-1
         // /((a*10^b)^-1) = /(a^-1*10^-b) = /(a^-1 * 10 * 10^(-b-1))
-        console.log(mantissaME)
         return PowiainaNum.pow(10, -mantissaME[1]-1).mul(mantissaME[0]**-1 * 10).rec();
       }
       if (isFinite(res) && a) {
@@ -1813,4 +1896,5 @@ export default class PowiainaNum implements IPowiainaNum {
     sign: 0,
   });
   public static readonly maxOps = 100;
+  public static arrowFuncMap: Map<string, PowiainaNum> = new Map();
 }
