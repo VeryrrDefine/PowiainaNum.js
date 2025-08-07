@@ -23,7 +23,7 @@ const MSI_REC = 1.1102230246251568e-16 as const;
 const LONG_STRING_MIN_LENGTH = 17 as const;
 const EXP_E_REC = 1.444667861009766 as const;
 const isPowiainaNum =
-  /^\/*[-\+]*(Infinity|NaN|(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d* )*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
+  /^(PN)?\/*[-\+]*(Infinity|NaN|(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
 
 export type PowiainaNumSource = number | string | IPowiainaNum | PowiainaNum;
 
@@ -1156,7 +1156,7 @@ export default class PowiainaNum implements IPowiainaNum {
         x.array[0].repeat == 1 &&
         x.array[1].repeat
       ) {
-        // for any 10{X}10{X} 1, turn into 10{x}10  
+        // for any 10{X}10{X} 1, turn into 10{X}10  
         // [1, [R=sth, A=sth, E=sth, M=sth]]
         if (x.array[1].repeat > 1) {
           x.array[1].repeat--;
@@ -1170,9 +1170,11 @@ export default class PowiainaNum implements IPowiainaNum {
         x.array.length >= 2 &&
         x.array[0].repeat < MSI &&
         x.array[1].arrow >= 2 &&
-        x.array[1].repeat == 1
+        x.array[1].repeat == 1 &&
+        isFinite(x.array[1].arrow)
       ) {
         // for any 10{A sample=2}1e9, turn into (10{A-1})^1e9-1 10
+        // But dont convert when a is infinite
         // [1e9, [R=1, A=2, sth, sth]]
         x.array.splice(
           1,
@@ -1254,7 +1256,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return false;
   }
   /**
-   * @returns PowiainaNum a PowiainaNum object which deep copied from `this` object.
+   * @returns  a PowiainaNum object which deep copied from `this` object.
    */
   clone(): PowiainaNum {
     let obj = new PowiainaNum();
@@ -1277,7 +1279,12 @@ export default class PowiainaNum implements IPowiainaNum {
     this.layer = powlikeObject.layer;
     return this;
   }
-  toNumber(): number {
+  /**
+   * Convert `this` to Javascript `number`
+   * 
+   * returns `Infinity` when the number is greater than `Number.MAX_VALUE`
+   */
+  public toNumber(): number {
     if (this.sign == -1) return -this.neg().toNumber();
     if (this.small) return 1 / this.rec().toNumber();
 
@@ -1287,11 +1294,15 @@ export default class PowiainaNum implements IPowiainaNum {
     else if (this.array.length==2 && this.array[1].arrow == 1&& this.array[1].expans == 1&& this.array[1].megota == 1&& this.array[1].repeat == 1) return 10 ** this.getOperator(0);
     return NaN;
   }
-  toString(): string {
+
+  /**
+   * Convert `this` to a string 
+   */
+  public toString(): string {
     if (this.isNaN()) return `NaN`;
     if (this.sign == -1) return `-${this.neg().toString()}`;
     if (this.small) {
-      if (this.eq(PowiainaNum.ZERO)) return `0`;
+      if (this.isZero()) return `0`;
       return `/${this.rec().toString()}`;
     }
     if (this.isInfi()) return `Infinity`;
@@ -1317,7 +1328,7 @@ export default class PowiainaNum implements IPowiainaNum {
       } else if (oper.repeat > 1) {
         calc = `(${calc})^${oper.repeat} `;
       } else {
-        calc = `${calc} `;
+        calc = `${calc}`;
       }
       res += `${calc}`;
     }
@@ -1350,9 +1361,21 @@ export default class PowiainaNum implements IPowiainaNum {
     }
     return obj;
   }
+
+  /**
+   * Convert `this` to a JSON object
+   * @returns a JSON object
+   */
+  public toJSON(): string{
+    return "PN"+this.toString();
+  }
   public static fromString(input: string) {
     var x = new PowiainaNum();
     // Judge the string was a number
+
+    if (input.startsWith("PN"))
+      input = input.substring(2);
+
     // @ts-ignore
     if (!isNaN(Number(input))){
       // @ts-ignore
