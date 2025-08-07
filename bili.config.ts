@@ -17,7 +17,7 @@ const config: Config = {
         case "esm":
           return "PowiainaNum.esm.js";
         case "cjs":
-          return "PowiainaNum.cjs.js";
+          return context.minify ? "PowiainaNum.min.cjs.js" : "PowiainaNum.cjs.js";
         default:
           return defaultFileName;
       }

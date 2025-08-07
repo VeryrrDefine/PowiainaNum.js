@@ -24,8 +24,9 @@ const LONG_STRING_MIN_LENGTH = 17 as const;
 const EXP_E_REC = 1.444667861009766 as const;
 const isPowiainaNum =
   /^(PN)?\/*[-\+]*(Infinity|NaN|(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
+type ExpantaNumArray = [number,number][]
 
-export type PowiainaNumSource = number | string | IPowiainaNum | PowiainaNum;
+export type PowiainaNumSource = number | string | IPowiainaNum | PowiainaNum | ExpantaNumArray;
 
 function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
   return {
@@ -46,7 +47,20 @@ function compareTuples<T extends Array<any>>(...tuples: [T, T]): -1 | 0 | 1 {
   }
   return 0;
 }
-
+function replaceETo10(str: string) {
+    // 使用正则表达式匹配 (e^数字) 的模式
+    // 正则解释：\(e\^(\d+)\) 匹配 (e^数字)，其中 \d+ 匹配一个或多个数字
+    return str.replace(
+      /\(e\^(\d+)\)/g, '(10^)^$1 '
+    ).replace(
+      /(\d+)\x20*PT/g, '(10^)^$1 '
+    );
+}
+/**
+ * 把一个字符串很长的数进行以10为底的对数
+ * @param str 被进行的字符串
+ * @returns 字符串以10为底的对数；
+ */
 function log10LongString(str: string) {
   return (
     Math.log10(Number(str.substring(0, LONG_STRING_MIN_LENGTH))) +
@@ -179,8 +193,32 @@ function f_lambertw(z: number, t=1e-10, pr=true) {
 
   throw Error("Iteration failed to converge: ".concat(z.toString())); //return Number.NaN;
 }; 
-
-
+function isTwoLengthArray(x: any[]): x is [any, any] {
+  return x.length == 2;
+}
+function isTwoNumberArray(x: [any, any]): x is [number, number] {
+  return typeof x[0] === "number" && typeof x[1] === "number"
+}
+function isExpantaNumArray(x: any) : x is ExpantaNumArray {
+  if (!Array.isArray(x)) return false;
+  for (let i = 0; i<x.length; i++) {
+    let arr = x[i];
+    if (!Array.isArray(arr)) return false;
+    if (!isTwoLengthArray(arr)) return false;
+    if (!isTwoNumberArray(arr)) return false;
+  }
+  return true;
+}
+function countLeadingZerosAfterDecimal(numStr: string) {
+    const match = numStr.match(/^0\.(0*)[1-9]/);
+    return match ? match[1].length : 0;
+}
+/*
+function countLeadingZerosAfterDecimal(numStr) {
+    const match = numStr.match(/^0\.(0*)[1-9]/);
+    return match ? match[1].length : 0;
+}
+*/
 //from https://github.com/scipy/scipy/blob/8dba340293fe20e62e173bdf2c10ae208286692f/scipy/special/lambertw.pxd
 // The evaluation can become inaccurate very close to the branch point
 // at ``-1/e``. In some corner cases, `lambertw` might currently
@@ -252,6 +290,8 @@ export default class PowiainaNum implements IPowiainaNum {
     } else if (typeof arg1 == "string") {
       let obj = PowiainaNum.fromString(arg1);
       this.resetFromObject(obj);
+    } else if (Array.isArray(arg1))  {
+
     } else {
       let isn: never = arg1;
     }
@@ -1376,14 +1416,59 @@ export default class PowiainaNum implements IPowiainaNum {
     if (input.startsWith("PN"))
       input = input.substring(2);
 
-    // @ts-ignore
     if (!isNaN(Number(input))){
-      // @ts-ignore
-      if (isFinite(Number(input))) {
+      let res = Number(input);
+      let a = false;
+      if (res==0) {
+        if (/^(0*\.0*e)|(0*\.0*)$/.test(input)) {
+          a= true;
+        }
+      } else {
+        a = true;
+      }
+      if (!a) {
+        let m=input.search(/e/)
+        let exponent = input.substring((m==-1?input.length:m)+1);
+        let mantissa = input.substring(0, m==-1?undefined:m);
+        let mantissaME = [0, 0];
+        
+        // Handle mantissa to ME
+        mantissaME[1] = Number(exponent ? exponent : "0");
+        console.log(mantissa)
+        // Is regular number gte 1:
+        if (Number(mantissa)>=1) {
+          // check The mantissa is very long?
+          let log10mant = mantissa.length >= LONG_STRING_MIN_LENGTH ? log10LongString(mantissa) : Math.log10(Number(mantissa));
+          
+          let log10int = Math.floor(log10mant)-1;
+          let log10float = log10mant-log10int;
+          mantissaME[0] = 10**log10float;
+          mantissaME[1] += log10float;
+        } else{
+          // If not , count how many zeros until reached non-zero numbers
+          let zeros= countLeadingZerosAfterDecimal(mantissa);
+          mantissa = mantissa.substring(mantissa.search(/[1-9]/));
+          console.log(mantissa)
+          mantissa = mantissa.charAt(0) + "." + mantissa.substring(1);
+          zeros+=1;
+          mantissaME[0] = Number(mantissa);
+          mantissaME[1] += -zeros;
+        console.log(mantissaME)
+        }
+        // We'll get [a, b] which respents a*10^b;
+        // actually b < 0; So we can ^-1
+        // /((a*10^b)^-1) = /(a^-1*10^-b) = /(a^-1 * 10 * 10^(-b-1))
+        console.log(mantissaME)
+        return PowiainaNum.pow(10, -mantissaME[1]-1).mul(mantissaME[0]**-1 * 10).rec();
+      }
+      if (isFinite(res) && a) {
         x.resetFromObject(PowiainaNum.fromNumber(Number(input)));
         return x;
       }
     }
+
+    input = replaceETo10(input);
+
     if (!isPowiainaNum.test(input)) {
       throw powiainaNumError+"malformed input: "+input
     }
@@ -1557,22 +1642,39 @@ export default class PowiainaNum implements IPowiainaNum {
     x.normalize();
     return x;
   }
-  public static fromObject(powlikeObject: IPowiainaNum) {
+  public static fromObject(powlikeObject: IPowiainaNum|ExpantaNumArray) {
     let obj = new PowiainaNum();
     obj.array = [];
-    for (let i = 0; i < powlikeObject.array.length; i++) {
-      obj.array[i] = {
-        arrow: powlikeObject.array[i].arrow,
-        expans: powlikeObject.array[i].expans,
-        megota: powlikeObject.array[i].megota,
-        repeat: powlikeObject.array[i].repeat,
-        valuereplaced: powlikeObject.array[i].valuereplaced,
-      };
+    if (isExpantaNumArray(powlikeObject)) {
+      for (let i = 0; i < powlikeObject.length; i++) {
+        obj.array[i] = {
+          arrow: powlikeObject[i][0],
+          expans: 1,
+          megota: 1,
+          repeat: powlikeObject[i][1]
+        };
+      }
+      obj.small = false;
+      obj.sign = 1;
+      obj.layer = 0;
+      obj.normalize();
+      return obj;
+
+    } else {
+      for (let i = 0; i < powlikeObject.array.length; i++) {
+        obj.array[i] = {
+          arrow: powlikeObject.array[i].arrow,
+          expans: powlikeObject.array[i].expans,
+          megota: powlikeObject.array[i].megota,
+          repeat: powlikeObject.array[i].repeat,
+          valuereplaced: powlikeObject.array[i].valuereplaced,
+        };
+      }
+      obj.small = powlikeObject.small;
+      obj.sign = powlikeObject.sign;
+      obj.layer = powlikeObject.layer;
+      return obj;
     }
-    obj.small = powlikeObject.small;
-    obj.sign = powlikeObject.sign;
-    obj.layer = powlikeObject.layer;
-    return obj;
   }
   /**
    * A property arary value for version 0.1.x PowiainaNum.
