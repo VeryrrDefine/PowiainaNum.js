@@ -23,7 +23,7 @@ const MSI_REC = 1.1102230246251568e-16 as const;
 const LONG_STRING_MIN_LENGTH = 17 as const;
 const EXP_E_REC = 1.444667861009766 as const;
 const isPowiainaNum =
-  /^(PN)?\/*[-\+]*(Infinity|NaN|(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
+  /^(PN)?[\/\-\+]*(Infinity|NaN|(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
 type ExpantaNumArray = [number,number][]
 
 export type PowiainaNumSource = number | string | IPowiainaNum | PowiainaNum | ExpantaNumArray;
@@ -562,11 +562,13 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(t).sqrt();
   }
   public cbrt(): PowiainaNum {
-    return this.root(3);
+    return this.abs().root(3).mul(this.sign);
   }
   public static cbrt(t: PowiainaNumSource): PowiainaNum {
     return new PowiainaNum(t).cbrt();
   }
+
+  
 
   // Code from ExpantaNum.js
   public tetrate(other2: PowiainaNumSource, payload: PowiainaNumSource=1) {
@@ -673,12 +675,19 @@ export default class PowiainaNum implements IPowiainaNum {
       r+=l;
       x.setOperator(x.getOperator(1)-l, 1);
     }
-    for (let i=0;i<100;++i) {
-      if (x.lte(PowiainaNum.ONE)) return new PowiainaNum(r+x.toNumber());
-      ++r;
-      x = PowiainaNum.log(x, base);
+    for (var i=0;i<100;++i){
+      if (x.lt(PowiainaNum.ZERO)){
+        x=PowiainaNum.pow(base,x);
+        --r;
+      }else if (x.lte(1)){
+        return new PowiainaNum(r+x.toNumber()-1);
+      }else{
+        ++r;
+        x=PowiainaNum.log(x,base);
+      }
     }
-    console.warn("Failed to converage")
+    if (x.gt(10))
+      return new PowiainaNum(r);
     return PowiainaNum.NaN.clone();
   }
 
@@ -721,6 +730,38 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public ln(): PowiainaNum {
     return this.log();
+  }
+  /**
+   * plog10, beware unexpected errors.
+   */
+  public plog10(): PowiainaNum {
+    return this.max(1).log10()
+  }
+  /**
+   * plog10, beware unexpected errors.
+   */
+  public static plog10(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).plog10();
+  }
+  /**
+   * plog, beware unexpected errors.
+   */
+  public plog(base: PowiainaNumSource=Math.E): PowiainaNum {
+    // log_a b = log_x b / log_x a;
+    const other = new PowiainaNum(base);
+    return this.plog10().div(other.plog10());
+  }
+  /**
+   * plog, beware unexpected errors.
+   */
+  public static plog(t: PowiainaNumSource, base: PowiainaNumSource=Math.E): PowiainaNum {
+    return new PowiainaNum(t).plog(base);
+  }
+  /**
+   * pln, beware unexpected errors.
+   */
+  public pln(): PowiainaNum {
+    return this.plog();
   }
   public static exp(x: PowiainaNumSource): PowiainaNum {
     let y = new PowiainaNum(x);
@@ -905,7 +946,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (arrows.eq(2)) return function (other) { return t.tetrate(other) };
     return function (other2, depth=0) {
       const other = new PowiainaNum(other2);
-      let ctt = PowiainaNum.arrowFuncMap.get(`${t.toString()} ${arrows.toString()} ${other.toString()}`);
+      let ctt = PowiainaNum.arrowFuncMap.get(`${t.toString()} ${arrows.toString()} ${other.toString()} ${depth}`);
       if (ctt) return ctt.clone();
 
       let res = (function (){
@@ -919,12 +960,17 @@ export default class PowiainaNum implements IPowiainaNum {
         if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
         if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
         if (other.eq(PowiainaNum.ONE)) return t.clone();
+
+        // arrow > 9e15, that using 10{x}, x=arrow;
         if (arrows.gt(PowiainaNum.MSI)) {
           r=arrows.clone();
           r.setOperator(r.getOperator(Infinity)+1, Infinity)
           return r;
         }
         let arrowsNum = arrows.toNumber();
+        // arrow < 9e15
+
+        // 10{x}2 = 10{x-1}10
         if (other.eq(2)) return t.arrow(arrowsNum-1)(t, depth+1);
         if (t.max(other).gt(PowiainaNum.arrowMSI(arrowsNum+1))) return t.max(other);
         if (t.gt(PowiainaNum.arrowMSI(arrowsNum))|| other.gt(MSI)) {
@@ -943,7 +989,15 @@ export default class PowiainaNum implements IPowiainaNum {
           return j;
         }
         if (depth >= PowiainaNum.maxOps + 10) {
-          return new PowiainaNum([[0,10], [arrowsNum,1]]);
+          return new PowiainaNum({
+            small: false,
+            sign:1,
+            layer:0,
+            array: [
+              newOperator(10,0),
+              newOperator(1,arrowsNum),
+            ]
+          });
         }
         const y =other.toNumber();
         let f = Math.floor(y);
@@ -960,8 +1014,11 @@ export default class PowiainaNum implements IPowiainaNum {
         r.setOperator(r.getOperator(arrowsNum-1)+f, arrowsNum-1);
         r.normalize();
         return r;
+
       })();
-      PowiainaNum.arrowFuncMap.set(`${t.toString()} ${arrows.toString()} ${other.toString()}`, res.clone());
+      if (depth < PowiainaNum.maxOps + 10){
+        PowiainaNum.arrowFuncMap.set(`${t.toString()} ${arrows.toString()} ${other.toString()} ${depth}`, res.clone());
+      }
       return res;
     }
   }
@@ -1389,7 +1446,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return this;
   }
   private static arrowMSI(arrowsNum: number): PowiainaNum {
-    return new PowiainaNum(`10${arrowsNum}${MSI}`);
+    return new PowiainaNum(`10{${arrowsNum}}${MSI}`);
   }
   /**
    * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
