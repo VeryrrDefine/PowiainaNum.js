@@ -1375,9 +1375,9 @@ export default class PowiainaNum implements IPowiainaNum {
       if (x.array.length > PowiainaNum.maxOps)
         x.array.splice(1, x.array.length - PowiainaNum.maxOps); // max operators check
       // for any 10^a but a >log10(MSI), replace to regular 10^a
-      if (this.getOperator(1) >= 1 && this.getOperator(0) < MSI_LOG10) {
-        this.setOperator(this.getOperator(1) - 1, 1);
-        this.setOperator(10 ** this.getOperator(0), 0);
+      if (this.array[1].arrow==1 && this.array[1].repeat >= 1 &&  this.array[0].repeat < MSI_LOG10) {
+        this.setOperator(this.array[1].repeat - 1, 1);
+        this.setOperator(10 ** this.array[0].repeat, 0);
         renormalize = true;
       }
       if (this.getOperator(0) > MSI && !isFinite(this.getOperator(0))) {
@@ -1411,7 +1411,7 @@ export default class PowiainaNum implements IPowiainaNum {
         x.array.length >= 2 &&
         x.array[0].repeat < MSI &&
         x.array[1].arrow >= 2 &&
-        x.array[1].repeat == 1 &&
+        x.array[1].repeat == 1 && //10^^^ 10
         isFinite(x.array[1].arrow)
       ) {
         // for any 10{A sample=2}1e9, turn into (10{A-1})^1e9-1 10
@@ -1452,10 +1452,6 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
    */
   getOperatorIndex(arrow: number, expans = 1, megota = 1) {
-    if (this.array.length==1 && arrow==0) return 0;
-    if (this.array.length==1 && arrow==1) return 0.5;
-    if (this.array.length==2 && arrow==1) return 1;
-    if (this.array.length==2 && arrow==0) return 0;
 
     for (let i = 0; i < this.array.length; i++) {
       let cmp = compareTuples(
@@ -1856,7 +1852,6 @@ export default class PowiainaNum implements IPowiainaNum {
       obj.small = false;
       obj.sign = 1;
       obj.layer = 0;
-      obj.normalize();
       return obj;
 
     } else {
