@@ -274,6 +274,11 @@ export default class PowiainaNum implements IPowiainaNum {
   small: boolean;
   sign: -1 | 0 | 1;
   layer: number;
+
+  /**
+   * Constructor of PowiainaNum class,
+   * If no arguments, return `PowiainaNum.NaN`.
+   */
   constructor(arg1?: PowiainaNumSource) {
     this.array = [{ arrow: 0, expans: 1, megota: 1, repeat: NaN }];
     this.small = false;
@@ -480,6 +485,9 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(t).div(other);
   }
   
+  /**
+   * @returns 10 to the power of `this`
+   */
   public pow10(): PowiainaNum {
     const r = this.clone();
     // inf & nan check
@@ -885,7 +893,6 @@ export default class PowiainaNum implements IPowiainaNum {
     // 2--3, 1e10-<e1e10, 10^10^10^0->1
     return PowiainaNum.NaN.clone();*/
   }
-
   public arrow(arrows2: PowiainaNumSource): (other: PowiainaNumSource, depth?: number)=>PowiainaNum {
     const t = this.clone();
     const arrows = new PowiainaNum(arrows2);
@@ -963,22 +970,70 @@ export default class PowiainaNum implements IPowiainaNum {
   }
 
 
+  /**
+   * Select the largest number of arguments.
+   */
+  public static max(...args: PowiainaNumSource[]): PowiainaNum {
+    let max = PowiainaNum.NEGATIVE_INFINITY;
+    for (let i = 0; i < args.length; i++) {
+      if (max.lt(args[i])) {
+        max = new PowiainaNum(args[i]).clone();
+      }
+    }
+    return max;
+  }
 
-  public max(x: PowiainaNumSource): PowiainaNum {
-    const other = new PowiainaNum(x);
-    return this.lt(other) ? other.clone() : this.clone();
+  
+  /**
+   * Select the smallest number of arguments.
+   */
+  public static min(...args: PowiainaNumSource[]): PowiainaNum {
+    let max = PowiainaNum.POSITIVE_INFINITY;
+    for (let i = 0; i < args.length; i++) {
+      if (max.gt(args[i])) {
+        max = new PowiainaNum(args[i]).clone();
+      }
+    }
+    return max;
   }
-  public min(x: PowiainaNumSource): PowiainaNum {
-    const other = new PowiainaNum(x);
-    return this.gte(other) ? other.clone() : this.clone();
+  /**
+   * Restrict a number be not lower than a number
+   * 
+   * It's also an alias of `PowiainaNum.max`.
+   * @returns restricted number
+   */
+  public static clampMin(...args: PowiainaNumSource[]): PowiainaNum {
+    return PowiainaNum.max(...args);
   }
-  public maxabs(x: PowiainaNumSource): PowiainaNum {
-    const other = new PowiainaNum(x).abs();
-    return this.abs().lt(other) ? other.clone() : this.clone();
+  
+  /**
+   * Restrict a number be not higher than a number
+   * 
+   * It's also an alias of `PowiainaNum.min`.
+   * @returns restricted number
+   */
+  public static clampMax(...args: PowiainaNumSource[]): PowiainaNum {
+    return PowiainaNum.min(...args);
   }
-  public minabs(x: PowiainaNumSource): PowiainaNum {
-    const other = new PowiainaNum(x).abs();
-    return this.abs().gt(other) ? other.clone() : this.clone();
+  public max(...args: PowiainaNumSource[]): PowiainaNum {
+    return PowiainaNum.max(this, ...args);
+  }
+  public min(...args: PowiainaNumSource[]): PowiainaNum {
+    return PowiainaNum.min(this, ...args);
+  }
+
+  /**
+   * Compare what PowiainaNum's absolute value is max
+   * @param args 
+   * @returns absolute value max number's absolute value
+   */
+  public maxabs(...args: PowiainaNumSource[]): PowiainaNum {
+    const other = args.map((x)=> new PowiainaNum(x).abs());
+    return PowiainaNum.max(this.abs(), ...other)
+  }
+  public minabs(...args: PowiainaNumSource[]): PowiainaNum {
+    const other = args.map((x)=> new PowiainaNum(x).abs());
+    return PowiainaNum.min(this.abs(), ...other)
   }
 
   public cmpabs(x: PowiainaNumSource): -1 | 0 | 1 | 2 {
@@ -1116,6 +1171,10 @@ export default class PowiainaNum implements IPowiainaNum {
   gte(other: PowiainaNumSource): boolean {
     let t = this.cmp(other);
     return t == 0 || t == 1;
+  }
+
+  public static sign(a: PowiainaNum): -1|0|1 {
+    return new PowiainaNum(a).sign;
   }
 
   isNaN(): boolean {
@@ -1264,7 +1323,7 @@ export default class PowiainaNum implements IPowiainaNum {
         this.setOperator(10 ** this.getOperator(0), 0);
         renormalize = true;
       }
-      if (this.getOperator(0) > MSI) {
+      if (this.getOperator(0) > MSI && !isFinite(this.getOperator(0))) {
         this.setOperator(this.getOperator(1) + 1, 1);
         this.setOperator(Math.log10(this.getOperator(0)), 0);
         renormalize = true;
@@ -1760,7 +1819,7 @@ export default class PowiainaNum implements IPowiainaNum {
     }
   }
   /**
-   * A property arary value for version 0.1.x PowiainaNum.
+   * A property array value for version 0.1.x PowiainaNum.
    */
   get arr01() {
     let res: [number, ...(([number, number, number, number]|["x", number, number, number]|[number, number, "x", number])[])] 
@@ -1782,6 +1841,10 @@ export default class PowiainaNum implements IPowiainaNum {
     }
     return res;
   }
+  
+  /**
+   * Zero
+   */
   public static readonly ZERO = new PowiainaNum({
     array: [
       {
@@ -1795,6 +1858,9 @@ export default class PowiainaNum implements IPowiainaNum {
     layer: 0,
     sign: 0,
   });
+  /**
+   * One
+   */
   public static readonly ONE = new PowiainaNum({
     array: [
       {
@@ -1808,12 +1874,25 @@ export default class PowiainaNum implements IPowiainaNum {
     layer: 0,
     sign: 1,
   });
+  /**
+   * The value of the largest integer n such that n and n + 1 are both 
+   * exactly representable as a Number value = 9007199254740991 = 2^53 − 1.
+   */
   public static readonly MSI = new PowiainaNum(MSI);
+  a = Number.MAX_SAFE_INTEGER
+  /**
+   * MSI's reciprocate value, = 1/9007199254740991.
+   */
   public static readonly MSI_REC = (function () {
     let obj = new PowiainaNum(MSI);
     obj.small = true;
     return obj;
   })();
+
+  
+  /**
+   * 10^(MSI) = 10^9007199254740991.
+   */
   public static readonly E_MSI = new PowiainaNum({
     array: [
       {
@@ -1828,6 +1907,11 @@ export default class PowiainaNum implements IPowiainaNum {
     layer: 0,
     sign: 1,
   });
+
+  
+  /**
+   * 10^(MSI) 's reciprocate value, = 10^-9007199254740991.
+   */
   public static readonly E_MSI_REC = new PowiainaNum({
     array: [
       {
@@ -1842,36 +1926,47 @@ export default class PowiainaNum implements IPowiainaNum {
     layer: 0,
     sign: 1,
   });
+
+  
+  /**
+   * Tetrated MSI, = 10↑↑9007199254740991.
+   */
   public static readonly TETRATED_MSI = new PowiainaNum({
     array: [
       {
         arrow: 0,
         expans: 1,
         megota: 1,
-        repeat: MSI,
+        repeat: 1e10,
       },
-      { arrow: 1, expans: 1, megota: 1, repeat: MSI },
-    ],
-    small: false,
-    layer: 0,
-    sign: 1,
-  });
-  public static readonly PENTATED_MSI = new PowiainaNum({
-    array: [
-      {
-        arrow: 0,
-        expans: 1,
-        megota: 1,
-        repeat: MSI,
-      },
-      { arrow: 1, expans: 1, megota: 1, repeat: MSI },
-      { arrow: 2, expans: 1, megota: 1, repeat: MSI },
+      { arrow: 1, expans: 1, megota: 1, repeat: MSI-2 },
     ],
     small: false,
     layer: 0,
     sign: 1,
   });
 
+  /**
+   * Pentated MSI, = 10↑↑↑9007199254740991.
+   */
+  public static readonly PENTATED_MSI = new PowiainaNum({
+    array: [
+      {
+        arrow: 0,
+        expans: 1,
+        megota: 1,
+        repeat: 10,
+      },
+      { arrow: 2, expans: 1, megota: 1, repeat: MSI-1 },
+    ],
+    small: false,
+    layer: 0,
+    sign: 1,
+  });
+
+  /**
+   * Tritri, = 3↑↑↑3 = power tower with height 7625597484987 base 3.
+   */
   public static readonly TRITRI = new PowiainaNum({
     small: false,layer:0,sign:1,
     array: [
@@ -1879,8 +1974,23 @@ export default class PowiainaNum implements IPowiainaNum {
       newOperator(7625587484984, 1, 1, 1)
     ]
   })
+
+  /**
+   * The Graham's Number, = G^64(4) 
+   * 
+   * = 3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{
+   * 3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3↑↑↑↑3
+   * }3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3
+   * }3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3
+   */
   public static readonly GRAHAMS_NUMBER = new PowiainaNum("(10{!})^63 10^^^(10^)^7625597484984 3638334640023.7783")
+  /**
+   * Positive Infinity.
+   */
   public static readonly POSITIVE_INFINITY = new PowiainaNum(Infinity);
+  /**
+   * Negative Infinity.
+   */
   public static readonly NEGATIVE_INFINITY = new PowiainaNum(-Infinity);
   public static readonly NaN = new PowiainaNum({
     array: [
@@ -1895,6 +2005,42 @@ export default class PowiainaNum implements IPowiainaNum {
     layer: 0,
     sign: 0,
   });
+  /**
+   * The mathematical constant e. This is Euler's number, the base of natural logarithms.
+   */
+  public static readonly E = new PowiainaNum(Math.E);
+  /**
+   * The natural logarithm of 2 = ln(2).
+   */
+  public static readonly LN2 = new PowiainaNum(Math.LN2);
+  /**
+   * The natural logarithm of 10.
+   */
+  public static readonly LN10 = new PowiainaNum(Math.LN10);
+  /**
+   * The base-2 logarithm of e = log_2(e).
+   */
+  public static readonly LOG2E = new PowiainaNum(Math.LOG2E);
+  /**
+   * The base-10 logarithm of e = log_10(e).
+   */
+  public static readonly LOG10E = new PowiainaNum(Math.LOG10E);
+  /**
+   * Pi(). This is the ratio of the circumference of a circle to its diameter.
+   */
+  public static readonly PI = new PowiainaNum(Math.PI);
+  /**
+   * The square root of 0.5, or, equivalently, one divided by the square root of 2.
+   * 
+   * = (√2)/2 = √(0.5)
+   */
+  public static readonly SQRT1_2 = new PowiainaNum(Math.SQRT1_2);
+  /**
+   * The square root of 2 = √2.
+   */
+  public static readonly SQRT2 = new PowiainaNum(Math.SQRT2);
+
+
   public static readonly maxOps = 100;
   public static arrowFuncMap: Map<string, PowiainaNum> = new Map();
 }
