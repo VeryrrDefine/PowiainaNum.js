@@ -1375,7 +1375,7 @@ export default class PowiainaNum implements IPowiainaNum {
       if (x.array.length > PowiainaNum.maxOps)
         x.array.splice(1, x.array.length - PowiainaNum.maxOps); // max operators check
       // for any 10^a but a >log10(MSI), replace to regular 10^a
-      if (this.array[1].arrow==1 && this.array[1].repeat >= 1 &&  this.array[0].repeat < MSI_LOG10) {
+      if (this.array.length>=2&&this.array[1].arrow==1 && this.array[1].repeat >= 1 &&  this.array[0].repeat < MSI_LOG10) {
         this.setOperator(this.array[1].repeat - 1, 1);
         this.setOperator(10 ** this.array[0].repeat, 0);
         renormalize = true;
