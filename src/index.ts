@@ -831,7 +831,7 @@ export default class PowiainaNum implements IPowiainaNum {
     } else if (principal) {
       if (this.abs().lt("1e-300")) return new PowiainaNum(this);else if (this.small) {
         return PowiainaNum.fromNumber(f_lambertw(this.toNumber()));
-      } else if (this.layer === 0) {
+      } else if (this.lt(MSI)) {
         return PowiainaNum.fromNumber(f_lambertw(this.sign * this.getOperator(0)));
       } else if (this.lt("eee15")) {
         return d_lambertw(this);
@@ -1879,7 +1879,6 @@ export default class PowiainaNum implements IPowiainaNum {
    * exactly representable as a Number value = 9007199254740991 = 2^53 − 1.
    */
   public static readonly MSI = new PowiainaNum(MSI);
-  a = Number.MAX_SAFE_INTEGER
   /**
    * MSI's reciprocate value, = 1/9007199254740991.
    */
