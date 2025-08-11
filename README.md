@@ -19,7 +19,10 @@ If arrow count or expans count is Infinite, the count replaces to the next opera
 
 Some codes snippet from [ExpantaNum.js by Naruyoko](https://github.com/Naruyoko/ExpantaNum.js)
 
-Functions are as follows `abs, neg, add, sub, mul, div, rec, pow, pow10, pow_base, sqrt, cbrt, root, log10, log, cmp, rec, gamma, mod, exp, ln, slog, factorial, tetrate_10, isFinite, isInfinite, isNaN, tetrate, lambertw, toString, toJSON, floor, ceil, round, trunc, clampMax, clampMin, arrow, expansion, expansionArrow, multiExpansion, powerExpansion`(some missing items that have not been fully developed)
+Functions are as follows `abs, neg, add, sub, mul, div, rec, pow, pow10, pow_base, sqrt, cbrt, root, log10, log, cmp, rec, gamma, mod, exp, ln, slog, factorial, tetrate_10, isFinite, isInfinite, isNaN, tetrate, lambertw, toString, toJSON, floor, ceil, round, trunc, clampMax, clampMin, arrow, expansion, expansionArrow, multiExpansion, powerExpansion, explosion`(some missing items that have not been fully developed)
+
+## Current unstable functions
+`megotion, BEAF`
 
 ## Using
 
