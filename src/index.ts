@@ -2456,7 +2456,6 @@ export default class PowiainaNum implements IPowiainaNum {
     }
     return res;
   }
-
   /**
    * Zero
    */
