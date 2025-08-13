@@ -312,7 +312,6 @@ export default class PowiainaNum implements IPowiainaNum {
     } else if (typeof arg1 == "string") {
       let obj = PowiainaNum.fromString(arg1);
       this.resetFromObject(obj);
-    } else if (Array.isArray(arg1)) {
     } else {
       let isn: never = arg1;
     }
