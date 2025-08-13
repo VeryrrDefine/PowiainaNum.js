@@ -11,6 +11,7 @@
     "types": "./dist/index.d.ts"
   },
   "unpkg": "dist/PowiainaNum.min.js",
+  "jsdelivr": "dist/PowiainaNum.min.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "bili",
