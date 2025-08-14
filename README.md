@@ -81,6 +81,16 @@ a.gt(b); // a is greater than b
 a.eq(b); // a is equals to b
 ```
 
+## Developing
+
+Clone this project and then run `npm install`.
+
+### Build project
+Run `npm run build` to build this project, js files will produce in `dist` directory.
+
+### Test project
+Run `npm run test` to test this project.
+
 ## Future ideas
 
 Extend `Operator` to nearly infinite keys to reach level f<sub>ω<sup>ω</sup></sub>

@@ -1,4 +1,4 @@
-/* Author: VeryrrDefine 0.2.0-alpha.4*/
+/* Author: VeryrrDefine 0.2.0-alpha.4.3*/
 
 interface Operator {
   arrow: number;
@@ -1894,6 +1894,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
 
   //#endregion
+  
   /**
    * Normalize functions will make this number convert into standard format.(it also change `this`, like [].sort)
    * @returns normalized number
@@ -2131,6 +2132,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return false;
   }
   //#endregion
+  
   /**
    * @returns  a PowiainaNum object which deep copied from `this` object.
    */
@@ -2139,6 +2141,12 @@ export default class PowiainaNum implements IPowiainaNum {
     obj.resetFromObject(this);
     return obj;
   }
+
+  /**
+   * Set `this` from a object(deep-copy)
+   * @param powlikeObject 
+   * @returns 
+   */
   resetFromObject(powlikeObject: IPowiainaNum) {
     this.array = [];
     for (let i = 0; i < powlikeObject.array.length; i++) {
