@@ -1,28 +1,30 @@
 # PowiainaNum.js
 
+[![npm](https://img.shields.io/npm/v/powiaina_num.js.svg)](https://www.npmjs.com/package/powiaina_num.js)
+
 A JavaScript library that handles arithmetic for numbers as large as {10,9e15,1,1,1,2}.
 
 This reaches level f<sub>ω<sup>3</sup>+1</sub>.
 
 Internally, it is represented as an sign, array, small, and layer. Sign is 1 or -1. . Layer is a non-negative integer. 
 
-The operator interface is `interface {arrow: number; expans: number; megota: number; repeat: number;}`, which respents {10, {10, ...{10, X, arrow, expans, megota}..., arrow, expans, megota}, arrow, expans, megota} (repeat means counts of 10's);
+The operator interface is `interface {arrow: number; expans: number; megota: number; repeat: number;}`;
 
-The array is `Operator[]`
+The array is an array types `Operator[]`
 
-when $$f(x) = \{10, 10, 10, 10, 10, x\}$$
-$$g_{a,b,c}(x) = \{10,x,a,b,c\}$$
+when $$f(x) = \{10, 10, 10, 10, x\}$$
+$$g_{a,b,c}(x) = \text{a,b is not Infinity}=\{10,x,a,b,c\},\text{a is Infinity}=\{10,10,x,b,c\},\text{b is Infinity}=\{10,10,10,x,c\}$$
 $$o_x = \text{last }x\text{th operator of array}  $$
-They together respents $s_{ign}\times f^{l_{ayer}} g_{o_1.arrow, o_1.expans, o_1.megota} g_{o_2.arrow, o_2.expans, o_2.megota} ...$
+$$s_{ign} = \text{PN's sign property}$$
+$$l_{ayer} = \text{PN's layer property}$$
+$$e_{xp} = \text{if PN's small property is false, }e_{xp}=1,\text{Otherwise,}e_{xp}=-1$$
+They together respents $(s_{ign}\times f^{l_{ayer}} g_{o_1.arrow, o_1.expans, o_1.megota}^{o_1.repeat} g_{o_2.arrow, o_2.expans, o_2.megota}^{o_2.repeat} ...)^{e_{xp}}$
 
 If arrow count or expans count is Infinite, the count replaces to the next operators.
 
 Some codes snippet from [ExpantaNum.js by Naruyoko](https://github.com/Naruyoko/ExpantaNum.js)
 
-Functions are as follows `abs, neg, add, sub, mul, div, rec, pow, pow10, pow_base, sqrt, cbrt, root, log10, log, cmp, rec, gamma, mod, exp, ln, slog, factorial, tetrate_10, isFinite, isInfinite, isNaN, tetrate, lambertw, toString, toJSON, floor, ceil, round, trunc, clampMax, clampMin, arrow, expansion, expansionArrow, multiExpansion, powerExpansion, explosion`(some missing items that have not been fully developed)
-
-## Current unstable functions
-`megotion, BEAF`
+Functions are as follows `abs, neg, add, sub, mul, div, rec, pow, pow10, pow_base, sqrt, cbrt, root, log10, log, cmp, rec, gamma, mod, exp, ln, slog, factorial, tetrate_10, isFinite, isInfinite, isNaN, tetrate, lambertw, toString, toJSON, floor, ceil, round, trunc, clampMax, clampMin, arrow, expansion, expansionArrow, multiExpansion, powerExpansion, explosion, megotion, BEAF`(some missing items that have not been fully developed)
 
 ## Using
 
@@ -89,7 +91,7 @@ Clone this project and then run `npm install`.
 Run `npm run build` to build this project, js files will produce in `dist` directory.
 
 ### Test project
-Run `npm run test` to test this project.
+Run `npm test` to test this project.
 
 ## Future ideas
 

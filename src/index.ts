@@ -1374,33 +1374,36 @@ export default class PowiainaNum implements IPowiainaNum {
   }
 
   public megotion(other: PowiainaNumSource) {
-    console.warn("This function is unstable when calculating numbers");
     return PowiainaNum.BEAF(this, other, 1, 1, 2);
   }
 
   public static BEAF(
     base2: PowiainaNumSource,
     power2: PowiainaNumSource,
-    ...args: PowiainaNumSource[]
+    arrow2: PowiainaNumSource=1,
+    expans2: PowiainaNumSource=1,
+    megota2: PowiainaNumSource=1,
+    powiaina2: PowiainaNumSource=1,
+    depth = 0
   ): PowiainaNum {
-    console.warn(
-      "This function is unstable when calculating numbers greater than *megotion*",
-    );
+    // console.warn(
+    //   "This function is unstable when calculating numbers greater than *megotion*",
+    // );
     let base = new PowiainaNum(base2);
     let power = new PowiainaNum(power2);
     function readArg(a: number) {
-      return new PowiainaNum(args[a] ?? 1);
+      return new PowiainaNum([arrow2,expans2,megota2,powiaina2][a] ?? 1);
     }
 
     if (base.eq(1)) return new PowiainaNum(1);
     if (power.eq(1)) return new PowiainaNum(base);
     if (power.isZero()) return new PowiainaNum(1);
     if (base.lt(0)) return PowiainaNum.NaN.clone();
-    // check infinite
-    let sufpowiaina = args.slice(4);
-    if (sufpowiaina.filter((f) => new PowiainaNum(f).gte(2)).length > 0) {
-      return PowiainaNum.POSITIVE_INFINITY;
-    }
+    // // check infinite
+    // let sufpowiaina = args.slice(4);
+    // if (sufpowiaina.filter((f) => new PowiainaNum(f).gte(2)).length > 0) {
+    //   return PowiainaNum.POSITIVE_INFINITY;
+    // }
     if (readArg(0).eq(1) && readArg(1).eq(1) && readArg(2).eq(1)) {
       return base.pow(power);
     }
@@ -1447,7 +1450,8 @@ export default class PowiainaNum implements IPowiainaNum {
 
     const t = base.clone();
     const arrows = new PowiainaNum(readArg(0));
-    return (function (other2: PowiainaNumSource, depth = 0): PowiainaNum {
+    const result = (function (other2: PowiainaNumSource, depth = 0): PowiainaNum {
+      console.log(`${"-".repeat(depth)} {${base2},${power2},${arrow2},${expans2},${megota2}}`)
       const other = new PowiainaNum(other2);
       let r;
       if (t.isNaN() || other.isNaN()) return PowiainaNum.NaN.clone();
@@ -1461,11 +1465,11 @@ export default class PowiainaNum implements IPowiainaNum {
       if (other.eq(PowiainaNum.ONE)) return t.clone();
 
       if (arrows.eq(0)) {
-        return PowiainaNum.BEAF(t, t, power, expans.sub(1), megota);
+        return PowiainaNum.BEAF(t, t, power, expans.sub(1), megota, powiaina2, depth+1);
         // {this, this, power, expans-1, megota}
       }
       if (expans.eq(0)) {
-        return PowiainaNum.BEAF(t, t, t, power, megota.sub(1));
+        return PowiainaNum.BEAF(t, t, t, arrow2, megota.sub(1), powiaina2, depth+1);
       }
       // expans > 9e15, that using 10{?, x}, x=expans;
       if (expans.gt(MSI)) {
@@ -1494,7 +1498,7 @@ export default class PowiainaNum implements IPowiainaNum {
 
       // 10{x}2 = 10{x-1}10
       if (other.eq(2))
-        return PowiainaNum.BEAF(t, t, arrowsNum - 1, expans, megota);
+        return PowiainaNum.BEAF(t, t, arrowsNum - 1, expans, megota, powiaina2, depth+1);
       if (
         t
           .max(other)
@@ -1561,7 +1565,7 @@ export default class PowiainaNum implements IPowiainaNum {
       const y = other.toNumber();
       let f = Math.floor(y);
       const arrows_m1 = arrows.sub(PowiainaNum.ONE);
-      r = PowiainaNum.BEAF(t, y - f, arrows_m1.toNumber(), expans, megota);
+      r = PowiainaNum.BEAF(t, y - f, arrows_m1.toNumber(), expans, megota, powiaina2, depth+1);
       let i = 0;
       for (
         let m = new PowiainaNum(
@@ -1577,7 +1581,7 @@ export default class PowiainaNum implements IPowiainaNum {
         i++
       ) {
         if (f > 0) {
-          r = PowiainaNum.BEAF(base, r, arrows_m1.toNumber(), expans, megota);
+          r = PowiainaNum.BEAF(base, r, arrows_m1.toNumber(), expans, megota, powiaina2, depth+1);
           --f;
         }
       }
@@ -1594,8 +1598,9 @@ export default class PowiainaNum implements IPowiainaNum {
       );
       r.normalize();
       return r;
-    })(power);
-
+    })(power, depth);
+    console.log(`${'-'.repeat(depth)} = ${result}`)
+    return result;
     throw new Error("Not implemented");
   }
   //#endregion
@@ -2274,7 +2279,7 @@ export default class PowiainaNum implements IPowiainaNum {
       let res = Number(input);
       let a = false;
       if (res == 0) {
-        if (/^(0*\.0*e)|(0*\.0*)$/.test(input)) {
+        if (/^((0)|(0*\.0+e\d+)|(0*\.0*))$/.test(input)) {
           a = true;
         }
       } else {
@@ -2317,7 +2322,7 @@ export default class PowiainaNum implements IPowiainaNum {
           .rec();
       }
       if (isFinite(res) && a) {
-        x.resetFromObject(PowiainaNum.fromNumber(Number(input)));
+        x = (PowiainaNum.fromNumber(Number(input)));
         return x;
       }
     }
