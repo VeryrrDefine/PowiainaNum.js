@@ -4,7 +4,7 @@
 
 A JavaScript library that handles arithmetic for numbers as large as {10,9e15,1,1,1,2}.
 
-This reaches level f<sub>ω<sup>3</sup>+1</sub>.
+This reaches level f<sub>ω<sup>3</sup>+1</sub>, which the operation [powiaination](https://googology.fandom.com/wiki/Powiaination) also is at, hence the name.
 
 Internally, it is represented as an sign, array, small, and layer. Sign is 1 or -1. . Layer is a non-negative integer. 
 
@@ -24,7 +24,7 @@ If arrow count or expans count is Infinite, the count replaces to the next opera
 
 Some codes snippet from [ExpantaNum.js by Naruyoko](https://github.com/Naruyoko/ExpantaNum.js)
 
-Functions are as follows `abs, neg, add, sub, mul, div, rec, pow, pow10, pow_base, sqrt, cbrt, root, log10, log, cmp, rec, gamma, mod, exp, ln, slog, factorial, tetrate_10, isFinite, isInfinite, isNaN, tetrate, lambertw, toString, toJSON, floor, ceil, round, trunc, clampMax, clampMin, arrow, expansion, expansionArrow, multiExpansion, powerExpansion, explosion, megotion, BEAF`(some missing items that have not been fully developed)
+Functions are as follows `abs, neg, add, sub, mul, div, rec, pow, pow10, pow_base, sqrt, cbrt, root, log10, log, cmp, rec, gamma, mod, exp, ln, slog, factorial, tetrate_10, isFinite, isInfinite, isNaN, tetrate, lambertw, toString, toJSON, floor, ceil, round, trunc, clampMax, clampMin, arrow, expansion, expansionArrow, multiExpansion, powerExpansion, explosion, megotion, BEAF, powiaination`
 
 ## Using
 
