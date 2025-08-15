@@ -1,11 +1,23 @@
 {
   "name": "powiaina_num.js",
-  "version": "0.1.12",
+  "version": "0.2.0-beta.1",
   "description": "A JavaScript library that handles arithmetic for numbers as large as {10,9e15,1,1,1,2}.",
-  "main": "PowiainaNum.js",
-  "module": "PowiainaNum.esm.js",
+  "type": "module",
+  "main": "dist/PowiainaNum.cjs.js",
+  "module": "dist/PowiainaNum.esm.js",
+  "exports": {
+    "import": "./dist/PowiainaNum.esm.js",
+    "require": "./dist/PowiainaNum.cjs.js",
+    "types": "./dist/index.d.ts"
+  },
+  "unpkg": "dist/PowiainaNum.min.js",
+  "jsdelivr": "dist/PowiainaNum.min.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "lint": "eslint ."
+    "build": "bili",
+    "prepublishOnly": "npm run build",
+    "test": "npx jest",
+    "fix": "prettier --write ."
   },
   "repository": {
     "type": "git",
@@ -18,6 +30,9 @@
     "number",
     "decimal"
   ],
+  "files": [
+    "dist"
+  ],
   "author": "VeryrrDefine",
   "license": "MIT",
   "bugs": {
@@ -25,6 +40,12 @@
   },
   "homepage": "https://github.com/VeryrrDefine/PowiainaNum.js#readme",
   "devDependencies": {
-    "eslint": "^8.39.0"
+    "@types/jest": "^30.0.0",
+    "bili": "^5.0.5",
+    "jest": "^30.0.5",
+    "prettier": "^3.6.2",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "ts-jest": "^29.4.1",
+    "typescript": "^5.8.3"
   }
 }
