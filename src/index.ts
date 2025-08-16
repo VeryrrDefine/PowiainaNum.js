@@ -670,39 +670,17 @@ export default class PowiainaNum implements IPowiainaNum {
     return this.log();
   }
   /**
-   * plog10, beware unexpected errors.
+   * positive-Log10, Returns the base-10 logarithm of nonnegative Decimals, but returns 0 for negative Decimals. 
    */
-  public plog10(): PowiainaNum {
-    return this.max(1).log10();
+  public pLog10(): PowiainaNum {
+    if (this.isneg()) return PowiainaNum.ZERO;
+    return this.log10();
   }
   /**
-   * plog10, beware unexpected errors.
+   * positive-Log10
    */
-  public static plog10(t: PowiainaNumSource): PowiainaNum {
-    return new PowiainaNum(t).plog10();
-  }
-  /**
-   * plog, beware unexpected errors.
-   */
-  public plog(base: PowiainaNumSource = Math.E): PowiainaNum {
-    // log_a b = log_x b / log_x a;
-    const other = new PowiainaNum(base);
-    return this.plog10().div(other.plog10());
-  }
-  /**
-   * plog, beware unexpected errors.
-   */
-  public static plog(
-    t: PowiainaNumSource,
-    base: PowiainaNumSource = Math.E,
-  ): PowiainaNum {
-    return new PowiainaNum(t).plog(base);
-  }
-  /**
-   * pln, beware unexpected errors.
-   */
-  public pln(): PowiainaNum {
-    return this.plog();
+  public static pLog10(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).pLog10();
   }
   public static exp(x: PowiainaNumSource): PowiainaNum {
     let y = new PowiainaNum(x);
