@@ -1,4 +1,4 @@
-/* Author: VeryrrDefine 0.2.0-alpha.4.3*/
+/* Author: VeryrrDefine 0.2.0-beta.1.1*/
 
 interface Operator {
   arrow: number;
@@ -844,6 +844,8 @@ export default class PowiainaNum implements IPowiainaNum {
   //#endregion
   
   //#region higher calculates
+
+  //#region Tetration
   // Code from ExpantaNum.js
   public tetrate(other2: PowiainaNumSource, payload: PowiainaNumSource = 1) {
     const t = this.clone();
@@ -1013,6 +1015,9 @@ export default class PowiainaNum implements IPowiainaNum {
   public static tetrate_10(other2: PowiainaNumSource): PowiainaNum {
     return PowiainaNum.fromNumber(10).tetrate(other2);
   }
+
+  //#endregion
+
   public arrow(
     arrows2: PowiainaNumSource,
   ): (other: PowiainaNumSource, depth?: number) => PowiainaNum {
@@ -1668,6 +1673,15 @@ export default class PowiainaNum implements IPowiainaNum {
   public static clampMin(...args: PowiainaNumSource[]): PowiainaNum {
     return PowiainaNum.max(...args);
   }
+  /**
+   * Restrict a number be not lower than a number
+   *
+   * It's also an alias of `PowiainaNum.max`.
+   * @returns restricted number
+   */
+  public clampMin(...args: PowiainaNumSource[]): PowiainaNum {
+    return PowiainaNum.max(this, ...args);
+  }
 
   /**
    * Restrict a number be not higher than a number
@@ -1678,6 +1692,17 @@ export default class PowiainaNum implements IPowiainaNum {
   public static clampMax(...args: PowiainaNumSource[]): PowiainaNum {
     return PowiainaNum.min(...args);
   }
+  /**
+   * Restrict a number be not higher than a number
+   *
+   * It's also an alias of `PowiainaNum.min`.
+   * @returns restricted number
+   */
+  public clampMax(...args: PowiainaNumSource[]): PowiainaNum {
+    return PowiainaNum.min(this, ...args);
+  }
+
+  
   public max(...args: PowiainaNumSource[]): PowiainaNum {
     return PowiainaNum.max(this, ...args);
   }
