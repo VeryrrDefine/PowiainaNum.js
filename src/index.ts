@@ -2109,7 +2109,7 @@ export default class PowiainaNum implements IPowiainaNum {
           1,
           1,
           newOperator(
-            x.array[0].repeat,
+            x.array[0].repeat-1,
             x.array[1].arrow - 1,
             x.array[1].expans,
             x.array[1].megota,
