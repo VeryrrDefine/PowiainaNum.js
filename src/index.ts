@@ -1702,7 +1702,14 @@ export default class PowiainaNum implements IPowiainaNum {
     return PowiainaNum.min(this, ...args);
   }
 
-  
+  /**
+   * A combination of minimum and maximum: the value returned by clamp is normally 'this', but it won't go below 'min' and it won't go above 'max'.
+   * Therefore, if 'this' < 'min', then 'min' is returned, and if 'this' > 'max', then 'max' is returned.
+   */
+  public clamp(min: PowiainaNumSource, max: PowiainaNumSource): PowiainaNum {
+    return this.max(min).min(max);
+  }
+
   public max(...args: PowiainaNumSource[]): PowiainaNum {
     return PowiainaNum.max(this, ...args);
   }
