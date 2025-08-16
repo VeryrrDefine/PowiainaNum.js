@@ -994,6 +994,20 @@ export default class PowiainaNum implements IPowiainaNum {
     return PowiainaNum.fromNumber(10).tetrate(other2);
   }
 
+  /**
+   * iterated-log
+   * 
+   * @example new P("10^10^3").iteratedlog(2,10) == 3 
+   */
+  public iteratedlog(other2: PowiainaNumSource=1, base2: PowiainaNumSource = 10){
+    const t=this.clone();
+    const base=new PowiainaNum(base2);
+    const other=new PowiainaNum(other2);
+    if (other.isZero()) return t;
+    if (other.eq(PowiainaNum.ONE)) return t.log(base);
+    return base.tetrate(t.slog(base).sub(other));
+  }
+
   //#endregion
 
   public arrow(
