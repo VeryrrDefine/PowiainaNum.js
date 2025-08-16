@@ -1799,6 +1799,10 @@ export default class PowiainaNum implements IPowiainaNum {
     return t == 0 || t == 1;
   }
 
+  public eq_tolerance(value: PowiainaNumSource, tolerance: number = 1e-7): boolean {
+    const dec = new PowiainaNum(value);
+    return this.sub(dec).lte(this.max(dec).mul(tolerance))
+  }
   //#endregion
   
   //#region geometry
