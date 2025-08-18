@@ -2190,6 +2190,30 @@ export default class PowiainaNum implements IPowiainaNum {
         x.array.length >= 2 &&
         x.array[0].repeat < MSI &&
         x.array[1].arrow >= 2 &&
+        x.array[1].repeat > 1 && //10^^^ 10
+        isFinite(x.array[1].arrow)
+      ) {
+        // for any (10{A sample=2})^k 1e9, turn into (10{A})^k-1  (10{A-1})^1e9-1 10
+        // But dont convert when a is infinite
+        // [1e9, [R=K, A=2, sth, sth]]
+        x.array[1].repeat--;
+        x.array.splice(
+          1,
+          0,
+          newOperator(
+            x.array[0].repeat - 1,
+            x.array[1].arrow - 1,
+            x.array[1].expans,
+            x.array[1].megota,
+          ),
+        );
+        x.array[0].repeat = 10;
+        renormalize = true;
+      }
+      if (
+        x.array.length >= 2 &&
+        x.array[0].repeat < MSI &&
+        x.array[1].arrow >= 2 &&
         x.array[1].repeat == 1 && //10^^^ 10
         isFinite(x.array[1].arrow)
       ) {
@@ -2209,6 +2233,8 @@ export default class PowiainaNum implements IPowiainaNum {
         x.array[0].repeat = 10;
         renormalize = true;
       }
+      
+      
 
       // for any (10{A=2})^1e16 10, turn into (10{A+1}) 1e16
       if (
