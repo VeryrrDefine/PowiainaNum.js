@@ -1013,9 +1013,16 @@ export default class PowiainaNum implements IPowiainaNum {
 
   //#endregion
 
+  /**
+   * Arrow operation, return a function
+   * The function has a parameter `other`
+   * call this function returns a powiainanum `this`{`arrow2`}`other`
+   * @param arrows2 arrow count
+   * @returns A function
+   */
   public arrow(
     arrows2: PowiainaNumSource,
-  ): (other: PowiainaNumSource, depth?: number) => PowiainaNum {
+  ): (other: PowiainaNumSource, payload?: PowiainaNum, depth?: number) => PowiainaNum {
     const t = this.clone();
     const arrows = new PowiainaNum(arrows2);
     if (!arrows.isInt() || arrows.lt(PowiainaNum.ZERO)) {
@@ -1038,21 +1045,24 @@ export default class PowiainaNum implements IPowiainaNum {
       return function (other) {
         return t.tetrate(other);
       };
-    return function (other2, depth = 0) {
-      const other = new PowiainaNum(other2);
+    return function (other2, payload2?: PowiainaNum,depth = 0) {
+      let other = new PowiainaNum(other2);
+      const payload = new PowiainaNum(payload2)
       let ctt = PowiainaNum.arrowFuncMap.get(
+
         `${t.toString()} ${arrows.toString()} ${other.toString()} ${depth}`,
       );
       if (ctt) return ctt.clone();
 
       let res = (function () {
         let r;
-        if (t.isNaN() || other.isNaN()) return PowiainaNum.NaN.clone();
+        if (t.isNaN() || other.isNaN() || payload.isNaN()) return PowiainaNum.NaN.clone();
         if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
         if (t.eq(PowiainaNum.ZERO)) {
           if (other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
           return PowiainaNum.NaN.clone();
         }
+        if (payload.neq(PowiainaNum.ONE)) other=other.add(payload.anyarrow_log(arrows)(t));
         if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
         if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
         if (other.eq(PowiainaNum.ONE)) return t.clone();
@@ -1067,7 +1077,7 @@ export default class PowiainaNum implements IPowiainaNum {
         // arrow < 9e15
 
         // 10{x}2 = 10{x-1}10
-        if (other.eq(2)) return t.arrow(arrowsNum - 1)(t, depth + 1);
+        if (other.eq(2)) return t.arrow(arrowsNum - 1)(t, payload, depth + 1);
         if (t.max(other).gt(PowiainaNum.arrowMSI(arrowsNum + 1)))
           return t.max(other);
         if (t.gt(PowiainaNum.arrowMSI(arrowsNum)) || other.gt(MSI)) {
@@ -1096,7 +1106,7 @@ export default class PowiainaNum implements IPowiainaNum {
         const y = other.toNumber();
         let f = Math.floor(y);
         const arrows_m1 = arrows.sub(PowiainaNum.ONE);
-        r = t.arrow(arrows_m1)(y - f, depth + 1);
+        r = t.arrow(arrows_m1)(y - f, payload, depth + 1);
         let i = 0;
         for (
           let m = PowiainaNum.arrowMSI(arrowsNum - 1);
@@ -1104,7 +1114,7 @@ export default class PowiainaNum implements IPowiainaNum {
           i++
         ) {
           if (f > 0) {
-            r = t.arrow(arrows_m1)(r, depth + 1);
+            r = t.arrow(arrows_m1)(r, payload, depth + 1);
             --f;
           }
         }
@@ -1123,6 +1133,12 @@ export default class PowiainaNum implements IPowiainaNum {
     };
   }
 
+  /**
+   * return `base`{`arrow2`}`x` = `this` which `x` is.
+   * 
+   * @param arrow2 
+   * @returns 
+   */
   public anyarrow_log(
     arrow2: PowiainaNumSource,
   ): (base: PowiainaNumSource) => PowiainaNum {
