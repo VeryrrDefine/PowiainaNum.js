@@ -116,5 +116,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Tests
-*.test.js
+index.html
+page.js
+
