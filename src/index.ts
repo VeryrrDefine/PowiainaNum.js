@@ -1022,7 +1022,7 @@ export default class PowiainaNum implements IPowiainaNum {
    */
   public arrow(
     arrows2: PowiainaNumSource,
-  ): (other: PowiainaNumSource, payload?: PowiainaNum, depth?: number) => PowiainaNum {
+  ): (other: PowiainaNumSource, payload?: PowiainaNumSource, depth?: number) => PowiainaNum {
     const t = this.clone();
     const arrows = new PowiainaNum(arrows2);
     if (!arrows.isInt() || arrows.lt(PowiainaNum.ZERO)) {
@@ -1045,7 +1045,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return function (other) {
         return t.tetrate(other);
       };
-    return function (other2, payload2?: PowiainaNum,depth = 0) {
+    return function (other2, payload2?: PowiainaNumSource,depth = 0) {
       let other = new PowiainaNum(other2);
       const payload = new PowiainaNum(payload2)
       let ctt = PowiainaNum.arrowFuncMap.get(
@@ -1206,6 +1206,14 @@ export default class PowiainaNum implements IPowiainaNum {
     };
   }
 
+  /**
+   * Arrow height inverse (ExpantaNum.js), an alias of `anyarrow_log`
+   * @param arrows 
+   * @returns 
+   */
+  public arrow_height_inverse(arrows: PowiainaNumSource) {
+    return this.anyarrow_log(arrows)
+  }
   private static arrowMSI(arrowsNum: number): PowiainaNum {
     return new PowiainaNum(`10{${arrowsNum}}${MSI}`);
   }
@@ -1235,7 +1243,9 @@ export default class PowiainaNum implements IPowiainaNum {
   public hexate(other: PowiainaNumSource) {
     return this.arrow(4)(other);
   }
-
+  public penta_log(base: PowiainaNumSource = 10) {
+    return this.anyarrow_log(3)(base);
+  }
   /**
    * Expansion, which is `this`{{1}}`other2`.
    *
