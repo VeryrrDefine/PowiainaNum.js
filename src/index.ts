@@ -1141,7 +1141,7 @@ export default class PowiainaNum implements IPowiainaNum {
    */
   public anyarrow_log(
     arrow2: PowiainaNumSource,
-  ): (base: PowiainaNumSource) => PowiainaNum {
+  ): (base: PowiainaNumSource, depth?: number) => PowiainaNum {
     let x = this.clone();
     const arrow = new PowiainaNum(arrow2);
 
@@ -1154,7 +1154,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (arrow.eq(1)) return (base) => x.log(base);
     if (arrow.eq(2)) return (base) => x.slog(base);
     if (x.isInfiNaN()) return () => x;
-    return function (base: PowiainaNumSource) {
+    return function (base: PowiainaNumSource, depth=0) {
       const b = new PowiainaNum(base);
       if (b.isNaN()) return b;
       if (b.isInfi()) return PowiainaNum.ZERO.clone();
@@ -1198,7 +1198,7 @@ export default class PowiainaNum implements IPowiainaNum {
         } else {
           // 第1-4次迭代，进入此处
           ++r;
-          x = x.anyarrow_log(arrowsNum - 1)(base);
+          x = x.anyarrow_log(arrowsNum - 1)(base, depth+1);
         }
       }
       if (x.gt(10)) return new PowiainaNum(r);
