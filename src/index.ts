@@ -17,6 +17,15 @@ interface IPowiainaNum {
   layer: number; // actions like ExpantaNum.js, but use {10, 10, 10, 10, ..} instead of {10, 10, x}
 }
 
+type PowiainaNumArray01X = [
+  number,
+  ...(
+    | [number, number, number, number]
+    | ["x", number, number, number]
+    | [number, number, "x", number]
+  )[],
+];
+
 const powiainaNumError = "[PowiainaNum 0.2 error]" as const;
 const MSI = 9007199254740991 as const;
 const MSI_LOG10 = 15.954589770191003 as const;
@@ -43,6 +52,24 @@ function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
     megota: m,
     valuereplaced: a == Infinity ? 0 : e == Infinity ? 1 : -1,
   };
+}
+
+// parse 0.1.x PowiainaNum.js string
+function parseLegacyPowiainaNumString(str: string) {
+  const pattern = /l(\d+)\s+s(\d+)\s+a(\[.*\])/;
+  const match = str.match(pattern);
+  try {
+    if (match) {
+      return {
+        lValue: parseInt(match[1]),
+        sValue: parseInt(match[2]),
+        array: JSON.parse(match[3]),
+      };
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 function compareTuples<T extends Array<any>>(...tuples: [T, T]): -1 | 0 | 1 {
@@ -200,19 +227,83 @@ function f_lambertw(z: number, t = 1e-10, pr = true) {
 
   throw Error("Iteration failed to converge: ".concat(z.toString())); //return Number.NaN;
 }
-function isTwoLengthArray(x: any[]): x is [any, any] {
+function isTwoLengthArray(x: unknown[]): x is [unknown, unknown] {
   return x.length == 2;
 }
-function isTwoNumberArray(x: [any, any]): x is [number, number] {
+function isTwoNumberArray(x: [unknown, unknown]): x is [number, number] {
   return typeof x[0] === "number" && typeof x[1] === "number";
 }
-function isExpantaNumArray(x: any): x is ExpantaNumArray {
+function isExpantaNumArray(x: unknown): x is ExpantaNumArray {
   if (!Array.isArray(x)) return false;
   for (let i = 0; i < x.length; i++) {
     let arr = x[i];
     if (!Array.isArray(arr)) return false;
     if (!isTwoLengthArray(arr)) return false;
     if (!isTwoNumberArray(arr)) return false;
+  }
+  return true;
+}
+function replaceXToInfinity(x: "x" | number): number {
+  if (x === "x") return Infinity;
+  return x;
+}
+function isFourLengthArray(
+  x: unknown[]
+): x is [unknown, unknown, unknown, unknown] {
+  return x.length == 4;
+}
+function isFourNumberArray(
+  x: [unknown, unknown, unknown, unknown]
+): x is [number, number, number, number] {
+  if (
+    typeof x[0] == "number" &&
+    typeof x[1] == "number" &&
+    typeof x[2] == "number" &&
+    typeof x[3] == "number"
+  ) {
+    return true;
+  }
+  return false;
+}
+function isFourArrayWithFirstTermX(
+  x: [unknown, unknown, unknown, unknown]
+): x is ["x", number, number, number] {
+  if (
+    x[0] === "x" &&
+    typeof x[1] == "number" &&
+    typeof x[2] == "number" &&
+    typeof x[3] == "number"
+  ) {
+    return true;
+  }
+  return false;
+}
+function isFourArrayWithThirdTermX(
+  x: [unknown, unknown, unknown, unknown]
+): x is ["x", number, number, number] {
+  if (
+    typeof x[0] == "number" &&
+    typeof x[1] == "number" &&
+    x[2] == "x" &&
+    typeof x[3] == "number"
+  ) {
+    return true;
+  }
+  return false;
+}
+function isPowiainaNum01XArray(x: unknown): x is PowiainaNumArray01X {
+  if (!Array.isArray(x)) return false;
+  if (typeof x[0] != "number") return false;
+  for (let i = 1; i < x.length; i++) {
+    let b = x[i];
+    if (!Array.isArray(b)) return false;
+    if (!isFourLengthArray(b)) return false;
+    if (
+      !isFourNumberArray(b) &&
+      !isFourArrayWithFirstTermX(b) &&
+      !isFourArrayWithThirdTermX(b)
+    )
+      return false;
   }
   return true;
 }
@@ -2520,6 +2611,22 @@ export default class PowiainaNum implements IPowiainaNum {
       }
     }
 
+    // Check legacy PowiainaNum 0.1.x number format
+    if (
+      input.indexOf("l") !== -1 &&
+      input.indexOf("s") !== -1 &&
+      input.indexOf("a") !== -1
+    ) {
+      const obj = parseLegacyPowiainaNumString(input);
+      if (!obj || (obj.sValue !== 0 && obj.sValue !== 1 && obj.sValue !== -1))
+        throw powiainaNumError + "malformed input: " + input;
+      x = PowiainaNum.fromObject(obj.array);
+      x.layer = obj.lValue;
+      x.sign = obj.sValue;
+      x.small = false;
+      x.normalize();
+      return x;
+    }
     input = replaceETo10(input);
 
     if (!isPowiainaNum.test(input)) {
@@ -2710,7 +2817,9 @@ export default class PowiainaNum implements IPowiainaNum {
     x.normalize();
     return x;
   }
-  public static fromObject(powlikeObject: IPowiainaNum | ExpantaNumArray) {
+  public static fromObject(
+    powlikeObject: IPowiainaNum | ExpantaNumArray | PowiainaNumArray01X
+  ) {
     let obj = new PowiainaNum();
     obj.array = [];
     if (isExpantaNumArray(powlikeObject)) {
@@ -2721,6 +2830,25 @@ export default class PowiainaNum implements IPowiainaNum {
           megota: 1,
           repeat: powlikeObject[i][1],
         };
+      }
+      obj.small = false;
+      obj.sign = 1;
+      obj.layer = 0;
+      return obj;
+    } else if (isPowiainaNum01XArray(powlikeObject)) {
+      let arrayobj = powlikeObject;
+      obj.array[0] = newOperator(arrayobj[0]);
+      for (let i = 1; i < arrayobj.length; i++) {
+        let b = arrayobj[i] as
+          | [number, number, number, number]
+          | ["x", number, number, number]
+          | [number, number, "x", number];
+        obj.array[1] = newOperator(
+          b[1],
+          replaceXToInfinity(b[0]),
+          replaceXToInfinity(b[2]),
+          b[3]
+        );
       }
       obj.small = false;
       obj.sign = 1;
@@ -2746,14 +2874,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * A property array value for version 0.1.x PowiainaNum.
    */
   get arr01() {
-    let res: [
-      number,
-      ...(
-        | [number, number, number, number]
-        | ["x", number, number, number]
-        | [number, number, "x", number]
-      )[],
-    ] = [0];
+    let res: PowiainaNumArray01X = [0];
     for (let i = 0; i < this.array.length; i++) {
       if (i == 0) res[0] = this.array[i].repeat;
       else {
