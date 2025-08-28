@@ -459,7 +459,10 @@ export default class PowiainaNum implements IPowiainaNum {
       y.abs().lt(PowiainaNum.E_MSI_REC) ||
       y.abs().gt(PowiainaNum.E_MSI)
     ) {
-      return x.maxabs(y);
+      let a = x.maxabs(y);
+      if (a.abs().eq(x)) return x;
+      if (a.abs().eq(y)) return y;
+      return y;
     }
     if (x.sign == -1) {
       return x.neg().add(y.neg()).neg();
