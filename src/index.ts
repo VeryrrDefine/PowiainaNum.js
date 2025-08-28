@@ -1664,8 +1664,36 @@ export default class PowiainaNum implements IPowiainaNum {
   public powiaination(other: PowiainaNumSource) {
     return PowiainaNum.BEAF(this, other, 1, 1, 1, 2);
   }
+  public static BEAF(...args: PowiainaNumSource[]) {
+    function getArgs(x: number) {
+      if (args[x]) return new PowiainaNum(args[x]);
+      return new PowiainaNum(1);
+    }
+    if (getArgs(0).eq(1)) return new PowiainaNum(1);
+    if (getArgs(1).eq(1)) return new PowiainaNum(getArgs(0));
+    if (
+      getArgs(5).eq(2) &&
+      (getArgs(4).gte(2) || getArgs(3).gte(2) || getArgs(2).gte(2))
+    )
+      return PowiainaNum.POSITIVE_INFINITY.clone();
+    if (
+      args
+        .slice(6)
+        .map((x) => new PowiainaNum(x))
+        .filter((x) => x.gt(1)).length !== 0
+    )
+      return PowiainaNum.POSITIVE_INFINITY.clone();
 
-  public static BEAF(
+    return PowiainaNum.BEAF_core(
+      getArgs(0),
+      getArgs(1),
+      getArgs(2),
+      getArgs(3),
+      getArgs(4),
+      getArgs(5)
+    );
+  }
+  public static BEAF_core(
     base2: PowiainaNumSource,
     power2: PowiainaNumSource,
     arrow2: PowiainaNumSource = 1,
