@@ -1306,6 +1306,16 @@ export default class PowiainaNum implements IPowiainaNum {
   }
 
   /**
+   * base{height}base
+   */
+  public static arrFrac(base: PowiainaNumSource, height: PowiainaNumSource) {
+    let b = new PowiainaNum(base).clone();
+    let h = new PowiainaNum(height).clone();
+    return new PowiainaNum(b).arrow(h.floor().add(1))(
+      b.div(2).pow(h.sub(h.floor())).mul(2)
+    );
+  }
+  /**
    * Arrow height inverse (ExpantaNum.js), an alias of `anyarrow_log`
    * @param arrows
    * @returns
