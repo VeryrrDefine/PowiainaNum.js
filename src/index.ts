@@ -914,7 +914,152 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(x).lambertw(principal);
   }
   //#endregion
+  //#region Commonly used functions by game
+  // All of these are from break_eternity.js
 
+  /**
+   * If you're willing to spend 'resourcesAvailable' and want to buy something
+   * with exponentially increasing cost each purchase (start at priceStart,
+   * multiply by priceRatio, already own currentOwned), how much of it can you buy?
+   * Adapted from Trimps source code.
+   *
+   * currentOwned >= priceStart*priceRatio^(return value)
+   */
+  public static affordGeometricSeries(
+    resourcesAvailable: PowiainaNumSource,
+    priceStart: PowiainaNumSource,
+    priceRatio: PowiainaNumSource,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum {
+    return this.affordGeometricSeries_core(
+      new PowiainaNum(resourcesAvailable),
+      new PowiainaNum(priceStart),
+      new PowiainaNum(priceRatio),
+      currentOwned
+    );
+  }
+
+  public static affordGeometricSeries_core(
+    resourcesAvailable: PowiainaNum,
+    priceStart: PowiainaNum,
+    priceRatio: PowiainaNum,
+    currentOwned: PowiainaNumSource,
+    withNaNProtect = true
+  ): PowiainaNum {
+    const actualStart = priceStart.mul(priceRatio.pow(currentOwned));
+    return resourcesAvailable
+      .div(actualStart)
+      .mul(priceRatio.sub(1))
+      .add(1)
+      .clampMin(withNaNProtect ? 1 : -Infinity)
+      .log10()
+      .div(priceRatio.log10())
+      .floor();
+  }
+
+  /**
+   * How much resource would it cost to buy (numItems) items if you already have currentOwned,
+   * the initial price is priceStart and it multiplies by priceRatio each purchase?
+   *
+   * return value = priceStart*priceRatio^(numItems)
+   */
+  public static sumGeometricSeries(
+    numItems: PowiainaNumSource,
+    priceStart: PowiainaNumSource,
+    priceRatio: PowiainaNumSource,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum {
+    return this.sumGeometricSeries_core(
+      numItems,
+      new PowiainaNum(priceStart),
+      new PowiainaNum(priceRatio),
+      currentOwned
+    );
+  }
+
+  public static sumGeometricSeries_core(
+    numItems: PowiainaNumSource,
+    priceStart: PowiainaNum,
+    priceRatio: PowiainaNum,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum {
+    return priceStart
+      .mul(priceRatio.pow(currentOwned))
+      .mul(PowiainaNum.sub(1, priceRatio.pow(numItems)))
+      .div(PowiainaNum.sub(1, priceRatio));
+  }
+
+  /**
+   * If you're willing to spend 'resourcesAvailable' and want to buy something with additively
+   * increasing cost each purchase (start at priceStart, add by priceAdd, already own currentOwned),
+   * how much of it can you buy?
+   */
+  public static affordArithmeticSeries(
+    resourcesAvailable: PowiainaNumSource,
+    priceStart: PowiainaNumSource,
+    priceAdd: PowiainaNumSource,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum {
+    return this.affordArithmeticSeries_core(
+      new PowiainaNum(resourcesAvailable),
+      new PowiainaNum(priceStart),
+      new PowiainaNum(priceAdd),
+      new PowiainaNum(currentOwned)
+    );
+  }
+
+  public static affordArithmeticSeries_core(
+    resourcesAvailable: PowiainaNum,
+    priceStart: PowiainaNum,
+    priceAdd: PowiainaNum,
+    currentOwned: PowiainaNum
+  ): PowiainaNum {
+    // n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
+    // where a is actualStart, d is priceAdd and S is resourcesAvailable
+    // then floor it and you're done!
+    const actualStart = priceStart.add(currentOwned.mul(priceAdd));
+    const b = actualStart.sub(priceAdd.div(2));
+    const b2 = b.pow(2);
+    return b
+      .neg()
+      .add(b2.add(priceAdd.mul(resourcesAvailable).mul(2)).sqrt())
+      .div(priceAdd)
+      .floor();
+  }
+
+  /**
+   * How much resource would it cost to buy (numItems) items if you already have currentOwned,
+   * the initial price is priceStart and it adds priceAdd each purchase?
+   * Adapted from http://www.mathwords.com/a/arithmetic_series.htm
+   */
+
+  public static sumArithmeticSeries(
+    numItems: PowiainaNumSource,
+    priceStart: PowiainaNumSource,
+    priceAdd: PowiainaNumSource,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum {
+    return this.sumArithmeticSeries_core(
+      new PowiainaNum(numItems),
+      new PowiainaNum(priceStart),
+      new PowiainaNum(priceAdd),
+      new PowiainaNum(currentOwned)
+    );
+  }
+  public static sumArithmeticSeries_core(
+    numItems: PowiainaNum,
+    priceStart: PowiainaNum,
+    priceAdd: PowiainaNum,
+    currentOwned: PowiainaNum
+  ): PowiainaNum {
+    const actualStart = priceStart.add(currentOwned.mul(priceAdd)); // (n/2)*(2*a+(n-1)*d)
+
+    return numItems
+      .div(2)
+      .mul(actualStart.mul(2).add(numItems.sub(1).mul(priceAdd)));
+  }
+
+  //#endregion
   //#region higher calculates
 
   //#region Tetration
@@ -1355,6 +1500,7 @@ export default class PowiainaNum implements IPowiainaNum {
   public penta_log(base: PowiainaNumSource = 10) {
     return this.anyarrow_log(3)(base);
   }
+
   /**
    * Expansion, which is `this`{{1}}`other2`.
    *
