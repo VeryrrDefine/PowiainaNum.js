@@ -2745,7 +2745,16 @@ export default class PowiainaNum implements IPowiainaNum {
     // Judge the string was a number
 
     if (input.startsWith("PN")) input = input.substring(2);
-
+    input = input.replace(/J\^(\d+)/g, "(10{!})^$1");
+    input = input.replace(/J/g, "10{!}");
+    input = input.replace(/K\^(\d+)/g, "(10{1,2})^$1");
+    input = input.replace(/K/g, "10{1,2}");
+    input = input.replace(/L\^(\d+)/g, "(10{2,2})^$1");
+    input = input.replace(/L/g, "10{2,2}");
+    input = input.replace(/M\^(\d+)/g, "(10{!,2})^$1");
+    input = input.replace(/M/g, "10{!,2}");
+    input = input.replace(/N\^(\d+)/g, "(10{1,!})^$1");
+    input = input.replace(/N/g, "10{1,!}");
     if (!isNaN(Number(input))) {
       let res = Number(input);
       let a = false;
