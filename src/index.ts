@@ -915,6 +915,47 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   //#endregion
   //#region Commonly used functions by game
+
+  numberLogHH(x: PowiainaNum, base: PowiainaNum): PowiainaNum {
+    //数值被HH Log
+    // const lbb = base.log(2);
+    if (x.lt(base.pow_base(2).mul(base))) {
+      let k = new PowiainaNum(0),
+        n = new PowiainaNum(0);
+      while (
+        base
+          .mul(k.add(1).pow_base(2))
+          .add(n.mul(k.add(1).pow_base(2)))
+          .lte(x.add(1e-9))
+      )
+        k = k.add(1);
+      while (
+        base
+          .mul(k.pow_base(2))
+          .add(n.add(1).mul(k.pow_base(2)))
+          .lte(x.add(1e-9))
+      )
+        n = n.add(1);
+      return base.mul(k).add(n);
+    } else if (x.slog(2).lt(8)) {
+      return base.pow(2).add(this.numberLogHH(x.div(base).log(2), base));
+    } else if (x.slog(2).gte(8)) {
+      const s = x.slog(2).floor().sub(2);
+      const lx = x.iteratedlog(2, s.toNumber());
+      return this.numberLogHH(lx, base).add(base.pow(2).mul(s));
+    } else {
+      let an = new PowiainaNum(1),
+        lx = x,
+        wp2 = 0;
+      while (an.pow_base(2).mul(base).lte(x.add(1e-9))) {
+        an = an.pow_base(2).mul(base);
+        lx = lx.div(base).log(2);
+        wp2++;
+      }
+      return this.numberLogHH(lx, base).add(base.pow(2).mul(wp2));
+    }
+  }
+
   // All of these are from break_eternity.js
 
   /**
