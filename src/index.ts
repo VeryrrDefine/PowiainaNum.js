@@ -1301,7 +1301,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return function (other) {
         return t.tetrate(other);
       };
-    return function (other2, payload2?: PowiainaNumSource, depth = 0) {
+    return function (other2, payload2: PowiainaNumSource = 1, depth = 0) {
       let other = new PowiainaNum(other2);
       const payload = new PowiainaNum(payload2);
       let ctt = PowiainaNum.arrowFuncMap.get(
