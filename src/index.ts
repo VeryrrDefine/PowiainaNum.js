@@ -1142,6 +1142,10 @@ export default class PowiainaNum implements IPowiainaNum {
     r.normalize();
     return r;
   }
+
+  public tetr(other2: PowiainaNumSource, payload: PowiainaNumSource = 1) {
+    return this.tetrate(other2, payload);
+  }
   // Code from ExpantaNum.js
   public slog(base: PowiainaNumSource = 10): PowiainaNum {
     let x = this.clone();
@@ -1229,6 +1233,9 @@ export default class PowiainaNum implements IPowiainaNum {
     return l.div(l.lambertw());
   }
 
+  public tetrate_10(): PowiainaNum {
+    return PowiainaNum.tetrate(10, this);
+  }
   public static tetrate_10(other2: PowiainaNumSource): PowiainaNum {
     return PowiainaNum.fromNumber(10).tetrate(other2);
   }
@@ -1249,7 +1256,13 @@ export default class PowiainaNum implements IPowiainaNum {
     if (other.eq(PowiainaNum.ONE)) return t.log(base);
     return base.tetrate(t.slog(base).sub(other));
   }
-
+  public static iteratedlog(
+    t: PowiainaNumSource,
+    other2: PowiainaNumSource = 1,
+    base2: PowiainaNumSource = 10
+  ) {
+    return new PowiainaNum(t).iteratedlog(other2, base2);
+  }
   //#endregion
 
   /**
@@ -1288,7 +1301,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return function (other) {
         return t.tetrate(other);
       };
-    return function (other2, payload2?: PowiainaNumSource, depth = 0) {
+    return function (other2, payload2: PowiainaNumSource = 1, depth = 0) {
       let other = new PowiainaNum(other2);
       const payload = new PowiainaNum(payload2);
       let ctt = PowiainaNum.arrowFuncMap.get(
@@ -1377,6 +1390,13 @@ export default class PowiainaNum implements IPowiainaNum {
     };
   }
 
+  public static arrow(
+    x: PowiainaNumSource,
+    z: PowiainaNumSource,
+    y: PowiainaNumSource
+  ) {
+    return new PowiainaNum(x).arrow(z)(y);
+  }
   /**
    * return `base`{`arrow2`}`x` = `this` which `x` is.
    *
@@ -1496,6 +1516,9 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public hexate(other: PowiainaNumSource) {
     return this.arrow(4)(other);
+  }
+  public pent(other: PowiainaNumSource) {
+    return this.arrow(3)(other);
   }
   public penta_log(base: PowiainaNumSource = 10) {
     return this.anyarrow_log(3)(base);
