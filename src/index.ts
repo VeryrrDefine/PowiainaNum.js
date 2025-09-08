@@ -2244,6 +2244,7 @@ export default class PowiainaNum implements IPowiainaNum {
     r.array[0].repeat = Math[this.sign == 1 ? "floor" : "ceil"](
       r.getOperator(0)
     );
+    r.sign = this.sign;
     return r;
   }
   public ceil(): PowiainaNum {
