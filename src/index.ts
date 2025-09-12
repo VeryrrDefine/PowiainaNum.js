@@ -449,7 +449,8 @@ export default class PowiainaNum implements IPowiainaNum {
 
     // Run pure number calculates in there
     if (x.abs().lt(MSI) && y.abs().lt(MSI)) {
-      return PowiainaNum.fromNumber(x.toNumber() + y.toNumber());
+      if (x.abs().gte(MSI_REC) && y.abs().gte(MSI_REC))
+        return PowiainaNum.fromNumber(x.toNumber() + y.toNumber());
     }
 
     // calculate anything > e9e15 or <e-9e15, take absval bigger.
