@@ -2805,7 +2805,7 @@ export default class PowiainaNum implements IPowiainaNum {
               ? log10LongString(mantissa)
               : Math.log10(Number(mantissa));
 
-          let log10int = Math.floor(log10mant) - 1;
+          let log10int = Math.floor(log10mant);
           let log10float = log10mant - log10int;
           mantissaME[0] = 10 ** log10float;
           mantissaME[1] += log10float;
