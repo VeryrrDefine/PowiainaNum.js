@@ -24,18 +24,19 @@
                 href="https://github.com/aarextiaokhiao/magna_numerus.js/blob/master/logarithmica_numerus_lite.js">logarithmica_numerus_lite.js</a>
             by Aarex Tiaokhiao - <span>e1.8e308</span></li>
         <li><a
+                href="https://github.com/aarextiaokhiao/magna_numerus.js/blob/master/magna_numerus.js">magna_numerus.js</a>
+            by Aarex Tiaokhiao - <span>ee65536?</span></li>
+        <li><a
                 href="https://github.com/aarextiaokhiao/magna_numerus.js/blob/master/confractus_numerus.js">confractus_numerus.js</a>
             by Aarex Tiaokhiao - <span>ee9e15</span></li>
-        <li><a
-                href="https://github.com/aarextiaokhiao/magna_numerus.js/blob/master/magna_numerus.js">magna_numerus.js</a>
-            by Aarex Tiaokhiao - <span>?</span></li>
+
         <li><a href="https://github.com/Patashu/break_eternity.js">break_eternity.js</a> by Patashu -
             <span>10^^1.8e308</span>
         </li>
         <li><a href="https://github.com/Naruyoko/OmegaNum.js">OmegaNum.js</a> by Naruyoko - <span>10{1000}9e15</span>
         </li>
         <li><a href="https://github.com/Naruyoko/ExpantaNum.js">ExpantaNum.js</a> by Naruyoko -
-            <span>10{1000}9e15</span>
+            <span>10{{1}}9e15</span>
         </li>
     </ul>
 
@@ -86,9 +87,11 @@ var num2 = new PowiainaNum(6);
 </code></pre>
     <p>I calculate <code class="language-typescript">num1 + num2</code>, but it says <code
             class="language-typescript">'36'</code>, why?</p>
-    <p><a href="./test-in-node_modules.html">Test in Production build</a></p>
-    </p>
-
+    <p>You should use num1.add(num2) instead of num1+ num2.</p>
+    <p>num1.add(num2) returns a new PN.js cls that is the sum of num1 & num2.</p>
+    <p>Also, replace a-b to a.sub(b), a*b to a.mul(b), a^b to a.pow(b).</p>
+    <p>More functions see <a href="docs.html">this link</a></p>
+    <img src="7ccd2def-1204-41d4-b2ae-87519862fa53.jpeg">
     <script src="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/highlight.min.js"></script>
 
     <!-- and it's easy to individually load additional languages -->
