@@ -1,5 +1,6 @@
 /* Author: VeryrrDefine 0.2.0-beta.1.1*/
 
+//#region Types
 interface Operator {
   arrow: number;
   expans: number;
@@ -26,14 +27,6 @@ type PowiainaNumArray01X = [
   )[],
 ];
 
-const powiainaNumError = "[PowiainaNum 0.2 error]" as const;
-const MSI = 9007199254740991 as const;
-const MSI_LOG10 = 15.954589770191003 as const;
-const MSI_REC = 1.1102230246251568e-16 as const;
-const LONG_STRING_MIN_LENGTH = 17 as const;
-const EXP_E_REC = 1.444667861009766 as const;
-const isPowiainaNum =
-  /^(PN)?[\/\-\+]*(Infinity|NaN|(P+|P\^\d+ )?(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
 type ExpantaNumArray = [number, number][];
 
 export type PowiainaNumSource =
@@ -42,6 +35,20 @@ export type PowiainaNumSource =
   | IPowiainaNum
   | PowiainaNum
   | ExpantaNumArray;
+
+//#endregion
+
+//#region constants
+const powiainaNumError = "[PowiainaNum 0.2 error]" as const;
+const MSI = 9007199254740991 as const;
+const MSI_LOG10 = 15.954589770191003 as const;
+const MSI_REC = 1.1102230246251568e-16 as const;
+const LONG_STRING_MIN_LENGTH = 17 as const;
+const EXP_E_REC = 1.444667861009766 as const;
+const isPowiainaNum =
+  /^(PN)?[\/\-\+]*(Infinity|NaN|(P+|P\^\d+ )?(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
+
+//#endregion
 
 //#region some useful functions
 function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
@@ -351,6 +358,7 @@ export function mergeSameArrays<T>(
   }
 }
 //#endregion
+
 export default class PowiainaNum implements IPowiainaNum {
   array: Operator[];
   small: boolean;
