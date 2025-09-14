@@ -15,10 +15,10 @@
     <div style="border: 1px solid black">
         <ul>
             <li>Properties<ul>
-                    <li><a>array</a></li>
-                    <li><a>layer</a></li>
-                    <li><a>sign</a></li>
-                    <li><a>small</a></li>
+                    <li><a href="#p.array">array</a></li>
+                    <li><a href="#p.layer">layer</a></li>
+                    <li><a href="#p.sign">sign</a></li>
+                    <li><a href="#p.small">small</a></li>
                 </ul>
             </li>
         </ul>
@@ -415,20 +415,584 @@ e \text{ is Infinite} & \{10,10,10,x,m\}\\
 \end{array} 
 -->
     <p>Set the last xth array is a<sub>x</sub>,</p>
-    <p>The main magnitude can be represented:</p>
+    <p>The array magnitude can be represented:</p>
     <p>f(a<sub>1</sub>.a, .e, .m, --&gt; (repeat .r times) <br>
         f(a<sub>2</sub>.a, .e, .m, --&gt; (repeat .r times)...<br>
         f(a<sub>n</sub>.a, .e, .m, .r ))...)</p>
     </p>
+    <h3 id="p.layer">layer</h3>
+    <p>work like ExpantaNum.js J</p>
+
+    <p>g(x)={10,10,10,10,x}</p>
+    <h3 id="p.sign">sign</h3>
+    <p>Represents a number is positive or negative (0=>Zero, NaN=>NaN)</p>
+    <h3 id="p.small">small</h3>
+    <p>Represents a number is normal(x>1) reciprocatal (x<sup>-1</sup>)</p>
+    <p>With these properties,a PN.js class can be represented as (sign * g<sup>layer</sup>(array magnitude))<sup>small ?
+            -1 : 1</sup></p>
+    <hr />
+    <h2 id="m">Methods (Arithmetic)</h2>
+    docs not completed
+    <h2>.d.ts</h2>
+    <pre><code class="language-typescript">interface Operator {
+  arrow: number;
+  expans: number;
+  megota: number;
+  repeat: number;
+  valuereplaced?: -1 | 0 | 1;
+}
+interface IPowiainaNum {
+  array: Operator[];
+  small: boolean;
+  sign: -1 | 0 | 1;
+  layer: number;
+}
+type PowiainaNumArray01X = [
+  number,
+  ...(
+    | [number, number, number, number]
+    | ["x", number, number, number]
+    | [number, number, "x", number]
+  )[],
+];
+type ExpantaNumArray = [number, number][];
+export type PowiainaNumSource =
+  | number
+  | string
+  | IPowiainaNum
+  | PowiainaNum
+  | ExpantaNumArray;
+export declare function arraySortFunction(a: Operator, b: Operator): 0 | 1 | -1;
+/**
+ * Merge arrays in arrow,expans,megota is all same.
+ * @param x an object has `array` key.
+ */
+export declare function mergeSameArrays&lt;T>(
+  x: T extends {
+    array: Operator[];
+  }
+    ? T
+    : never
+): void;
+export default class PowiainaNum implements IPowiainaNum {
+  array: Operator[];
+  small: boolean;
+  sign: -1 | 0 | 1;
+  layer: number;
+  /**
+   * Constructor of PowiainaNum class,
+   * If no arguments, return `PowiainaNum.NaN`.
+   */
+  constructor(arg1?: PowiainaNumSource);
+  /**
+   * Addition
+   * @returns the sum of `this` and `other`
+   */
+  add(other: PowiainaNumSource): PowiainaNum;
+  static add(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+  sub(a: PowiainaNumSource): PowiainaNum;
+  static sub(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+  mul(other: PowiainaNumSource): PowiainaNum;
+  static mul(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+  div(other: PowiainaNumSource): PowiainaNum;
+  static div(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+  mod(x: PowiainaNumSource): PowiainaNum;
+  /**
+   * @returns 10 to the power of `this`
+   */
+  pow10(): PowiainaNum;
+  pow(x: PowiainaNumSource): PowiainaNum;
+  pow_base(x: PowiainaNumSource): PowiainaNum;
+  static pow(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+  root(x: PowiainaNumSource): PowiainaNum;
+  static root(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+  sqrt(): PowiainaNum;
+  static sqrt(t: PowiainaNumSource): PowiainaNum;
+  cbrt(): PowiainaNum;
+  static cbrt(t: PowiainaNumSource): PowiainaNum;
+  log10(): PowiainaNum;
+  static log10(t: PowiainaNumSource): PowiainaNum;
+  log(base?: PowiainaNumSource): PowiainaNum;
+  static log(t: PowiainaNumSource, base?: PowiainaNumSource): PowiainaNum;
+  ln(): PowiainaNum;
+  /**
+   * positive-Log10, Returns the base-10 logarithm of nonnegative Decimals, but returns 0 for negative Decimals.
+   */
+  pLog10(): PowiainaNum;
+  /**
+   * positive-Log10
+   */
+  static pLog10(t: PowiainaNumSource): PowiainaNum;
+  static exp(x: PowiainaNumSource): PowiainaNum;
+  exp(): PowiainaNum;
+  /**
+   * For positive integers, X factorial (written as X!) equals X * (X - 1) * (X - 2) *... * 3 * 2 * 1. 0! equals 1.
+   * This can be extended to real numbers (except for negative integers) via the gamma function, which is what this function does.
+   */
+  factorial(): PowiainaNum;
+  static factorial(x: PowiainaNumSource): PowiainaNum;
+  /**
+   * The gamma function extends the idea of factorials to non-whole numbers using some calculus.
+   * Gamma(x) is defined as the integral of t^(x-1) * e^-t dt from t = 0 to t = infinity,
+   * and gamma(x) = (x - 1)! for nonnegative integer x, so the factorial for non-whole numbers is defined using the gamma function.
+   */
+  gamma(): PowiainaNum;
+  static gamma(x: PowiainaNumSource): PowiainaNum;
+  /**
+   * The Lambert W function, also called the omega function or product logarithm, is the solution W(x) === x*e^x.
+   * https://en.wikipedia.org/wiki/Lambert_W_function
+   *
+   * This is a multi-valued function in the complex plane, but only two branches matter for real numbers: the "principal branch" W0, and the "non-principal branch" W_-1.
+   * W_0 works for any number >= -1/e, but W_-1 only works for nonpositive numbers >= -1/e.
+   * The "principal" parameter, which is true by default, decides which branch we're looking for: W_0 is used if principal is true, W_-1 is used if principal is false.
+   */
+  lambertw(princ?: boolean): PowiainaNum;
+  static lambertw(x: PowiainaNumSource, principal?: boolean): PowiainaNum;
+  /**
+   * If you're willing to spend 'resourcesAvailable' and want to buy something
+   * with exponentially increasing cost each purchase (start at priceStart,
+   * multiply by priceRatio, already own currentOwned), how much of it can you buy?
+   * Adapted from Trimps source code.
+   *
+   * currentOwned >= priceStart*priceRatio^(return value)
+   */
+  static affordGeometricSeries(
+    resourcesAvailable: PowiainaNumSource,
+    priceStart: PowiainaNumSource,
+    priceRatio: PowiainaNumSource,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum;
+  static affordGeometricSeries_core(
+    resourcesAvailable: PowiainaNum,
+    priceStart: PowiainaNum,
+    priceRatio: PowiainaNum,
+    currentOwned: PowiainaNumSource,
+    withNaNProtect?: boolean
+  ): PowiainaNum;
+  /**
+   * How much resource would it cost to buy (numItems) items if you already have currentOwned,
+   * the initial price is priceStart and it multiplies by priceRatio each purchase?
+   *
+   * return value = priceStart*priceRatio^(numItems)
+   */
+  static sumGeometricSeries(
+    numItems: PowiainaNumSource,
+    priceStart: PowiainaNumSource,
+    priceRatio: PowiainaNumSource,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum;
+  static sumGeometricSeries_core(
+    numItems: PowiainaNumSource,
+    priceStart: PowiainaNum,
+    priceRatio: PowiainaNum,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum;
+  /**
+   * If you're willing to spend 'resourcesAvailable' and want to buy something with additively
+   * increasing cost each purchase (start at priceStart, add by priceAdd, already own currentOwned),
+   * how much of it can you buy?
+   */
+  static affordArithmeticSeries(
+    resourcesAvailable: PowiainaNumSource,
+    priceStart: PowiainaNumSource,
+    priceAdd: PowiainaNumSource,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum;
+  static affordArithmeticSeries_core(
+    resourcesAvailable: PowiainaNum,
+    priceStart: PowiainaNum,
+    priceAdd: PowiainaNum,
+    currentOwned: PowiainaNum
+  ): PowiainaNum;
+  /**
+   * How much resource would it cost to buy (numItems) items if you already have currentOwned,
+   * the initial price is priceStart and it adds priceAdd each purchase?
+   * Adapted from http://www.mathwords.com/a/arithmetic_series.htm
+   */
+  static sumArithmeticSeries(
+    numItems: PowiainaNumSource,
+    priceStart: PowiainaNumSource,
+    priceAdd: PowiainaNumSource,
+    currentOwned: PowiainaNumSource
+  ): PowiainaNum;
+  static sumArithmeticSeries_core(
+    numItems: PowiainaNum,
+    priceStart: PowiainaNum,
+    priceAdd: PowiainaNum,
+    currentOwned: PowiainaNum
+  ): PowiainaNum;
+  tetrate(other2: PowiainaNumSource, payload?: PowiainaNumSource): PowiainaNum;
+  tetr(other2: PowiainaNumSource, payload?: PowiainaNumSource): PowiainaNum;
+  slog(base?: PowiainaNumSource): PowiainaNum;
+  static tetrate(
+    t: PowiainaNumSource,
+    other2: PowiainaNumSource,
+    payload?: PowiainaNumSource
+  ): PowiainaNum;
+  ssqrt(): PowiainaNum;
+  tetrate_10(): PowiainaNum;
+  static tetrate_10(other2: PowiainaNumSource): PowiainaNum;
+  /**
+   * iterated-log
+   *
+   * @example new P("10^10^3").iteratedlog(2,10) == 3
+   */
+  iteratedlog(
+    other2?: PowiainaNumSource,
+    base2?: PowiainaNumSource
+  ): PowiainaNum;
+  static iteratedlog(
+    t: PowiainaNumSource,
+    other2?: PowiainaNumSource,
+    base2?: PowiainaNumSource
+  ): PowiainaNum;
+  /**
+   * Arrow operation, return a function
+   * The function has a parameter `other`
+   * call this function returns a powiainanum `this`{`arrow2`}`other`
+   * @param arrows2 arrow count
+   * @returns A function
+   */
+  arrow(
+    arrows2: PowiainaNumSource
+  ): (
+    other: PowiainaNumSource,
+    payload?: PowiainaNumSource,
+    depth?: number
+  ) => PowiainaNum;
+  static arrow(
+    x: PowiainaNumSource,
+    z: PowiainaNumSource,
+    y: PowiainaNumSource
+  ): PowiainaNum;
+  /**
+   * return `base`{`arrow2`}`x` = `this` which `x` is.
+   *
+   * @param arrow2
+   * @returns
+   */
+  anyarrow_log(
+    arrow2: PowiainaNumSource
+  ): (base: PowiainaNumSource, depth?: number) => PowiainaNum;
+  /**
+   * base{height}base
+   */
+  static arrFrac(
+    base: PowiainaNumSource,
+    height: PowiainaNumSource
+  ): PowiainaNum;
+  /**
+   * Arrow height inverse (ExpantaNum.js), an alias of `anyarrow_log`
+   * @param arrows
+   * @returns
+   */
+  arrow_height_inverse(
+    arrows: PowiainaNumSource
+  ): (base: PowiainaNumSource, depth?: number) => PowiainaNum;
+  private static arrowMSI;
+  chain(other: PowiainaNumSource, arrows: PowiainaNumSource): PowiainaNum;
+  static hyper(arr: PowiainaNumSource): typeof PowiainaNum.mul;
+  pentate(other: PowiainaNumSource): PowiainaNum;
+  hexate(other: PowiainaNumSource): PowiainaNum;
+  pent(other: PowiainaNumSource): PowiainaNum;
+  penta_log(base?: PowiainaNumSource): PowiainaNum;
+  /**
+   * Expansion, which is `this`{{1}}`other2`.
+   *
+   * Expansion refers to the binary function a{{1}}b = a{a{...a{b}a...}a}a where there are b a's from the center out. It is {a,b,1,2} in BEAF and a{X+1}b in X-Sequence Hyper-Exponential Notation. The notation a{c}b means {a,b,c}, which is a "c + 2"-ated to b, using the bracket operator.
+   *
+   * @url https://googology.fandom.com/wiki/Expansion
+   */
+  expansion(other2: PowiainaNumSource): PowiainaNum;
+  expansionArrow(
+    arrow2: PowiainaNumSource
+  ): (other2: PowiainaNumSource, depth?: number) => PowiainaNum;
+  static expansion(t: PowiainaNumSource, other: PowiainaNumSource): PowiainaNum;
+  multiExpansion(other: PowiainaNumSource): PowiainaNum;
+  static multiExpansion(
+    t: PowiainaNumSource,
+    other: PowiainaNumSource
+  ): PowiainaNum;
+  powerExpansion(other: PowiainaNumSource): PowiainaNum;
+  static powerExpansion(
+    t: PowiainaNumSource,
+    other: PowiainaNumSource
+  ): PowiainaNum;
+  explosion(other: PowiainaNumSource): PowiainaNum;
+  megotion(other: PowiainaNumSource): PowiainaNum;
+  powiaination(other: PowiainaNumSource): PowiainaNum;
+  static BEAF(...args: PowiainaNumSource[]): PowiainaNum;
+  static BEAF_core(
+    base2: PowiainaNumSource,
+    power2: PowiainaNumSource,
+    arrow2?: PowiainaNumSource,
+    expans2?: PowiainaNumSource,
+    megota2?: PowiainaNumSource,
+    powiaina2?: PowiainaNumSource,
+    depth?: number
+  ): PowiainaNum;
+  abs(): PowiainaNum;
+  static abs(x: PowiainaNumSource): PowiainaNum;
+  /**
+   * Select the largest number of arguments.
+   */
+  static max(...args: PowiainaNumSource[]): PowiainaNum;
+  /**
+   * Select the smallest number of arguments.
+   */
+  static min(...args: PowiainaNumSource[]): PowiainaNum;
+  /**
+   * Restrict a number be not lower than a number
+   *
+   * It's also an alias of `PowiainaNum.max`.
+   * @returns restricted number
+   */
+  static clampMin(...args: PowiainaNumSource[]): PowiainaNum;
+  /**
+   * Restrict a number be not lower than a number
+   *
+   * It's also an alias of `PowiainaNum.max`.
+   * @returns restricted number
+   */
+  clampMin(...args: PowiainaNumSource[]): PowiainaNum;
+  /**
+   * Restrict a number be not higher than a number
+   *
+   * It's also an alias of `PowiainaNum.min`.
+   * @returns restricted number
+   */
+  static clampMax(...args: PowiainaNumSource[]): PowiainaNum;
+  /**
+   * Restrict a number be not higher than a number
+   *
+   * It's also an alias of `PowiainaNum.min`.
+   * @returns restricted number
+   */
+  clampMax(...args: PowiainaNumSource[]): PowiainaNum;
+  /**
+   * A combination of minimum and maximum: the value returned by clamp is normally 'this', but it won't go below 'min' and it won't go above 'max'.
+   * Therefore, if 'this' &lt; 'min', then 'min' is returned, and if 'this' > 'max', then 'max' is returned.
+   */
+  clamp(min: PowiainaNumSource, max: PowiainaNumSource): PowiainaNum;
+  max(...args: PowiainaNumSource[]): PowiainaNum;
+  min(...args: PowiainaNumSource[]): PowiainaNum;
+  /**
+   * Compare what PowiainaNum's absolute value is max
+   * @param args
+   * @returns absolute value max number's absolute value
+   */
+  maxabs(...args: PowiainaNumSource[]): PowiainaNum;
+  minabs(...args: PowiainaNumSource[]): PowiainaNum;
+  cmpabs(x: PowiainaNumSource): -1 | 0 | 1 | 2;
+  compare(x: PowiainaNumSource): -1 | 0 | 1 | 2;
+  cmp(other: PowiainaNumSource): -1 | 0 | 1 | 2;
+  eq(other: PowiainaNumSource): boolean;
+  neq(other: PowiainaNumSource): boolean;
+  lt(other: PowiainaNumSource): boolean;
+  lte(other: PowiainaNumSource): boolean;
+  gt(other: PowiainaNumSource): boolean;
+  gte(other: PowiainaNumSource): boolean;
+  eq_tolerance(value: PowiainaNumSource, tolerance?: number): boolean;
+  sin(): PowiainaNum;
+  cos(): PowiainaNum;
+  tan(): PowiainaNum;
+  cot(): PowiainaNum;
+  sec(): PowiainaNum;
+  csc(): PowiainaNum;
+  neg(): PowiainaNum;
+  rec(): PowiainaNum;
+  floor(): PowiainaNum;
+  ceil(): PowiainaNum;
+  round(): PowiainaNum;
+  /**
+   * Work like `Math.trunc`,
+   *
+   * if `this > 0`, return `floor(this)`
+   *
+   * if `this < 0`, return `ceil(this)`
+   *
+   * @example
+   * new PowiainaNum(3.3).trunc() == new PowiainaNum(3)
+   * new PowiainaNum(-1.114514).trunc() == new PowiainaNum(-1)
+   * @returns
+   */
+  trunc(): PowiainaNum;
+  /**
+   * @returns if this<other, return -1, if this=other, return 0, if this>other, return 1, if this!<=>, return 2
+   */
+  static sign(a: PowiainaNum): -1 | 0 | 1;
+  isNaN(): boolean;
+  isZero(): boolean;
+  isFinite(): boolean;
+  isInfi(): boolean;
+  isInfiNaN(): boolean;
+  isInt(): boolean;
+  ispos(): boolean;
+  isneg(): boolean;
+  static isNaN(x: PowiainaNumSource): boolean;
+  /**
+   * Normalize functions will make this number convert into standard format.(it also change `this`, like [].sort)
+   * @returns normalized number
+   */
+  normalize(): PowiainaNum;
+  /**
+   * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
+   */
+  getOperatorIndex(arrow: number, expans?: number, megota?: number): number;
+  /**
+   * @returns number repeats of operators with given arguments.
+   */
+  getOperator(arrow: number, expans?: number, megota?: number): number;
+  /**
+   * Modify the repeat of operator
+   * @param number val the repeat of operator will modify to array.
+   * @returns bool Is the operators array changed?
+   */
+  setOperator(
+    val: number,
+    arrow: number,
+    expans?: number,
+    megota?: number
+  ): boolean;
+  /**
+   * @returns  a PowiainaNum object which deep copied from `this` object.
+   */
+  clone(): PowiainaNum;
+  /**
+   * Set `this` from a object(deep-copy)
+   * @param powlikeObject
+   * @returns
+   */
+  resetFromObject(powlikeObject: IPowiainaNum): this;
+  /**
+   * Convert `this` to Javascript `number`
+   *
+   * returns `Infinity` when the number is greater than `Number.MAX_VALUE`
+   */
+  toNumber(): number;
+  /**
+   * Convert `this` to a string
+   */
+  toString(): string;
+  static fromNumber(x: number): PowiainaNum;
+  [Symbol.toStringTag]: string;
+  /**
+   * Convert `this` to a JSON object
+   * @returns a JSON object
+   */
+  toJSON(): string;
+  static fromString(input: string): PowiainaNum;
+  static fromObject(
+    powlikeObject: IPowiainaNum | ExpantaNumArray | PowiainaNumArray01X
+  ): PowiainaNum;
+  /**
+   * A property array value for version 0.1.x PowiainaNum.
+   */
+  get arr01(): PowiainaNumArray01X;
+  /**
+   * Zero
+   */
+  static readonly ZERO: PowiainaNum;
+  /**
+   * One
+   */
+  static readonly ONE: PowiainaNum;
+  /**
+   * The value of the largest integer n such that n and n + 1 are both
+   * exactly representable as a Number value = 9007199254740991 = 2^53 − 1.
+   */
+  static readonly MSI: PowiainaNum;
+  /**
+   * MSI's reciprocate value, = 1/9007199254740991.
+   */
+  static readonly MSI_REC: PowiainaNum;
+  /**
+   * 10^(MSI) = 10^9007199254740991.
+   */
+  static readonly E_MSI: PowiainaNum;
+  /**
+   * 10^10^(MSI) = 10^10^9007199254740991.
+   */
+  static readonly EE_MSI: PowiainaNum;
+  /**
+   * 10^(MSI) 's reciprocate value, = 10^-9007199254740991.
+   */
+  static readonly E_MSI_REC: PowiainaNum;
+  /**
+   * Tetrated MSI, = 10↑↑9007199254740991.
+   */
+  static readonly TETRATED_MSI: PowiainaNum;
+  /**
+   * Pentated MSI, = 10↑↑↑9007199254740991.
+   */
+  static readonly PENTATED_MSI: PowiainaNum;
+  /**
+   * Tritri, = 3↑↑↑3 = power tower with height 7625597484987 base 3.
+   */
+  static readonly TRITRI: PowiainaNum;
+  /**
+   * The Graham's Number, = G^64(4)
+   *
+   * = 3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{
+   * 3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3{3↑↑↑↑3
+   * }3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3
+   * }3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3
+   */
+  static readonly GRAHAMS_NUMBER: PowiainaNum;
+  /**
+   * Positive Infinity.
+   */
+  static readonly POSITIVE_INFINITY: PowiainaNum;
+  /**
+   * Negative Infinity.
+   */
+  static readonly NEGATIVE_INFINITY: PowiainaNum;
+  static readonly NaN: PowiainaNum;
+  /**
+   * The mathematical constant e. This is Euler's number, the base of natural logarithms.
+   */
+  static readonly E: PowiainaNum;
+  /**
+   * The natural logarithm of 2 = ln(2).
+   */
+  static readonly LN2: PowiainaNum;
+  /**
+   * The natural logarithm of 10.
+   */
+  static readonly LN10: PowiainaNum;
+  /**
+   * The base-2 logarithm of e = log_2(e).
+   */
+  static readonly LOG2E: PowiainaNum;
+  /**
+   * The base-10 logarithm of e = log_10(e).
+   */
+  static readonly LOG10E: PowiainaNum;
+  /**
+   * Pi(). This is the ratio of the circumference of a circle to its diameter.
+   */
+  static readonly PI: PowiainaNum;
+  /**
+   * The square root of 0.5, or, equivalently, one divided by the square root of 2.
+   *
+   * = (√2)/2 = √(0.5)
+   */
+  static readonly SQRT1_2: PowiainaNum;
+  /**
+   * The square root of 2 = √2.
+   */
+  static readonly SQRT2: PowiainaNum;
+  static readonly maxOps = 100;
+  static readonly POW_2_44_MOD_PI = 1.701173079953;
+  static arrowFuncMap: Map&lt;string, PowiainaNum>;
+}</code></pre>
     <script src="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/highlight.min.js"></script>
 
     <!-- and it's easy to individually load additional languages -->
     <script src="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/languages/go.min.js"></script>
 
     <script>
-        hljs.highlightAll();
-        // first, find all the div.code blocks
-        document.querySelectorAll('code.').forEach(el => {
+        document.querySelectorAll('code').forEach(el => {
             // then highlight each
             hljs.highlightElement(el);
         });
