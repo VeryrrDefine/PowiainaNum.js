@@ -884,6 +884,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(x).lambertw(principal);
   }
   //#endregion
+
   //#region Commonly used functions by game
   // All of these are from break_eternity.js
 
@@ -1030,6 +1031,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
 
   //#endregion
+
   //#region higher calculates
 
   //#region Tetration
@@ -2311,246 +2313,6 @@ export default class PowiainaNum implements IPowiainaNum {
 
   //#endregion
 
-  /**
-   * Normalize functions will make this number convert into standard format.(it also change `this`, like [].sort)
-   * @returns normalized number
-   */
-  public normalize(): PowiainaNum {
-    //TODO: normalize
-
-    let renormalize = true;
-    const x = this;
-    for (let i = 0; i < this.array.length; i++) {
-      // Check what is infinity
-      if (this.array[i].repeat == Infinity) {
-        this.array = [
-          {
-            arrow: 0,
-            expans: 1,
-            megota: 1,
-            repeat: Infinity,
-          },
-        ];
-        this.layer = 0;
-        return this;
-      }
-    }
-    for (let i = 1; i < x.array.length; ++i) {
-      const e = x.array[i];
-      if (e.arrow === null || e.arrow === undefined) {
-        e.arrow = 0;
-      }
-      if (e.expans === null || e.expans === undefined) {
-        e.expans = 1;
-      }
-      if (e.megota === null || e.megota === undefined) {
-        e.megota = 1;
-      }
-      if (
-        isNaN(e.arrow) ||
-        isNaN(e.repeat) ||
-        isNaN(e.expans) ||
-        isNaN(e.megota)
-      ) {
-        x.array = [newOperator(NaN, 0, 1, 1)];
-        return x;
-      }
-      if (!isFinite(e.repeat) || !isFinite(e.megota)) {
-        x.array = [newOperator(Infinity, 0, 1, 1)];
-        return x;
-      }
-      if (!Number.isInteger(e.arrow)) e.arrow = Math.floor(e.arrow);
-      if (!Number.isInteger(e.repeat)) e.repeat = Math.floor(e.repeat);
-      if (!Number.isInteger(e.expans)) e.expans = Math.floor(e.expans);
-      if (!Number.isInteger(e.megota)) e.megota = Math.floor(e.megota);
-    }
-
-    if (!x.array.length) {
-      x.small = !x.small;
-      x.array = [newOperator(Infinity)]; // if no array set zero
-    }
-    do {
-      renormalize = false;
-      // Sort arrays.
-      this.array.sort(arraySortFunction);
-
-      for (let i = 1; i < x.array.length - 1; ++i) {
-        if (
-          x.array[i].arrow == x.array[i + 1].arrow &&
-          x.array[i].expans == x.array[i + 1].expans &&
-          x.array[i].megota == x.array[i + 1].megota
-        ) {
-          // same array's merge
-          x.array[i].repeat += x.array[i + 1].repeat;
-          x.array.splice(i + 1, 1);
-          --i;
-          renormalize = true;
-        }
-      }
-      for (let i = 1; i < x.array.length; ++i) {
-        // If there is a 0 repeat operator, remove it.
-        if (
-          x.array[i].arrow !== 0 &&
-          (x.array[i].repeat === 0 ||
-            x.array[i].repeat === null ||
-            x.array[i].repeat === undefined)
-        ) {
-          x.array.splice(i, 1);
-          --i;
-          continue;
-        }
-        // If there is a operator which arrow 0 and brace count >=2
-        // replace it as arrow replacement operaotr
-        if (x.array[i].arrow == 0 && x.array[i].expans >= 2) {
-          x.array[i].arrow = Infinity;
-          x.array[i].valuereplaced = 0;
-          x.array[i].expans = x.array[i].expans - 1;
-        }
-      }
-      if (x.array.length > PowiainaNum.maxOps)
-        x.array.splice(1, x.array.length - PowiainaNum.maxOps); // max operators check
-      // for any 10^a but a >log10(MSI), replace to regular 10^a
-      if (
-        this.array.length >= 2 &&
-        this.array[1].arrow == 1 &&
-        this.array[1].repeat >= 1 &&
-        this.array[0].repeat < MSI_LOG10
-      ) {
-        this.setOperator(this.array[1].repeat - 1, 1);
-        this.setOperator(10 ** this.array[0].repeat, 0);
-        renormalize = true;
-      }
-      if (this.getOperator(0) > MSI && isFinite(this.getOperator(0))) {
-        this.setOperator(this.getOperator(1) + 1, 1);
-        this.setOperator(Math.log10(this.getOperator(0)), 0);
-        renormalize = true;
-      }
-      if (this.array[this.array.length - 1].megota > MSI) {
-        this.layer++;
-        this.array = [newOperator(this.array[this.array.length - 1].megota)];
-        renormalize = true;
-      } else if (
-        this.layer &&
-        this.array.length == 1 &&
-        this.array[0].arrow === 0
-      ) {
-        this.layer--;
-        this.array = [
-          newOperator(10),
-          newOperator(1, 10, 10, this.array[0].repeat),
-        ];
-
-        renormalize = true;
-      }
-      // for a<1, turn into reciprocate
-      if (this.array.length == 1 && this.array[0].repeat < 1) {
-        this.array[0].repeat = 1 / this.array[0].repeat;
-        this.small = !this.small;
-        renormalize = true;
-      }
-      // for any 10{X>9e15}10, replace into 10{!}X;
-      if (this.array.length >= 2 && this.array[1].arrow >= MSI) {
-        this.array[0].repeat = this.array[1].arrow;
-        this.array[1] = newOperator(
-          1,
-          Infinity,
-          this.array[1].expans,
-          this.array[1].megota
-        );
-      }
-      while (
-        x.array.length >= 2 &&
-        x.array[0].repeat == 1 &&
-        x.array[1].repeat
-      ) {
-        // for any 10{X}10{X} 1, turn into 10{X}10
-        // [1, [R=sth, A=sth, E=sth, M=sth]]
-        if (x.array[1].repeat > 1) {
-          x.array[1].repeat--;
-        } else {
-          x.array.splice(1, 1);
-        }
-        x.array[0].repeat = 10;
-        renormalize = true;
-      }
-      if (
-        x.array.length >= 2 &&
-        x.array.length < PowiainaNum.maxOps &&
-        x.array[0].repeat < MSI &&
-        x.array[1].arrow >= 2 &&
-        x.array[1].repeat > 1 && //10^^^ 10
-        isFinite(x.array[1].arrow)
-      ) {
-        // for any (10{A sample=2})^k 1e9, turn into (10{A})^k-1  (10{A-1})^1e9-1 10
-        // But dont convert when a is infinite
-        // [1e9, [R=K, A=2, sth, sth]]
-        x.array[1].repeat--;
-        x.array.splice(
-          1,
-          0,
-          newOperator(
-            x.array[0].repeat - 1,
-            x.array[1].arrow - 1,
-            x.array[1].expans,
-            x.array[1].megota
-          )
-        );
-        x.array[0].repeat = 10;
-        renormalize = true;
-      }
-      if (
-        x.array.length >= 2 &&
-        x.array[0].repeat < MSI &&
-        x.array[1].arrow >= 2 &&
-        x.array[1].repeat == 1 && //10^^^ 10
-        isFinite(x.array[1].arrow)
-      ) {
-        // for any 10{A sample=2}1e9, turn into (10{A-1})^1e9-1 10
-        // But dont convert when a is infinite
-        // [1e9, [R=1, A=2, sth, sth]]
-        x.array.splice(
-          1,
-          1,
-          newOperator(
-            x.array[0].repeat - 1,
-            x.array[1].arrow - 1,
-            x.array[1].expans,
-            x.array[1].megota
-          )
-        );
-        x.array[0].repeat = 10;
-        renormalize = true;
-      }
-
-      // for any (10{A=2})^1e16 10, turn into (10{A+1}) 1e16
-      if (
-        x.array.length >= 2 &&
-        x.array[1].repeat > MSI &&
-        x.array[1].arrow !== Infinity
-      ) {
-        x.array[1].arrow++;
-        x.array[0].repeat = x.array[1].repeat;
-        x.array[1].repeat = 1;
-
-        renormalize = true;
-      }
-      // for any (10{x})^1e16 10, turn into (10{1,2}) 1e16
-      if (
-        x.array.length >= 2 &&
-        x.array[1].repeat > MSI &&
-        x.array[1].arrow === Infinity
-      ) {
-        x.array[1].arrow = 1;
-        x.array[1].expans++;
-        x.array[0].repeat = x.array[1].repeat;
-        x.array[1].repeat = 1;
-
-        renormalize = true;
-      }
-    } while (renormalize);
-    return this;
-  }
-
   //#region operators
   /**
    * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
@@ -2598,37 +2360,6 @@ export default class PowiainaNum implements IPowiainaNum {
     return false;
   }
   //#endregion
-
-  /**
-   * @returns  a PowiainaNum object which deep copied from `this` object.
-   */
-  clone(): PowiainaNum {
-    const obj = new PowiainaNum();
-    obj.resetFromObject(this);
-    return obj;
-  }
-
-  /**
-   * Set `this` from a object(deep-copy)
-   * @param powlikeObject
-   * @returns
-   */
-  resetFromObject(powlikeObject: IPowiainaNum) {
-    this.array = [];
-    for (let i = 0; i < powlikeObject.array.length; i++) {
-      this.array[i] = {
-        arrow: powlikeObject.array[i].arrow,
-        expans: powlikeObject.array[i].expans,
-        megota: powlikeObject.array[i].megota,
-        repeat: powlikeObject.array[i].repeat,
-        valuereplaced: powlikeObject.array[i].valuereplaced,
-      };
-    }
-    this.small = powlikeObject.small;
-    this.sign = powlikeObject.sign;
-    this.layer = powlikeObject.layer;
-    return this;
-  }
 
   //#region converters
   /**
@@ -3089,6 +2820,279 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   //#endregion
 
+  //#region other functions
+  /**
+   * Normalize functions will make this number convert into standard format.(it also change `this`, like [].sort)
+   * @returns normalized number
+   */
+  public normalize(): PowiainaNum {
+    //TODO: normalize
+
+    let renormalize = true;
+    const x = this;
+    for (let i = 0; i < this.array.length; i++) {
+      // Check what is infinity
+      if (this.array[i].repeat == Infinity) {
+        this.array = [
+          {
+            arrow: 0,
+            expans: 1,
+            megota: 1,
+            repeat: Infinity,
+          },
+        ];
+        this.layer = 0;
+        return this;
+      }
+    }
+    for (let i = 1; i < x.array.length; ++i) {
+      const e = x.array[i];
+      if (e.arrow === null || e.arrow === undefined) {
+        e.arrow = 0;
+      }
+      if (e.expans === null || e.expans === undefined) {
+        e.expans = 1;
+      }
+      if (e.megota === null || e.megota === undefined) {
+        e.megota = 1;
+      }
+      if (
+        isNaN(e.arrow) ||
+        isNaN(e.repeat) ||
+        isNaN(e.expans) ||
+        isNaN(e.megota)
+      ) {
+        x.array = [newOperator(NaN, 0, 1, 1)];
+        return x;
+      }
+      if (!isFinite(e.repeat) || !isFinite(e.megota)) {
+        x.array = [newOperator(Infinity, 0, 1, 1)];
+        return x;
+      }
+      if (!Number.isInteger(e.arrow)) e.arrow = Math.floor(e.arrow);
+      if (!Number.isInteger(e.repeat)) e.repeat = Math.floor(e.repeat);
+      if (!Number.isInteger(e.expans)) e.expans = Math.floor(e.expans);
+      if (!Number.isInteger(e.megota)) e.megota = Math.floor(e.megota);
+    }
+
+    if (!x.array.length) {
+      x.small = !x.small;
+      x.array = [newOperator(Infinity)]; // if no array set zero
+    }
+    do {
+      renormalize = false;
+      // Sort arrays.
+      this.array.sort(arraySortFunction);
+
+      for (let i = 1; i < x.array.length - 1; ++i) {
+        if (
+          x.array[i].arrow == x.array[i + 1].arrow &&
+          x.array[i].expans == x.array[i + 1].expans &&
+          x.array[i].megota == x.array[i + 1].megota
+        ) {
+          // same array's merge
+          x.array[i].repeat += x.array[i + 1].repeat;
+          x.array.splice(i + 1, 1);
+          --i;
+          renormalize = true;
+        }
+      }
+      for (let i = 1; i < x.array.length; ++i) {
+        // If there is a 0 repeat operator, remove it.
+        if (
+          x.array[i].arrow !== 0 &&
+          (x.array[i].repeat === 0 ||
+            x.array[i].repeat === null ||
+            x.array[i].repeat === undefined)
+        ) {
+          x.array.splice(i, 1);
+          --i;
+          continue;
+        }
+        // If there is a operator which arrow 0 and brace count >=2
+        // replace it as arrow replacement operaotr
+        if (x.array[i].arrow == 0 && x.array[i].expans >= 2) {
+          x.array[i].arrow = Infinity;
+          x.array[i].valuereplaced = 0;
+          x.array[i].expans = x.array[i].expans - 1;
+        }
+      }
+      if (x.array.length > PowiainaNum.maxOps)
+        x.array.splice(1, x.array.length - PowiainaNum.maxOps); // max operators check
+      // for any 10^a but a >log10(MSI), replace to regular 10^a
+      if (
+        this.array.length >= 2 &&
+        this.array[1].arrow == 1 &&
+        this.array[1].repeat >= 1 &&
+        this.array[0].repeat < MSI_LOG10
+      ) {
+        this.setOperator(this.array[1].repeat - 1, 1);
+        this.setOperator(10 ** this.array[0].repeat, 0);
+        renormalize = true;
+      }
+      if (this.getOperator(0) > MSI && isFinite(this.getOperator(0))) {
+        this.setOperator(this.getOperator(1) + 1, 1);
+        this.setOperator(Math.log10(this.getOperator(0)), 0);
+        renormalize = true;
+      }
+      if (this.array[this.array.length - 1].megota > MSI) {
+        this.layer++;
+        this.array = [newOperator(this.array[this.array.length - 1].megota)];
+        renormalize = true;
+      } else if (
+        this.layer &&
+        this.array.length == 1 &&
+        this.array[0].arrow === 0
+      ) {
+        this.layer--;
+        this.array = [
+          newOperator(10),
+          newOperator(1, 10, 10, this.array[0].repeat),
+        ];
+
+        renormalize = true;
+      }
+      // for a<1, turn into reciprocate
+      if (this.array.length == 1 && this.array[0].repeat < 1) {
+        this.array[0].repeat = 1 / this.array[0].repeat;
+        this.small = !this.small;
+        renormalize = true;
+      }
+      // for any 10{X>9e15}10, replace into 10{!}X;
+      if (this.array.length >= 2 && this.array[1].arrow >= MSI) {
+        this.array[0].repeat = this.array[1].arrow;
+        this.array[1] = newOperator(
+          1,
+          Infinity,
+          this.array[1].expans,
+          this.array[1].megota
+        );
+      }
+      while (
+        x.array.length >= 2 &&
+        x.array[0].repeat == 1 &&
+        x.array[1].repeat
+      ) {
+        // for any 10{X}10{X} 1, turn into 10{X}10
+        // [1, [R=sth, A=sth, E=sth, M=sth]]
+        if (x.array[1].repeat > 1) {
+          x.array[1].repeat--;
+        } else {
+          x.array.splice(1, 1);
+        }
+        x.array[0].repeat = 10;
+        renormalize = true;
+      }
+      if (
+        x.array.length >= 2 &&
+        x.array.length < PowiainaNum.maxOps &&
+        x.array[0].repeat < MSI &&
+        x.array[1].arrow >= 2 &&
+        x.array[1].repeat > 1 && //10^^^ 10
+        isFinite(x.array[1].arrow)
+      ) {
+        // for any (10{A sample=2})^k 1e9, turn into (10{A})^k-1  (10{A-1})^1e9-1 10
+        // But dont convert when a is infinite
+        // [1e9, [R=K, A=2, sth, sth]]
+        x.array[1].repeat--;
+        x.array.splice(
+          1,
+          0,
+          newOperator(
+            x.array[0].repeat - 1,
+            x.array[1].arrow - 1,
+            x.array[1].expans,
+            x.array[1].megota
+          )
+        );
+        x.array[0].repeat = 10;
+        renormalize = true;
+      }
+      if (
+        x.array.length >= 2 &&
+        x.array[0].repeat < MSI &&
+        x.array[1].arrow >= 2 &&
+        x.array[1].repeat == 1 && //10^^^ 10
+        isFinite(x.array[1].arrow)
+      ) {
+        // for any 10{A sample=2}1e9, turn into (10{A-1})^1e9-1 10
+        // But dont convert when a is infinite
+        // [1e9, [R=1, A=2, sth, sth]]
+        x.array.splice(
+          1,
+          1,
+          newOperator(
+            x.array[0].repeat - 1,
+            x.array[1].arrow - 1,
+            x.array[1].expans,
+            x.array[1].megota
+          )
+        );
+        x.array[0].repeat = 10;
+        renormalize = true;
+      }
+
+      // for any (10{A=2})^1e16 10, turn into (10{A+1}) 1e16
+      if (
+        x.array.length >= 2 &&
+        x.array[1].repeat > MSI &&
+        x.array[1].arrow !== Infinity
+      ) {
+        x.array[1].arrow++;
+        x.array[0].repeat = x.array[1].repeat;
+        x.array[1].repeat = 1;
+
+        renormalize = true;
+      }
+      // for any (10{x})^1e16 10, turn into (10{1,2}) 1e16
+      if (
+        x.array.length >= 2 &&
+        x.array[1].repeat > MSI &&
+        x.array[1].arrow === Infinity
+      ) {
+        x.array[1].arrow = 1;
+        x.array[1].expans++;
+        x.array[0].repeat = x.array[1].repeat;
+        x.array[1].repeat = 1;
+
+        renormalize = true;
+      }
+    } while (renormalize);
+    return this;
+  }
+
+  /**
+   * @returns  a PowiainaNum object which deep copied from `this` object.
+   */
+  clone(): PowiainaNum {
+    const obj = new PowiainaNum();
+    obj.resetFromObject(this);
+    return obj;
+  }
+
+  /**
+   * Set `this` from a object(deep-copy)
+   * @param powlikeObject
+   * @returns
+   */
+  resetFromObject(powlikeObject: IPowiainaNum) {
+    this.array = [];
+    for (let i = 0; i < powlikeObject.array.length; i++) {
+      this.array[i] = {
+        arrow: powlikeObject.array[i].arrow,
+        expans: powlikeObject.array[i].expans,
+        megota: powlikeObject.array[i].megota,
+        repeat: powlikeObject.array[i].repeat,
+        valuereplaced: powlikeObject.array[i].valuereplaced,
+      };
+    }
+    this.small = powlikeObject.small;
+    this.sign = powlikeObject.sign;
+    this.layer = powlikeObject.layer;
+    return this;
+  }
+  //#endregion
+
   //#region constants
   /**
    * Zero
@@ -3309,5 +3313,6 @@ export default class PowiainaNum implements IPowiainaNum {
   public static readonly POW_2_44_MOD_PI = 1.701173079953;
 
   //#endregion
+
   public static arrowFuncMap: Map<string, PowiainaNum> = new Map();
 }
