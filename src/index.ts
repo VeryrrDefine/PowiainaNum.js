@@ -2780,6 +2780,9 @@ export default class PowiainaNum implements IPowiainaNum {
     input = input.replace(/M/g, "10{!,2}");
     input = input.replace(/N\^(\d+)/g, "(10{1,!})^$1");
     input = input.replace(/N/g, "10{1,!}");
+    if (/^.*e-.*(e|\^).*/.test(input)) {
+      input = "/10^" + input.substring(input.indexOf("e-"));
+    }
     if (!isNaN(Number(input))) {
       let res = Number(input);
       let a = false;
@@ -2804,12 +2807,12 @@ export default class PowiainaNum implements IPowiainaNum {
           let log10mant =
             mantissa.length >= LONG_STRING_MIN_LENGTH
               ? log10LongString(mantissa)
-              : Math.log10(Number(mantissa));
+              : Math.log10(Number(mantissa)); // sample 10
 
-          let log10int = Math.floor(log10mant);
-          let log10float = log10mant - log10int;
+          let log10int = Math.floor(log10mant); // sample 1
+          let log10float = log10mant - log10int; // sample 0;
           mantissaME[0] = 10 ** log10float;
-          mantissaME[1] += log10float;
+          mantissaME[1] += log10int;
         } else {
           // If not , count how many zeros until reached non-zero numbers
           let zeros = countLeadingZerosAfterDecimal(mantissa);
