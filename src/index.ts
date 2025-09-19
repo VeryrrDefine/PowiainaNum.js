@@ -2828,6 +2828,28 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   //#endregion
 
+  //#region useless functions
+
+  /**
+   * This function is for NaNe308, if you want to calculate G(x), use this function directly.
+   */
+  public static grahalFunction(layers2: PowiainaNumSource): PowiainaNum {
+    const layers = new PowiainaNum(layers2);
+    if (!layers.isInt() || layers.lt(0) || layers.isNaN())
+      return PowiainaNum.NaN.clone();
+    if (layers.eq(1))
+      return new PowiainaNum("10^^^(10^)^7625597484984 3638334640023.7783");
+    else if (layers.lte(MSI)) {
+      return new PowiainaNum(
+        `(10{!})^${layers.toNumber()} 10^^^(10^)^7625597484984 3638334640023.7783`
+      );
+    } else {
+      return PowiainaNum.BEAF(3, layers, 1, 2);
+    }
+  }
+
+  //#endregion
+
   //#region other functions
   /**
    * Normalize functions will make this number convert into standard format.(it also change `this`, like [].sort)
