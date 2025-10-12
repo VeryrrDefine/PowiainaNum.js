@@ -374,18 +374,23 @@ export default class PowiainaNum implements IPowiainaNum {
     this.small = false;
     this.sign = 0;
     this.layer = 0;
-    if (typeof arg1 == "undefined") {
-    } else if (typeof arg1 == "number") {
-      let obj = PowiainaNum.fromNumber(arg1);
-      this.resetFromObject(obj);
-    } else if (typeof arg1 == "object") {
-      let obj = PowiainaNum.fromObject(arg1);
-      this.resetFromObject(obj);
-    } else if (typeof arg1 == "string") {
-      let obj = PowiainaNum.fromString(arg1);
-      this.resetFromObject(obj);
-    } else {
-      let isn: never = arg1;
+    try {
+      if (typeof arg1 == "undefined") {
+      } else if (typeof arg1 == "number") {
+        let obj = PowiainaNum.fromNumber(arg1);
+        this.resetFromObject(obj);
+      } else if (typeof arg1 == "object") {
+        let obj = PowiainaNum.fromObject(arg1);
+        this.resetFromObject(obj);
+      } else if (typeof arg1 == "string") {
+        let obj = PowiainaNum.fromString(arg1);
+        this.resetFromObject(obj);
+      } else {
+        let isn: never = arg1;
+      }
+    } catch (e) {
+      console.error("Malformed input");
+      console.error(e);
     }
   }
 
@@ -2396,7 +2401,7 @@ export default class PowiainaNum implements IPowiainaNum {
   /**
    * Convert `this` to a string
    */
-  public toString(): string {
+  public toString_core(): string {
     if (this.isNaN()) return `NaN`;
     if (this.sign == -1) return `-${this.neg().toString()}`;
     if (this.small) {
@@ -2435,6 +2440,14 @@ export default class PowiainaNum implements IPowiainaNum {
       res += `${calc}`;
     }
     return res;
+  }
+  public toString(): string {
+    try {
+      return this.toString_core();
+    } catch {
+      console.error("Checked error when converting to string");
+      return "NaN";
+    }
   }
   public static fromNumber(x: number): PowiainaNum {
     const obj = new PowiainaNum(); // NaN
@@ -2478,6 +2491,7 @@ export default class PowiainaNum implements IPowiainaNum {
     // Judge the string was a number
 
     if (input.startsWith("PN")) input = input.substring(2);
+    if (input == "NaN") return PowiainaNum.NaN.clone();
     input = input.replace(/J\^(\d+)/g, "(10{!})^$1");
     input = input.replace(/J/g, "10{!}");
     input = input.replace(/K\^(\d+)/g, "(10{1,2})^$1");
@@ -2860,6 +2874,11 @@ export default class PowiainaNum implements IPowiainaNum {
 
     let renormalize = true;
     const x = this;
+    if (this.array === undefined) {
+      x.array = [newOperator(NaN, 0, 1, 1)];
+    }
+    if (this.sign === undefined) this.sign = 0;
+    if (this.layer === undefined) this.layer = 0;
     for (let i = 0; i < this.array.length; i++) {
       // Check what is infinity
       if (this.array[i].repeat == Infinity) {
