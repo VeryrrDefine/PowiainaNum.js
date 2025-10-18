@@ -522,11 +522,30 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(t).add(other);
   }
 
+  public plus(other: PowiainaNumSource): PowiainaNum {
+    return this.add(other);
+  }
+  public static plus(
+    t: PowiainaNumSource,
+    other: PowiainaNumSource
+  ): PowiainaNum {
+    return new PowiainaNum(t).add(other);
+  }
+
   public sub(a: PowiainaNumSource): PowiainaNum {
     return this.add(new PowiainaNum(a).neg());
   }
 
   public static sub(
+    t: PowiainaNumSource,
+    other: PowiainaNumSource
+  ): PowiainaNum {
+    return new PowiainaNum(t).sub(other);
+  }
+  public minus(other: PowiainaNumSource): PowiainaNum {
+    return this.sub(other);
+  }
+  public static minus(
     t: PowiainaNumSource,
     other: PowiainaNumSource
   ): PowiainaNum {
@@ -590,6 +609,15 @@ export default class PowiainaNum implements IPowiainaNum {
   ): PowiainaNum {
     return new PowiainaNum(t).mul(other);
   }
+  public times(other: PowiainaNumSource): PowiainaNum {
+    return this.mul(other);
+  }
+  public static times(
+    t: PowiainaNumSource,
+    other: PowiainaNumSource
+  ): PowiainaNum {
+    return new PowiainaNum(t).mul(other);
+  }
 
   public div(other: PowiainaNumSource): PowiainaNum {
     const x = new PowiainaNum(other).rec();
@@ -601,12 +629,33 @@ export default class PowiainaNum implements IPowiainaNum {
   ): PowiainaNum {
     return new PowiainaNum(t).div(other);
   }
+  public divide(other: PowiainaNumSource): PowiainaNum {
+    return this.div(other);
+  }
+  public static divide(
+    t: PowiainaNumSource,
+    other: PowiainaNumSource
+  ): PowiainaNum {
+    return new PowiainaNum(t).div(other);
+  }
 
   public mod(x: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(x);
 
     const division = this.div(other);
     return division.sub(division.floor()).mul(other);
+  }
+  public modulus(x: PowiainaNumSource): PowiainaNum {
+    return this.mod(x);
+  }
+  public static mod(x: PowiainaNumSource, y: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(x).mod(y);
+  }
+  public static modulus(
+    x: PowiainaNumSource,
+    y: PowiainaNumSource
+  ): PowiainaNum {
+    return new PowiainaNum(x).mod(y);
   }
   //#endregion
 
@@ -646,7 +695,14 @@ export default class PowiainaNum implements IPowiainaNum {
 
     if (this.eq(10)) return other.pow10();
     if (this.isneg()) {
-      if (!other.isInt()) return PowiainaNum.NaN.clone();
+      if (!other.isInt()) {
+        if (other.small) {
+          if (other.rec().div(2).eq(1)) {
+            return this.neg().pow(other).neg();
+          }
+        }
+        return PowiainaNum.NaN.clone();
+      }
       let r = this.abs().pow(other);
       r.sign = (function () {
         let a = other.mod(2).round();
@@ -740,6 +796,15 @@ export default class PowiainaNum implements IPowiainaNum {
     return this.log10().div(other.log10());
   }
   public static log(
+    t: PowiainaNumSource,
+    base: PowiainaNumSource = Math.E
+  ): PowiainaNum {
+    return new PowiainaNum(t).log(base);
+  }
+  public logBase(a: PowiainaNumSource): PowiainaNum {
+    return this.log(a);
+  }
+  public static logBase(
     t: PowiainaNumSource,
     base: PowiainaNumSource = Math.E
   ): PowiainaNum {
