@@ -48,6 +48,8 @@ const EXP_E_REC = 1.444667861009766 as const;
 const isPowiainaNum =
   /^(PN)?[\/\-\+]*(Infinity|NaN|(P+|P\^\d+ )?(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
 
+const BE_REGEX =
+  /^((\d+(\.\d*)?|\d*\.\d+)?([EeFf]([-\+]?)))*(0|\d+(\.\d*)?|\d*\.\d+)$/;
 //#endregion
 
 //#region some useful functions
@@ -152,6 +154,10 @@ function f_gamma(n: number) {
   l = l - 3617 / (122400 * np);
   return Math.exp(l) / scal1;
 }
+
+const f_maglog10 = function (n: number) {
+  return Math.sign(n) * Math.log10(Math.abs(n));
+};
 
 const _EXPN1 = 0.36787944117144232159553 as const; // exp(-1)
 
@@ -1562,17 +1568,41 @@ export default class PowiainaNum implements IPowiainaNum {
       };
     }
   }
-  public pentate(other: PowiainaNumSource) {
-    return this.arrow(3)(other);
+  public pentate(other: PowiainaNumSource, payload?: PowiainaNumSource) {
+    return this.arrow(3)(other, payload);
   }
-  public hexate(other: PowiainaNumSource) {
-    return this.arrow(4)(other);
+  public hexate(other: PowiainaNumSource, payload?: PowiainaNumSource) {
+    return this.arrow(4)(other, payload);
   }
-  public pent(other: PowiainaNumSource) {
-    return this.arrow(3)(other);
+  public pent(other: PowiainaNumSource, payload?: PowiainaNumSource) {
+    return this.arrow(3)(other, payload);
   }
   public penta_log(base: PowiainaNumSource = 10) {
     return this.anyarrow_log(3)(base);
+  }
+  public static pentate(
+    x: PowiainaNumSource,
+    other: PowiainaNumSource,
+    payload?: PowiainaNumSource
+  ) {
+    return new PowiainaNum(x).arrow(3)(other, payload);
+  }
+  public static hexate(
+    x: PowiainaNumSource,
+    other: PowiainaNumSource,
+    payload?: PowiainaNumSource
+  ) {
+    return new PowiainaNum(x).arrow(4)(other, payload);
+  }
+  public static pent(
+    x: PowiainaNumSource,
+    other: PowiainaNumSource,
+    payload?: PowiainaNumSource
+  ) {
+    return new PowiainaNum(x).arrow(3)(other, payload);
+  }
+  public static penta_log(x: PowiainaNumSource, base: PowiainaNumSource = 10) {
+    return new PowiainaNum(x).anyarrow_log(3)(base);
   }
 
   /**
@@ -2552,6 +2582,271 @@ export default class PowiainaNum implements IPowiainaNum {
     return "PN" + this.toString();
   }
   public static fromString(input: string) {
+    if (PowiainaNum.usingBreakEternityLikeFromString && BE_REGEX.test(input)) {
+      try {
+        return new PowiainaNum(114514).breaketernity_fromString(input);
+      } catch {
+        console.warn("Checked break_eternity.js malformed input, " + input);
+      }
+    }
+    return this.fromString_core(input);
+  }
+  public breaketernity_fromString(value: string): PowiainaNum {
+    const originalValue = value;
+    value = value.replace(",", "");
+
+    //Handle x^^^y format. Note that no linearhyper5 parameter is needed, as pentation has no analytic approximation.
+    const pentationparts = value.split("^^^");
+    if (pentationparts.length === 2) {
+      const base = parseFloat(pentationparts[0]);
+      const height = parseFloat(pentationparts[1]);
+      const heightparts = pentationparts[1].split(";");
+      let payload = 1;
+      if (heightparts.length === 2) {
+        payload = parseFloat(heightparts[1]);
+        if (!isFinite(payload)) {
+          payload = 1;
+        }
+      }
+      if (isFinite(base) && isFinite(height)) {
+        const result = PowiainaNum.pentate(base, height, payload);
+        this.resetFromObject(result);
+        return this;
+      }
+    }
+
+    //Handle x^^y format.
+    const tetrationparts = value.split("^^");
+    if (tetrationparts.length === 2) {
+      const base = parseFloat(tetrationparts[0]);
+      const height = parseFloat(tetrationparts[1]);
+      const heightparts = tetrationparts[1].split(";");
+      let payload = 1;
+      if (heightparts.length === 2) {
+        payload = parseFloat(heightparts[1]);
+        if (!isFinite(payload)) {
+          payload = 1;
+        }
+      }
+      if (isFinite(base) && isFinite(height)) {
+        const result = PowiainaNum.tetrate(base, height, payload);
+        this.resetFromObject(result);
+        return this;
+      }
+    }
+
+    //Handle x^y format.
+    const powparts = value.split("^");
+    if (powparts.length === 2) {
+      const base = parseFloat(powparts[0]);
+      const exponent = parseFloat(powparts[1]);
+      if (isFinite(base) && isFinite(exponent)) {
+        const result = PowiainaNum.pow(base, exponent);
+        this.resetFromObject(result);
+        return this;
+      }
+    }
+
+    //Handle various cases involving it being a Big Number.
+    value = value.trim().toLowerCase();
+
+    //handle X PT Y format.
+    let base;
+    let height;
+    let ptparts = value.split("pt");
+    if (ptparts.length === 2) {
+      base = 10;
+      let negative = false;
+      if (ptparts[0][0] == "-") {
+        negative = true;
+        ptparts[0] = ptparts[0].slice(1);
+      }
+      height = parseFloat(ptparts[0]);
+      ptparts[1] = ptparts[1].replace("(", "");
+      ptparts[1] = ptparts[1].replace(")", "");
+      let payload = parseFloat(ptparts[1]);
+      if (!isFinite(payload)) {
+        payload = 1;
+      }
+      if (isFinite(base) && isFinite(height)) {
+        const result = PowiainaNum.tetrate(base, height, payload);
+        this.resetFromObject(result);
+        if (negative) this.sign *= -1;
+        return this;
+      }
+    }
+
+    //handle XpY format (it's the same thing just with p).
+    ptparts = value.split("p");
+    if (ptparts.length === 2) {
+      base = 10;
+      let negative = false;
+      if (ptparts[0][0] == "-") {
+        negative = true;
+        ptparts[0] = ptparts[0].slice(1);
+      }
+      height = parseFloat(ptparts[0]);
+      ptparts[1] = ptparts[1].replace("(", "");
+      ptparts[1] = ptparts[1].replace(")", "");
+      let payload = parseFloat(ptparts[1]);
+      if (!isFinite(payload)) {
+        payload = 1;
+      }
+      if (isFinite(base) && isFinite(height)) {
+        const result = PowiainaNum.tetrate(base, height, payload);
+        this.resetFromObject(result);
+        if (negative) this.sign *= -1;
+        return this;
+      }
+    }
+
+    //handle XFY format
+    ptparts = value.split("f");
+    if (ptparts.length === 2) {
+      base = 10;
+      let negative = false;
+      if (ptparts[0][0] == "-") {
+        negative = true;
+        ptparts[0] = ptparts[0].slice(1);
+      }
+      ptparts[0] = ptparts[0].replace("(", "");
+      ptparts[0] = ptparts[0].replace(")", "");
+      let payload = parseFloat(ptparts[0]);
+      ptparts[1] = ptparts[1].replace("(", "");
+      ptparts[1] = ptparts[1].replace(")", "");
+      height = parseFloat(ptparts[1]);
+      if (!isFinite(payload)) {
+        payload = 1;
+      }
+      if (isFinite(base) && isFinite(height)) {
+        const result = PowiainaNum.tetrate(base, height, payload);
+        this.resetFromObject(result);
+
+        if (negative) this.sign *= -1;
+        return this;
+      }
+    }
+
+    const parts = value.split("e");
+    const ecount = parts.length - 1;
+
+    //Handle numbers that are exactly floats (0 or 1 es).
+    if (ecount === 0) {
+      const numberAttempt = parseFloat(value);
+      if (isFinite(numberAttempt)) {
+        this.resetFromObject(PowiainaNum.fromNumber(numberAttempt));
+
+        return this;
+      }
+    } else if (ecount === 1) {
+      //Very small numbers ("2e-3000" and so on) may look like valid floats but round to 0.
+      //Additionally, small numbers (like 1e-308) look like valid floats but are starting to lose precision.
+      const numberAttempt = parseFloat(value);
+      if (isFinite(numberAttempt) && Math.abs(numberAttempt) > 1e-307) {
+        this.resetFromObject(PowiainaNum.fromNumber(numberAttempt));
+
+        return this;
+      }
+    }
+
+    //Handle new (e^N)X format.
+    const newparts = value.split("e^");
+    if (newparts.length === 2) {
+      const pseudoBEDecimal = {
+        sign: 0,
+        mag: 0,
+        layer: 0,
+      };
+      pseudoBEDecimal.sign = 1;
+      if (newparts[0].charAt(0) == "-") {
+        pseudoBEDecimal.sign = -1;
+      }
+      let layerstring = "";
+      for (let i = 0; i < newparts[1].length; ++i) {
+        const chrcode = newparts[1].charCodeAt(i);
+        if ((chrcode >= 43 && chrcode <= 57) || chrcode === 101) {
+          //is "0" to "9" or "+" or "-" or "." or "e" (or "," or "/")
+          layerstring += newparts[1].charAt(i);
+        } //we found the end of the layer count
+        else {
+          pseudoBEDecimal.layer = parseFloat(layerstring);
+          pseudoBEDecimal.mag = parseFloat(newparts[1].substring(i + 1));
+          // Handle invalid cases like (e^-8)1 and (e^10.5)1 by just calling tetrate
+          if (pseudoBEDecimal.layer < 0 || pseudoBEDecimal.layer % 1 != 0) {
+            const result = PowiainaNum.tetrate(
+              10,
+              pseudoBEDecimal.layer,
+              pseudoBEDecimal.mag
+            );
+            return result;
+          }
+          return PowiainaNum.tetrate(
+            10,
+            pseudoBEDecimal.layer,
+            pseudoBEDecimal.mag
+          ).mul(pseudoBEDecimal.sign);
+        }
+      }
+    }
+
+    if (ecount < 1) {
+      return new PowiainaNum(0);
+    }
+    const mantissa = parseFloat(parts[0]);
+    if (mantissa === 0) {
+      return new PowiainaNum(0);
+    }
+    let exponent = parseFloat(parts[parts.length - 1]);
+    //handle numbers like AeBeC and AeeeeBeC
+    if (ecount >= 2) {
+      const me = parseFloat(parts[parts.length - 2]);
+      if (isFinite(me)) {
+        exponent *= Math.sign(me);
+        exponent += f_maglog10(me);
+      }
+    }
+
+    const pseudoBEDecimal = {
+      sign: 0,
+      mag: 0,
+      layer: 0,
+    };
+    //Handle numbers written like eee... (N es) X
+    if (!isFinite(mantissa)) {
+      pseudoBEDecimal.sign = parts[0] === "-" ? -1 : 1;
+      pseudoBEDecimal.layer = ecount;
+      pseudoBEDecimal.mag = exponent;
+    }
+    //Handle numbers written like XeY
+    else if (ecount === 1) {
+      pseudoBEDecimal.sign = Math.sign(mantissa);
+      pseudoBEDecimal.layer = 1;
+      //Example: 2e10 is equal to 10^log10(2e10) which is equal to 10^(10+log10(2))
+      pseudoBEDecimal.mag = exponent + Math.log10(Math.abs(mantissa));
+    }
+    //Handle numbers written like Xeee... (N es) Y
+    else {
+      pseudoBEDecimal.sign = Math.sign(mantissa);
+      pseudoBEDecimal.layer = ecount;
+      if (ecount === 2) {
+        const result = PowiainaNum.mul(
+          PowiainaNum.tetrate(10, 2, exponent),
+          new PowiainaNum(mantissa)
+        );
+        return result;
+      } else {
+        //at eee and above, mantissa is too small to be recognizable!
+        pseudoBEDecimal.mag = exponent;
+      }
+    }
+
+    return PowiainaNum.tetrate(
+      10,
+      pseudoBEDecimal.layer,
+      pseudoBEDecimal.mag
+    ).mul(pseudoBEDecimal.sign);
+  }
+  public static fromString_core(input: string) {
     let x = new PowiainaNum();
     // Judge the string was a number
 
@@ -3429,4 +3724,12 @@ export default class PowiainaNum implements IPowiainaNum {
   //#endregion
 
   public static arrowFuncMap: Map<string, PowiainaNum> = new Map();
+
+  //#region configurations
+
+  /**
+   * set this config to true, the program will try to parse the string to PowiainaNum.js with break_eternity method, if cannot parse correctly, the program will use PowiainaNum.js method.
+   */
+  public static usingBreakEternityLikeFromString = false;
+  //#endregion
 }
