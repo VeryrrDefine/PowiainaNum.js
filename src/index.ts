@@ -62,7 +62,32 @@ function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
     valuereplaced: a == Infinity ? 0 : e == Infinity ? 1 : -1,
   };
 }
+function removeCommasOutsideBraces(input: string): string {
+  let result = "";
+  let inBraces = false;
 
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+
+    if (char === "{") {
+      inBraces = true;
+      result += char;
+    } else if (char === "}") {
+      inBraces = false;
+      result += char;
+    } else if (char === ",") {
+      // 只有在花括号内部才保留逗号
+      if (inBraces) {
+        result += char;
+      }
+      // 如果在花括号外部，就不添加到结果中（相当于删除）
+    } else {
+      result += char;
+    }
+  }
+
+  return result;
+}
 // parse 0.1.x PowiainaNum.js string
 function parseLegacyPowiainaNumString(str: string) {
   const pattern = /l(\d+)\s+s(\d+)\s+a(\[.*\])/;
@@ -95,7 +120,7 @@ function replaceETo10(str: string) {
   // 正则解释：\(e\^(\d+)\) 匹配 (e^数字)，其中 \d+ 匹配一个或多个数字
   return str
     .replace(/\(e\^(\d+)\)/g, "(10^)^$1 ")
-    .replace(/(\d+)\x20*PT/g, "(10^)^$1 ");
+    .replace(/(\d+)[Pp][Tt]/g, "(10^)^$1 ");
 }
 /**
  * 把一个字符串很长的数进行以10为底的对数
@@ -380,6 +405,9 @@ export default class PowiainaNum implements IPowiainaNum {
     this.small = false;
     this.sign = 0;
     this.layer = 0;
+    if (PowiainaNum.blankArgumentConstructorReturnZero) {
+      this.resetFromObject(PowiainaNum.ZERO);
+    }
     try {
       if (typeof arg1 == "undefined") {
       } else if (typeof arg1 == "number") {
@@ -406,7 +434,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns the sum of `this` and `other`
    */
   public add(other: PowiainaNumSource): PowiainaNum {
-    let x = this.clone();
+    let x = this.clone().normalize();
     let y = new PowiainaNum(other);
 
     // inf + -inf = nan
@@ -508,7 +536,7 @@ export default class PowiainaNum implements IPowiainaNum {
     }
     if (t == 0) throw Error("Encounter a calculate error");
 
-    r = new PowiainaNum();
+    r = PowiainaNum.NaN.clone();
 
     r.sign = 1;
     if (l > MSI_LOG10 || l < -MSI_LOG10) {
@@ -700,6 +728,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (!this.isFinite()) return this.clone();
 
     if (this.eq(10)) return other.pow10();
+    if (other.isneg()) return this.pow(other.neg()).rec();
     if (this.isneg()) {
       if (!other.isInt()) {
         if (other.small) {
@@ -806,6 +835,12 @@ export default class PowiainaNum implements IPowiainaNum {
     base: PowiainaNumSource = Math.E
   ): PowiainaNum {
     return new PowiainaNum(t).log(base);
+  }
+  public log2(): PowiainaNum {
+    return this.log(2);
+  }
+  public static log2(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).log2();
   }
   public logBase(a: PowiainaNumSource): PowiainaNum {
     return this.log(a);
@@ -952,11 +987,11 @@ export default class PowiainaNum implements IPowiainaNum {
         return PowiainaNum.NaN.clone(); //complex
       }
 
-      if (this.layer === 0) {
+      if (this.lt(9e15)) {
         return PowiainaNum.fromNumber(
           f_lambertw(this.sign * this.array[0].repeat, 1e-10, false)
         );
-      } else if (this.layer == 1) {
+      } else if (this.lt(PowiainaNum.E_MSI)) {
         return d_lambertw(this, 1e-10, false);
       } else {
         return this.neg().rec().lambertw().neg();
@@ -1127,7 +1162,9 @@ export default class PowiainaNum implements IPowiainaNum {
     if (t.isNaN() || other.isNaN() || payl.isNaN())
       return PowiainaNum.NaN.clone();
     if (t.eq(1)) return PowiainaNum.ONE.clone();
-    if (payl.neq(PowiainaNum.ONE)) other = other.add(payl.slog(t));
+    if (payl.neq(PowiainaNum.ONE) && t.gte(EXP_E_REC)) {
+      other = other.add(payl.slog(t));
+    }
     let negln;
     if (other.isInfi() && other.sign > 0) {
       if (t.gte(EXP_E_REC)) return PowiainaNum.POSITIVE_INFINITY.clone();
@@ -2241,24 +2278,54 @@ export default class PowiainaNum implements IPowiainaNum {
     return this.compare(other);
   }
 
-  eq(other: PowiainaNumSource): boolean {
+  public eq(other: PowiainaNumSource): boolean {
     return this.cmp(other) === 0;
   }
-  neq(other: PowiainaNumSource): boolean {
+  public neq(other: PowiainaNumSource): boolean {
     return this.cmp(other) !== 0;
   }
-  lt(other: PowiainaNumSource): boolean {
+  public lt(other: PowiainaNumSource): boolean {
     return this.cmp(other) === -1;
   }
-  lte(other: PowiainaNumSource): boolean {
+  public lte(other: PowiainaNumSource): boolean {
     return this.cmp(other) <= 0;
   }
-  gt(other: PowiainaNumSource): boolean {
+  public gt(other: PowiainaNumSource): boolean {
     return this.cmp(other) == 1;
   }
-  gte(other: PowiainaNumSource): boolean {
+  public gte(other: PowiainaNumSource): boolean {
     const t = this.cmp(other);
     return t == 0 || t == 1;
+  }
+  public equals(other: PowiainaNumSource): boolean {
+    return this.eq(other);
+  }
+  public notEquals(other: PowiainaNumSource): boolean {
+    return this.neq(other);
+  }
+  public static eq(a: PowiainaNumSource, o: PowiainaNumSource): boolean {
+    return new PowiainaNum(a).eq(o);
+  }
+  public static equals(a: PowiainaNumSource, o: PowiainaNumSource): boolean {
+    return new PowiainaNum(a).eq(o);
+  }
+  public static neq(a: PowiainaNumSource, o: PowiainaNumSource): boolean {
+    return new PowiainaNum(a).neq(o);
+  }
+  public static notEquals(a: PowiainaNumSource, o: PowiainaNumSource): boolean {
+    return new PowiainaNum(a).notEquals(o);
+  }
+  public static lt(a: PowiainaNumSource, o: PowiainaNumSource): boolean {
+    return new PowiainaNum(a).lt(o);
+  }
+  public static gt(a: PowiainaNumSource, o: PowiainaNumSource): boolean {
+    return new PowiainaNum(a).gt(o);
+  }
+  public static lte(a: PowiainaNumSource, o: PowiainaNumSource): boolean {
+    return new PowiainaNum(a).lte(o);
+  }
+  public static gte(a: PowiainaNumSource, o: PowiainaNumSource): boolean {
+    return new PowiainaNum(a).gte(o);
   }
 
   public eq_tolerance(
@@ -2314,6 +2381,21 @@ export default class PowiainaNum implements IPowiainaNum {
     a.small = !a.small;
     return a;
   }
+  public static rec(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).rec();
+  }
+  public recip(): PowiainaNum {
+    return this.rec();
+  }
+  public static recip(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).rec();
+  }
+  public reciprocate(): PowiainaNum {
+    return this.rec();
+  }
+  public static reciprocate(t: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(t).rec();
+  }
   public floor(): PowiainaNum {
     if (this.isInt()) return this.clone();
     if (this.small) {
@@ -2327,6 +2409,9 @@ export default class PowiainaNum implements IPowiainaNum {
     r.sign = this.sign;
     return r;
   }
+  public static floor(x: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(x).floor();
+  }
   public ceil(): PowiainaNum {
     if (this.isInt()) return this.clone();
     if (this.small) {
@@ -2339,6 +2424,9 @@ export default class PowiainaNum implements IPowiainaNum {
     );
     r.sign = this.sign;
     return r;
+  }
+  public static ceil(x: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(x).ceil();
   }
   public round(): PowiainaNum {
     if (this.isInt()) return this.clone();
@@ -2356,6 +2444,9 @@ export default class PowiainaNum implements IPowiainaNum {
     r.sign = this.sign;
     return r;
   }
+  public static round(x: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(x).round();
+  }
 
   /**
    * Work like `Math.trunc`,
@@ -2372,6 +2463,9 @@ export default class PowiainaNum implements IPowiainaNum {
   public trunc() {
     const y = this.clone();
     return y.gte(0) ? y.floor() : y.ceil();
+  }
+  public static trunc(x: PowiainaNumSource): PowiainaNum {
+    return new PowiainaNum(x).trunc();
   }
   /**
    * @returns if this<other, return -1, if this=other, return 0, if this>other, return 1, if this!<=>, return 2
@@ -2546,7 +2640,19 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static fromNumber(x: number): PowiainaNum {
     const obj = new PowiainaNum(); // NaN
-
+    obj.resetFromObject({
+      array: [
+        {
+          arrow: 0,
+          expans: 1,
+          megota: 1,
+          repeat: NaN,
+        },
+      ],
+      small: false,
+      layer: 0,
+      sign: 0,
+    });
     if (x < 0)
       obj.sign = -1; // negative
     else if (x == 0) {
@@ -2583,271 +2689,19 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static fromString(input: string) {
     if (PowiainaNum.usingBreakEternityLikeFromString && BE_REGEX.test(input)) {
-      try {
-        return new PowiainaNum(114514).breaketernity_fromString(input);
-      } catch {
-        console.warn("Checked break_eternity.js malformed input, " + input);
+      /*
+       * 0i00000000a7 says that eee-3000 will wrongly parse to 1. So i added this
+       */
+      const a = input.match(/(e+-)(\d+(.\d+)?)/);
+      if (a) {
+        const e_s = a[1].length;
+        input = "e-" + "e".repeat(e_s - 1) + a[2];
       }
     }
     return this.fromString_core(input);
   }
-  public breaketernity_fromString(value: string): PowiainaNum {
-    const originalValue = value;
-    value = value.replace(",", "");
-
-    //Handle x^^^y format. Note that no linearhyper5 parameter is needed, as pentation has no analytic approximation.
-    const pentationparts = value.split("^^^");
-    if (pentationparts.length === 2) {
-      const base = parseFloat(pentationparts[0]);
-      const height = parseFloat(pentationparts[1]);
-      const heightparts = pentationparts[1].split(";");
-      let payload = 1;
-      if (heightparts.length === 2) {
-        payload = parseFloat(heightparts[1]);
-        if (!isFinite(payload)) {
-          payload = 1;
-        }
-      }
-      if (isFinite(base) && isFinite(height)) {
-        const result = PowiainaNum.pentate(base, height, payload);
-        this.resetFromObject(result);
-        return this;
-      }
-    }
-
-    //Handle x^^y format.
-    const tetrationparts = value.split("^^");
-    if (tetrationparts.length === 2) {
-      const base = parseFloat(tetrationparts[0]);
-      const height = parseFloat(tetrationparts[1]);
-      const heightparts = tetrationparts[1].split(";");
-      let payload = 1;
-      if (heightparts.length === 2) {
-        payload = parseFloat(heightparts[1]);
-        if (!isFinite(payload)) {
-          payload = 1;
-        }
-      }
-      if (isFinite(base) && isFinite(height)) {
-        const result = PowiainaNum.tetrate(base, height, payload);
-        this.resetFromObject(result);
-        return this;
-      }
-    }
-
-    //Handle x^y format.
-    const powparts = value.split("^");
-    if (powparts.length === 2) {
-      const base = parseFloat(powparts[0]);
-      const exponent = parseFloat(powparts[1]);
-      if (isFinite(base) && isFinite(exponent)) {
-        const result = PowiainaNum.pow(base, exponent);
-        this.resetFromObject(result);
-        return this;
-      }
-    }
-
-    //Handle various cases involving it being a Big Number.
-    value = value.trim().toLowerCase();
-
-    //handle X PT Y format.
-    let base;
-    let height;
-    let ptparts = value.split("pt");
-    if (ptparts.length === 2) {
-      base = 10;
-      let negative = false;
-      if (ptparts[0][0] == "-") {
-        negative = true;
-        ptparts[0] = ptparts[0].slice(1);
-      }
-      height = parseFloat(ptparts[0]);
-      ptparts[1] = ptparts[1].replace("(", "");
-      ptparts[1] = ptparts[1].replace(")", "");
-      let payload = parseFloat(ptparts[1]);
-      if (!isFinite(payload)) {
-        payload = 1;
-      }
-      if (isFinite(base) && isFinite(height)) {
-        const result = PowiainaNum.tetrate(base, height, payload);
-        this.resetFromObject(result);
-        if (negative) this.sign *= -1;
-        return this;
-      }
-    }
-
-    //handle XpY format (it's the same thing just with p).
-    ptparts = value.split("p");
-    if (ptparts.length === 2) {
-      base = 10;
-      let negative = false;
-      if (ptparts[0][0] == "-") {
-        negative = true;
-        ptparts[0] = ptparts[0].slice(1);
-      }
-      height = parseFloat(ptparts[0]);
-      ptparts[1] = ptparts[1].replace("(", "");
-      ptparts[1] = ptparts[1].replace(")", "");
-      let payload = parseFloat(ptparts[1]);
-      if (!isFinite(payload)) {
-        payload = 1;
-      }
-      if (isFinite(base) && isFinite(height)) {
-        const result = PowiainaNum.tetrate(base, height, payload);
-        this.resetFromObject(result);
-        if (negative) this.sign *= -1;
-        return this;
-      }
-    }
-
-    //handle XFY format
-    ptparts = value.split("f");
-    if (ptparts.length === 2) {
-      base = 10;
-      let negative = false;
-      if (ptparts[0][0] == "-") {
-        negative = true;
-        ptparts[0] = ptparts[0].slice(1);
-      }
-      ptparts[0] = ptparts[0].replace("(", "");
-      ptparts[0] = ptparts[0].replace(")", "");
-      let payload = parseFloat(ptparts[0]);
-      ptparts[1] = ptparts[1].replace("(", "");
-      ptparts[1] = ptparts[1].replace(")", "");
-      height = parseFloat(ptparts[1]);
-      if (!isFinite(payload)) {
-        payload = 1;
-      }
-      if (isFinite(base) && isFinite(height)) {
-        const result = PowiainaNum.tetrate(base, height, payload);
-        this.resetFromObject(result);
-
-        if (negative) this.sign *= -1;
-        return this;
-      }
-    }
-
-    const parts = value.split("e");
-    const ecount = parts.length - 1;
-
-    //Handle numbers that are exactly floats (0 or 1 es).
-    if (ecount === 0) {
-      const numberAttempt = parseFloat(value);
-      if (isFinite(numberAttempt)) {
-        this.resetFromObject(PowiainaNum.fromNumber(numberAttempt));
-
-        return this;
-      }
-    } else if (ecount === 1) {
-      //Very small numbers ("2e-3000" and so on) may look like valid floats but round to 0.
-      //Additionally, small numbers (like 1e-308) look like valid floats but are starting to lose precision.
-      const numberAttempt = parseFloat(value);
-      if (isFinite(numberAttempt) && Math.abs(numberAttempt) > 1e-307) {
-        this.resetFromObject(PowiainaNum.fromNumber(numberAttempt));
-
-        return this;
-      }
-    }
-
-    //Handle new (e^N)X format.
-    const newparts = value.split("e^");
-    if (newparts.length === 2) {
-      const pseudoBEDecimal = {
-        sign: 0,
-        mag: 0,
-        layer: 0,
-      };
-      pseudoBEDecimal.sign = 1;
-      if (newparts[0].charAt(0) == "-") {
-        pseudoBEDecimal.sign = -1;
-      }
-      let layerstring = "";
-      for (let i = 0; i < newparts[1].length; ++i) {
-        const chrcode = newparts[1].charCodeAt(i);
-        if ((chrcode >= 43 && chrcode <= 57) || chrcode === 101) {
-          //is "0" to "9" or "+" or "-" or "." or "e" (or "," or "/")
-          layerstring += newparts[1].charAt(i);
-        } //we found the end of the layer count
-        else {
-          pseudoBEDecimal.layer = parseFloat(layerstring);
-          pseudoBEDecimal.mag = parseFloat(newparts[1].substring(i + 1));
-          // Handle invalid cases like (e^-8)1 and (e^10.5)1 by just calling tetrate
-          if (pseudoBEDecimal.layer < 0 || pseudoBEDecimal.layer % 1 != 0) {
-            const result = PowiainaNum.tetrate(
-              10,
-              pseudoBEDecimal.layer,
-              pseudoBEDecimal.mag
-            );
-            return result;
-          }
-          return PowiainaNum.tetrate(
-            10,
-            pseudoBEDecimal.layer,
-            pseudoBEDecimal.mag
-          ).mul(pseudoBEDecimal.sign);
-        }
-      }
-    }
-
-    if (ecount < 1) {
-      return new PowiainaNum(0);
-    }
-    const mantissa = parseFloat(parts[0]);
-    if (mantissa === 0) {
-      return new PowiainaNum(0);
-    }
-    let exponent = parseFloat(parts[parts.length - 1]);
-    //handle numbers like AeBeC and AeeeeBeC
-    if (ecount >= 2) {
-      const me = parseFloat(parts[parts.length - 2]);
-      if (isFinite(me)) {
-        exponent *= Math.sign(me);
-        exponent += f_maglog10(me);
-      }
-    }
-
-    const pseudoBEDecimal = {
-      sign: 0,
-      mag: 0,
-      layer: 0,
-    };
-    //Handle numbers written like eee... (N es) X
-    if (!isFinite(mantissa)) {
-      pseudoBEDecimal.sign = parts[0] === "-" ? -1 : 1;
-      pseudoBEDecimal.layer = ecount;
-      pseudoBEDecimal.mag = exponent;
-    }
-    //Handle numbers written like XeY
-    else if (ecount === 1) {
-      pseudoBEDecimal.sign = Math.sign(mantissa);
-      pseudoBEDecimal.layer = 1;
-      //Example: 2e10 is equal to 10^log10(2e10) which is equal to 10^(10+log10(2))
-      pseudoBEDecimal.mag = exponent + Math.log10(Math.abs(mantissa));
-    }
-    //Handle numbers written like Xeee... (N es) Y
-    else {
-      pseudoBEDecimal.sign = Math.sign(mantissa);
-      pseudoBEDecimal.layer = ecount;
-      if (ecount === 2) {
-        const result = PowiainaNum.mul(
-          PowiainaNum.tetrate(10, 2, exponent),
-          new PowiainaNum(mantissa)
-        );
-        return result;
-      } else {
-        //at eee and above, mantissa is too small to be recognizable!
-        pseudoBEDecimal.mag = exponent;
-      }
-    }
-
-    return PowiainaNum.tetrate(
-      10,
-      pseudoBEDecimal.layer,
-      pseudoBEDecimal.mag
-    ).mul(pseudoBEDecimal.sign);
-  }
   public static fromString_core(input: string) {
-    let x = new PowiainaNum();
+    let x = new PowiainaNum(NaN);
     // Judge the string was a number
 
     if (input.startsWith("PN")) input = input.substring(2);
@@ -2934,7 +2788,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return x;
     }
     input = replaceETo10(input);
-
+    input = removeCommasOutsideBraces(input);
     if (!isPowiainaNum.test(input)) {
       throw powiainaNumError + "malformed input: " + input;
     }
@@ -3128,6 +2982,19 @@ export default class PowiainaNum implements IPowiainaNum {
     powlikeObject: IPowiainaNum | ExpantaNumArray | PowiainaNumArray01X
   ) {
     const obj = new PowiainaNum();
+    obj.resetFromObject({
+      array: [
+        {
+          arrow: 0,
+          expans: 1,
+          megota: 1,
+          repeat: NaN,
+        },
+      ],
+      small: false,
+      layer: 0,
+      sign: 0,
+    });
     obj.array = [];
     if (isExpantaNumArray(powlikeObject)) {
       for (let i = 0; i < powlikeObject.length; i++) {
@@ -3162,18 +3029,7 @@ export default class PowiainaNum implements IPowiainaNum {
       obj.layer = 0;
       return obj;
     } else {
-      for (let i = 0; i < powlikeObject.array.length; i++) {
-        obj.array[i] = {
-          arrow: powlikeObject.array[i].arrow,
-          expans: powlikeObject.array[i].expans,
-          megota: powlikeObject.array[i].megota,
-          repeat: powlikeObject.array[i].repeat,
-          valuereplaced: powlikeObject.array[i].valuereplaced,
-        };
-      }
-      obj.small = powlikeObject.small;
-      obj.sign = powlikeObject.sign;
-      obj.layer = powlikeObject.layer;
+      obj.resetFromObject(powlikeObject);
       return obj;
     }
   }
@@ -3367,6 +3223,11 @@ export default class PowiainaNum implements IPowiainaNum {
         this.small = !this.small;
         renormalize = true;
       }
+      // for a = 1, small should false.
+      if (this.array.length == 1 && this.array[0].repeat == 1 && this.small) {
+        this.small = false;
+        renormalize = true;
+      }
       // for any 10{X>9e15}10, replace into 10{!}X;
       if (this.array.length >= 2 && this.array[1].arrow >= MSI) {
         this.array[0].repeat = this.array[1].arrow;
@@ -3485,6 +3346,9 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns
    */
   resetFromObject(powlikeObject: IPowiainaNum) {
+    if (!powlikeObject.array) {
+      return;
+    }
     this.array = [];
     for (let i = 0; i < powlikeObject.array.length; i++) {
       this.array[i] = {
@@ -3728,8 +3592,13 @@ export default class PowiainaNum implements IPowiainaNum {
   //#region configurations
 
   /**
-   * set this config to true, the program will try to parse the string to PowiainaNum.js with break_eternity method, if cannot parse correctly, the program will use PowiainaNum.js method.
+   * If you set this config to true, the `fromString` method will try to parse the string to `PowiainaNum` class with `break_eternity.js` similar `fromString` method, if cannot parse correctly, the program will use `PowiainaNum.js` `fromString` method.
    */
   public static usingBreakEternityLikeFromString = false;
+
+  /**
+   * If you set this config to true, the `constructor` method will return Zero instead of NaN when call new PowiainaNum() with no arguments.
+   */
+  public static blankArgumentConstructorReturnZero = false;
   //#endregion
 }
