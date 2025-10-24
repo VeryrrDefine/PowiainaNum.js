@@ -719,14 +719,20 @@ export default class PowiainaNum implements IPowiainaNum {
       thisObject.sign *= -1;
       return thisObject.pow10().rec();
     }
+
+    /**if t lessthan log10 2^1024, use fromNumber. */
     if (thisObject.lte(308.25471555991675)) {
       return PowiainaNum.fromNumber(10 ** thisObject.toNumber());
     }
+    /**calculate directly */
     if (thisObject.small) {
       if (thisObject.lt(PowiainaNum.MSI_REC)) return PowiainaNum.ONE;
       return new PowiainaNum(10 ** (thisObject.array[0].repeat ** -1));
     }
+    /** indistinguishable above 10^^9e15 */
     if (thisObject.gt(PowiainaNum.TETRATED_MSI)) return thisObject;
+
+    /**otherwise add 10^ directly */
     thisObject.setOperator((thisObject.array[1]?.repeat ?? 0) + 1, 1);
     thisObject.normalize();
     return thisObject;
@@ -994,7 +1000,7 @@ export default class PowiainaNum implements IPowiainaNum {
         return this.log();
       }
     } else {
-      if (this.sign === 1) {
+      if (this.sign === -1) {
         return PowiainaNum.NaN.clone(); //complex
       }
 
