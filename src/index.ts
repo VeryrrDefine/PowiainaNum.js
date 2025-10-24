@@ -2355,6 +2355,8 @@ export default class PowiainaNum implements IPowiainaNum {
   //#endregion
 
   //#region geometry
+
+  /**this function is indistinguishable above 4503599627370496*/
   public sin(): PowiainaNum {
     const x = this.clone();
     if (x.isneg()) {
