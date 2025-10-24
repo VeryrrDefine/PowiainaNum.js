@@ -709,26 +709,27 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns 10 to the power of `this`
    */
   public pow10(): PowiainaNum {
-    const r = this.clone();
+    const thisObject = this.clone();
     // inf & nan check
     if (!this.isFinite()) return this.clone();
 
-    if (r.isneg()) {
+    /** when 10^(t), t<0, use 10^(-t) reciprocate. */
+    if (thisObject.isneg()) {
       // 10^(-x) = 1/(10^x)
-      r.sign *= -1;
-      return r.pow10().rec();
+      thisObject.sign *= -1;
+      return thisObject.pow10().rec();
     }
-    if (r.lte(308.25471555991675)) {
-      return PowiainaNum.fromNumber(10 ** r.toNumber());
+    if (thisObject.lte(308.25471555991675)) {
+      return PowiainaNum.fromNumber(10 ** thisObject.toNumber());
     }
-    if (r.small) {
-      if (r.lt(PowiainaNum.MSI_REC)) return PowiainaNum.ONE;
-      return new PowiainaNum(10 ** (r.array[0].repeat ** -1));
+    if (thisObject.small) {
+      if (thisObject.lt(PowiainaNum.MSI_REC)) return PowiainaNum.ONE;
+      return new PowiainaNum(10 ** (thisObject.array[0].repeat ** -1));
     }
-    if (r.gt(PowiainaNum.TETRATED_MSI)) return r;
-    r.setOperator((r.array[1]?.repeat ?? 0) + 1, 1);
-    r.normalize();
-    return r;
+    if (thisObject.gt(PowiainaNum.TETRATED_MSI)) return thisObject;
+    thisObject.setOperator((thisObject.array[1]?.repeat ?? 0) + 1, 1);
+    thisObject.normalize();
+    return thisObject;
   }
   public pow(x: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(x);
