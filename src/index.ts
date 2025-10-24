@@ -503,7 +503,9 @@ export default class PowiainaNum implements IPowiainaNum {
       return PowiainaNum.fromNumber(temp);
     }
 
-    let mult = 1;
+    let signMult = 1;
+
+    /**Calculate numbers [1, 9e15] (useless) */
     if (
       !a.small &&
       !b.small &&
@@ -514,6 +516,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return new PowiainaNum((a.array[0].repeat + b.array[0].repeat) * a.sign);
     }
 
+    // Calculate a & b's 10-logarithm
     const alog10 =
       (a.small ? -1 : 1) *
       (a.array[1]?.repeat ? a.array[0].repeat : Math.log10(a.array[0].repeat));
@@ -522,31 +525,38 @@ export default class PowiainaNum implements IPowiainaNum {
       (b.array[1]?.repeat ? b.array[0].repeat : Math.log10(b.array[0].repeat));
     if (alog10 - blog10 > MSI_LOG10) return a;
 
+    /**
+     * Offset, a number can make 10^ a+off calculatable not very small or big
+     */
     const offset = -Math.floor(alog10); //a number can make a+off in [0,1)
+    let resultLogarithm = 0;
 
-    let r,
-      l = 0,
-      t;
-    t = a.sign * 10 ** (alog10 + offset) + b.sign * 10 ** (blog10 + offset);
+    /** 10^(a+off) + 10^(b+off). */
+    let offsetedResult =
+      a.sign * 10 ** (alog10 + offset) + b.sign * 10 ** (blog10 + offset);
 
-    if (t > 0) l = Math.log10(t) - offset;
-    if (t < 0) {
-      l = Math.log10(-t) - offset;
-      mult *= -1;
+    if (offsetedResult > 0)
+      resultLogarithm = Math.log10(offsetedResult) - offset;
+    if (offsetedResult < 0) {
+      resultLogarithm = Math.log10(-offsetedResult) - offset;
+      signMult *= -1;
     }
-    if (t == 0) throw Error("Encounter a calculate error");
+    if (offsetedResult == 0) return PowiainaNum.ZERO.clone();
 
-    r = PowiainaNum.NaN.clone();
+    let resultPN = PowiainaNum.NaN.clone();
 
-    r.sign = 1;
-    if (l > MSI_LOG10 || l < -MSI_LOG10) {
-      r.array = [newOperator(l, 0), newOperator(1, 1)];
+    resultPN.sign = 1;
+
+    /** abs(resultLogarithm) > 15.9, use 10^x form. */
+    if (resultLogarithm > MSI_LOG10 || resultLogarithm < -MSI_LOG10) {
+      resultPN.array = [newOperator(resultLogarithm, 0), newOperator(1, 1)];
+      /**otherwise, use 10** abs(resultLogarithm) */
     } else {
-      r.array = [newOperator(10 ** Math.abs(l), 0)];
+      resultPN.array = [newOperator(10 ** Math.abs(resultLogarithm), 0)];
     }
-    r.small = l < 0 ? true : false;
-    r.sign *= mult;
-    return r;
+    resultPN.small = resultLogarithm < 0 ? true : false;
+    resultPN.sign *= signMult;
+    return resultPN;
   }
 
   public static add(
