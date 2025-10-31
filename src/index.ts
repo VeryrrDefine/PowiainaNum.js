@@ -1794,6 +1794,9 @@ export default class PowiainaNum implements IPowiainaNum {
       if (a == 0 && e == 1 && m > 1) {
         return [1, 1 / 0, m - 1];
       }
+      if (e == 0 && m > 1) {
+        return [1, 1 / 0, m - 1];
+      }
 
       return [a, e, m];
     }
