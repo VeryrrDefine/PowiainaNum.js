@@ -1808,7 +1808,8 @@ export default class PowiainaNum implements IPowiainaNum {
       return x.toString();
     }
     function getMSIForm(arrow: number, expans: number, megota: number) {
-      return `10{${infToBang(arrow)},${infToBang(expans)},${megota}}${MSI}`;
+      let conv = convertOperator(arrow, expans, megota);
+      return `10{${infToBang(conv[0])},${infToBang(conv[1])},${conv[2]}}${MSI}`;
     }
 
     const t = base.clone();
