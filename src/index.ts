@@ -1824,6 +1824,22 @@ export default class PowiainaNum implements IPowiainaNum {
       console.log(
         `${"-".repeat(depth)} {${base2},${power2},${arrow2},${expans2},${megota2}}`
       );
+      if (depth >= 200) {
+        return new PowiainaNum({
+          layer: 0,
+          array: [
+            newOperator(10),
+            newOperator(
+              1,
+              new PowiainaNum(arrow2).clampMax(MSI).toNumber(),
+              new PowiainaNum(expans2).clampMax(MSI).toNumber(),
+              new PowiainaNum(megota2).clampMax(MSI).toNumber()
+            ),
+          ],
+          sign: 1,
+          small: false,
+        }).normalize();
+      }
       const other = new PowiainaNum(other2);
       let r;
       if (t.isNaN() || other.isNaN()) return PowiainaNum.NaN.clone();
