@@ -1848,6 +1848,19 @@ export default class PowiainaNum implements IPowiainaNum {
         );
         // {this, this, power, expans-1, megota}
       }
+      if (expans.eq(0)) {
+        return PowiainaNum.BEAF(
+          t,
+          t,
+          t,
+          power,
+          megota.sub(1),
+          powiaina2,
+          depth + 1
+        );
+        // {this, this, power, expans-1, megota}
+      }
+
       if (megota.eq(0)) {
         return PowiainaNum.BEAF(
           t,
