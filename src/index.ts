@@ -1,4 +1,4 @@
-/* Author: VeryrrDefine 0.2.0-beta.1.1*/
+
 
 interface Operator {
   arrow: number;
@@ -17,6 +17,11 @@ interface IPowiainaNum {
   layer: number; // actions like ExpantaNum.js, but use {10, 10, 10, 10, ..} instead of {10, 10, x}
 }
 
+interface IBreakEternity {
+  layer: number;
+  sign: number;
+  mag: number;
+}
 type PowiainaNumArray01X = [
   number,
   ...(
@@ -33,7 +38,7 @@ const MSI_REC = 1.1102230246251568e-16 as const;
 const LONG_STRING_MIN_LENGTH = 17 as const;
 const EXP_E_REC = 1.444667861009766 as const;
 const isPowiainaNum =
-  /^(PN)?[\/\-\+]*(Infinity|NaN|(P+|P\^\d+ )?(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?\})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-\+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
+  /^(PN)?[\/\-+]*(Infinity|NaN|(P+|P\^\d+ )?(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?})|\(10(\^+|\{([1-9]\d*|!)(,([1-9]\d*|!))?(,[1-9]\d*)?})\)\^[1-9]\d*\x20*)*((\d+(\.\d*)?|\d*\.\d+)?([Ee][-+]*))*(0|\d+(\.\d*)?|\d*\.\d+))$/;
 type ExpantaNumArray = [number, number][];
 
 export type PowiainaNumSource =
@@ -41,7 +46,8 @@ export type PowiainaNumSource =
   | string
   | IPowiainaNum
   | PowiainaNum
-  | ExpantaNumArray;
+  | ExpantaNumArray
+    | IBreakEternity;
 
 //#region some useful functions
 function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
@@ -56,7 +62,7 @@ function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
 
 // parse 0.1.x PowiainaNum.js string
 function parseLegacyPowiainaNumString(str: string) {
-  const pattern = /l(\d+)\s+s(\d+)\s+a(\[.*\])/;
+  const pattern = /l(\d+)\s+s(\d+)\s+a(\[.*])/;
   const match = str.match(pattern);
   try {
     if (match) {
@@ -255,41 +261,29 @@ function isFourLengthArray(
 function isFourNumberArray(
   x: [unknown, unknown, unknown, unknown]
 ): x is [number, number, number, number] {
-  if (
-    typeof x[0] == "number" &&
-    typeof x[1] == "number" &&
-    typeof x[2] == "number" &&
-    typeof x[3] == "number"
-  ) {
-    return true;
-  }
-  return false;
+  return typeof x[0] == "number" &&
+      typeof x[1] == "number" &&
+      typeof x[2] == "number" &&
+      typeof x[3] == "number";
+
 }
 function isFourArrayWithFirstTermX(
   x: [unknown, unknown, unknown, unknown]
 ): x is ["x", number, number, number] {
-  if (
-    x[0] === "x" &&
-    typeof x[1] == "number" &&
-    typeof x[2] == "number" &&
-    typeof x[3] == "number"
-  ) {
-    return true;
-  }
-  return false;
+  return x[0] === "x" &&
+      typeof x[1] == "number" &&
+      typeof x[2] == "number" &&
+      typeof x[3] == "number";
+
 }
 function isFourArrayWithThirdTermX(
   x: [unknown, unknown, unknown, unknown]
 ): x is ["x", number, number, number] {
-  if (
-    typeof x[0] == "number" &&
-    typeof x[1] == "number" &&
-    x[2] == "x" &&
-    typeof x[3] == "number"
-  ) {
-    return true;
-  }
-  return false;
+  return typeof x[0] == "number" &&
+      typeof x[1] == "number" &&
+      x[2] == "x" &&
+      typeof x[3] == "number";
+
 }
 function isPowiainaNum01XArray(x: unknown): x is PowiainaNumArray01X {
   if (!Array.isArray(x)) return false;
@@ -379,6 +373,37 @@ export function mergeSameArrays<T>(
     }
   }
 }
+
+function isOperator(operator: unknown): operator is Operator {
+  if (typeof operator !== 'object' || (operator===null)) return false;
+  if (!('repeat' in operator) || (typeof operator.repeat !== 'number')) return false;
+  if (!('arrow' in operator) || (typeof operator.arrow !== 'number')) return false;
+  if (!('expans' in operator) || (typeof operator.expans !== 'number')) return false;
+  if (!('megota' in operator) || (typeof operator.megota !== 'number')) return false;
+  if ('valuereplaced' in operator) {
+    if (operator.valuereplaced !== 1 && operator.valuereplaced !== 0 && operator.valuereplaced !== -1) return false;
+  }
+
+  return true;
+}
+function isIPowiainaNum(powlikeObject: unknown): powlikeObject is IPowiainaNum {
+  if (!(typeof powlikeObject == 'object') || (powlikeObject===null))
+    return false;
+  if (!('small' in powlikeObject)) return false;
+  if (typeof powlikeObject.small !=='boolean') return false;
+  if (!('layer' in powlikeObject)) return false;
+  if (typeof powlikeObject.layer !=='number') return false;
+  if (!('sign' in powlikeObject)) return false;
+  if (typeof powlikeObject.sign !=='number') return false;
+  if (powlikeObject.sign !== 1 && powlikeObject.sign!==0 && powlikeObject.sign!==-1) return false;
+  if (!('array' in powlikeObject)) return false;
+  if (!(Array.isArray(powlikeObject.array))) return false;
+  for (let i = 0; i<powlikeObject.array.length; i++) {
+    if (!isOperator((powlikeObject.array[i]))) return false;
+  }
+  return true;
+}
+
 //#endregion
 export default class PowiainaNum implements IPowiainaNum {
   array: Operator[];
@@ -526,7 +551,7 @@ export default class PowiainaNum implements IPowiainaNum {
     } else {
       r.array = [newOperator(10 ** Math.abs(l), 0)];
     }
-    r.small = l < 0 ? true : false;
+    r.small = l < 0;
     r.sign *= mult;
     return r;
   }
@@ -2042,7 +2067,6 @@ export default class PowiainaNum implements IPowiainaNum {
     })(power, depth);
     console.log(`${"-".repeat(depth)} = ${result}`);
     return result;
-    throw new Error("Not implemented");
   }
   //#endregion
 
@@ -2891,7 +2915,7 @@ export default class PowiainaNum implements IPowiainaNum {
     var negateIt = false;
     var recipIt = false;
     if (input[0] == "-" || input[0] == "+") {
-      var numSigns = input.search(/[^-\+]/);
+      var numSigns = input.search(/[^-+]/);
       var signs = input.substring(0, numSigns);
       negateIt = (signs.match(/-/g)?.length ?? 0) % 2 == 1;
       input = input.substring(numSigns);
@@ -2920,7 +2944,7 @@ export default class PowiainaNum implements IPowiainaNum {
         }
       }
       while (input) {
-        if (/^(\(?10[\^\{])/.test(input)) {
+        if (/^(\(?10[\^{])/.test(input)) {
           /*
             10^ - 匹配
             10{ - 匹配
@@ -3026,11 +3050,12 @@ export default class PowiainaNum implements IPowiainaNum {
         var decimalPointPos = a[i].indexOf(".");
         var intPartLen = decimalPointPos == -1 ? a[i].length : decimalPointPos;
         if (b[1] === 0) {
-          if (intPartLen >= LONG_STRING_MIN_LENGTH)
-            ((b[0] =
-              Math.log10(b[0]) +
-              log10LongString(a[i].substring(0, intPartLen))),
-              (b[1] = 1));
+          if (intPartLen >= LONG_STRING_MIN_LENGTH) {
+            b[0] =
+                Math.log10(b[0]) +
+                log10LongString(a[i].substring(0, intPartLen));
+            b[1] = 1;
+          }
           else if (a[i]) b[0] *= Number(a[i]);
         } else {
           d =
@@ -3073,7 +3098,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return x;
   }
   public static fromObject(
-    powlikeObject: IPowiainaNum | ExpantaNumArray | PowiainaNumArray01X
+    powlikeObject: IPowiainaNum | ExpantaNumArray | PowiainaNumArray01X | IBreakEternity
   ) {
     let obj = new PowiainaNum();
     obj.array = [];
@@ -3109,7 +3134,7 @@ export default class PowiainaNum implements IPowiainaNum {
       obj.sign = 1;
       obj.layer = 0;
       return obj;
-    } else {
+    } else if (isIPowiainaNum(powlikeObject)){
       for (let i = 0; i < powlikeObject.array.length; i++) {
         obj.array[i] = {
           arrow: powlikeObject.array[i].arrow,
@@ -3123,6 +3148,46 @@ export default class PowiainaNum implements IPowiainaNum {
       obj.sign = powlikeObject.sign;
       obj.layer = powlikeObject.layer;
       return obj;
+    } else {
+      // sign: -1, 0, 1
+      // layer: 0-9e15
+      // mag: 1/9e15 ~ 9e15 || -15.9 ~ -9e15
+      const sign = powlikeObject.sign;
+      if (sign !== 1 && sign !== 0 && sign !== -1) throw powiainaNumError+"Sign value not valid";
+
+      let small = false;
+      if (powlikeObject.mag<1) small = true;
+      let layer = powlikeObject.layer;
+      let base = powlikeObject.mag;
+      if (base < 0) {
+        base = -base;
+      }
+
+      if (base > 0 && base < MSI_LOG10) {
+        layer -- ;
+        base = Math.pow(10, base);
+      }
+
+
+      let operators: Operator[] = [];
+      if (layer > MSI) {
+        operators.push(newOperator(Math.log10(layer),0,1,1));
+        operators.push(newOperator(1,1,1,1));
+        operators.push(newOperator(1,2,1,1));
+      } else {
+        operators.push(newOperator(
+            (layer==0&&small) ? 1/base : base, 0, 1, 1));
+        if (layer > 0)
+          operators.push(newOperator(layer, 1, 1, 1));
+
+      }
+
+      const result = PowiainaNum.NaN.clone();
+      result.sign = sign;
+      result.small = small;
+      result.array = operators;
+      return result;
+
     }
   }
   /**
