@@ -1824,7 +1824,8 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static BEAF(...args: PowiainaNumSource[]) {
     function getArgs(x: number) {
-      if (args[x]) return new PowiainaNum(args[x]);
+      if (args[x] !== undefined && args[x] !== null)
+        return new PowiainaNum(args[x]);
       return new PowiainaNum(1);
     }
     if (getArgs(0).eq(1)) return new PowiainaNum(1);
@@ -1976,6 +1977,18 @@ export default class PowiainaNum implements IPowiainaNum {
           depth + 1
         );
         // {this, this, power, expans-1, megota}
+      }
+      if (expans.eq(0)) {
+        return PowiainaNum.BEAF(
+          t,
+          t,
+          t,
+          power,
+          megota.sub(1),
+          powiaina2,
+          depth + 1
+        );
+        // {this, this, this, power, megota-1}
       }
       if (megota.eq(0)) {
         return PowiainaNum.BEAF(
@@ -2252,6 +2265,11 @@ export default class PowiainaNum implements IPowiainaNum {
     return this.abs().cmp(other);
   }
 
+  /**
+   * -1: `this` is smaller
+   * 0: equals
+   * 1: `x` is bigger
+   */
   compare(x: PowiainaNumSource): -1 | 0 | 1 | 2 {
     const other = new PowiainaNum(x);
     if (this.isNaN() || other.isNaN()) return 2;
@@ -2276,6 +2294,14 @@ export default class PowiainaNum implements IPowiainaNum {
     ) {
       const op1 = this.array[this.array.length - 1 - i];
       const op2 = other.array[other.array.length - 1 - i];
+      if (op1.repeat === Infinity) {
+        result = 1;
+        break;
+      }
+      if (op2.repeat === Infinity) {
+        result = -1;
+        break;
+      }
       const cmp = compareTuples(
         [op1.megota, op1.expans, op1.arrow, op1.repeat],
         [op2.megota, op2.expans, op2.arrow, op2.repeat]
