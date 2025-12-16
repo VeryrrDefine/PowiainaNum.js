@@ -3338,8 +3338,31 @@ export default class PowiainaNum implements IPowiainaNum {
         this.small = false;
         renormalize = true;
       }
-      // for any 10{X>9e15}10, replace into 10{!}X;
-      if (this.array.length >= 2 && this.array[1].arrow >= MSI) {
+      // for any 10{!}^t x, replace to 10{!}^t-1 10{x}10
+      if (this.array.length >= 2 && !isFinite(this.array[1].arrow)) {
+        if (this.array[1].repeat > 1) {
+          this.array.push(
+            newOperator(
+              this.array[1].repeat - 1,
+              1 / 0,
+              this.array[1].expans,
+              this.array[1].megota
+            )
+          );
+          this.array[1].repeat = 1;
+          this.array[1].arrow = this.array[0].repeat;
+          this.array[0].repeat = 10;
+        } else {
+          this.array[1].arrow = this.array[0].repeat;
+          this.array[0].repeat = 10;
+        }
+      }
+      // for any 10{X>9e15}10 finite, replace into 10{!}X;
+      if (
+        this.array.length >= 2 &&
+        this.array[1].arrow >= MSI &&
+        isFinite(this.array[1].arrow)
+      ) {
         this.array[0].repeat = this.array[1].arrow;
         this.array[1] = newOperator(
           1,
@@ -3378,29 +3401,6 @@ export default class PowiainaNum implements IPowiainaNum {
         x.array.splice(
           1,
           0,
-          newOperator(
-            x.array[0].repeat - 1,
-            x.array[1].arrow - 1,
-            x.array[1].expans,
-            x.array[1].megota
-          )
-        );
-        x.array[0].repeat = 10;
-        renormalize = true;
-      }
-      if (
-        x.array.length >= 2 &&
-        x.array[0].repeat < MSI &&
-        x.array[1].arrow >= 2 &&
-        x.array[1].repeat == 1 && //10^^^ 10
-        isFinite(x.array[1].arrow)
-      ) {
-        // for any 10{A sample=2}1e9, turn into (10{A-1})^1e9-1 10
-        // But dont convert when a is infinite
-        // [1e9, [R=1, A=2, sth, sth]]
-        x.array.splice(
-          1,
-          1,
           newOperator(
             x.array[0].repeat - 1,
             x.array[1].arrow - 1,
