@@ -3039,7 +3039,7 @@ export default class PowiainaNum implements IPowiainaNum {
       const a = input.match(/(e+-)(\d+(.\d+)?)/);
       if (a) {
         const e_s = a[1].length;
-        input = "e-" + "e".repeat(e_s - 1) + a[2];
+        input = "/" + "e".repeat(e_s - 1) + a[2];
       }
     }
     return this.fromString_core(input);
