@@ -1,4 +1,4 @@
-/* Author: VeryrrDefine 0.2.0-beta.1.1*/
+/* Author: VeryrrDefine 0.2.16*/
 
 //#region Types
 interface Operator {
@@ -453,6 +453,22 @@ function arrowpsd(
     return arrowpsd(x, y.add(1), PowiainaNum.add(2, handled));
   }
   return PowiainaNum.arrFrac(x, arrFracPara(x, y, z));
+}
+
+function log10PosBigInt(input: bigint) {
+  var exp = BigInt(64);
+  while (input >= BigInt(1) << exp) exp *= BigInt(2);
+  var expdel = exp / BigInt(2);
+  while (expdel > BigInt(0)) {
+    if (input >= BigInt(1) << exp) exp += expdel;
+    else exp -= expdel;
+    expdel /= BigInt(2);
+  }
+  var cutbits = exp - BigInt(54);
+  var firstbits = input >> cutbits;
+  return (
+    Math.log10(Number(firstbits)) + (Math.LOG10E / Math.LOG2E) * Number(cutbits)
+  );
 }
 //#endregion
 
@@ -2937,6 +2953,15 @@ export default class PowiainaNum implements IPowiainaNum {
       console.error("Checked error when converting to string");
       return "NaN";
     }
+  }
+  public static fromBigInt(input: bigint) {
+    var x = new PowiainaNum(0);
+    var abs = input < BigInt(0) ? -input : input;
+    x.sign = input < BigInt(0) ? -1 : 1;
+    if (abs <= MSI) x.array = [newOperator(Number(abs))];
+    else x.array = [newOperator(log10PosBigInt(abs)), newOperator(1, 1)];
+    x.normalize();
+    return x;
   }
   public static fromNumber(x: number): PowiainaNum {
     const obj = new PowiainaNum();
