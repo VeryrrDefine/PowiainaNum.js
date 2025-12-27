@@ -17,7 +17,11 @@ interface IPowiainaNum {
   sign: -1 | 0 | 1; // when sign=-1, the number is negative, sign=0=>zero, sign=1=>positive
   layer: number; // actions like ExpantaNum.js, but use {10, 10, 10, 10, ..} instead of {10, 10, x}
 }
-
+interface IBreakEternity {
+  layer: number;
+  mag: number;
+  sign: number;
+}
 type PowiainaNumArray01X = [
   number,
   ...(
@@ -32,9 +36,11 @@ type ExpantaNumArray = [number, number][];
 export type PowiainaNumSource =
   | number
   | string
+  | bigint
   | IPowiainaNum
   | PowiainaNum
-  | ExpantaNumArray;
+  | ExpantaNumArray
+  | IBreakEternity;
 
 //#endregion
 
@@ -87,6 +93,15 @@ function removeCommasOutsideBraces(input: string): string {
   }
 
   return result;
+}
+
+function isIBreakEternity(obj: unknown): obj is IBreakEternity {
+  if (obj === null || typeof obj !== "object") return false;
+  if (!("mag" in obj && typeof obj.mag == "number")) return false;
+  if (!("layer" in obj && typeof obj.layer == "number")) return false;
+  if (!("sign" in obj && typeof obj.sign == "number")) return false;
+
+  return true;
 }
 // parse 0.1.x PowiainaNum.js string
 function parseLegacyPowiainaNumString(str: string) {
@@ -500,6 +515,9 @@ export default class PowiainaNum implements IPowiainaNum {
         this.resetFromObject(obj);
       } else if (typeof arg1 == "string") {
         let obj = PowiainaNum.fromString(arg1);
+        this.resetFromObject(obj);
+      } else if (typeof arg1 == "bigint") {
+        let obj = PowiainaNum.fromBigInt(arg1);
         this.resetFromObject(obj);
       } else {
         let isn: never = arg1;
@@ -3305,7 +3323,11 @@ export default class PowiainaNum implements IPowiainaNum {
     return x;
   }
   public static fromObject(
-    powlikeObject: IPowiainaNum | ExpantaNumArray | PowiainaNumArray01X
+    powlikeObject:
+      | IPowiainaNum
+      | ExpantaNumArray
+      | PowiainaNumArray01X
+      | IBreakEternity
   ) {
     const obj = new PowiainaNum();
     obj.resetFromObject({
@@ -3335,6 +3357,27 @@ export default class PowiainaNum implements IPowiainaNum {
       obj.sign = 1;
       obj.layer = 0;
       return obj;
+    } else if (isIBreakEternity(powlikeObject)) {
+      let res = powlikeObject;
+      let reciprocated = res.mag < 0;
+
+      let res2 = new PowiainaNum(1);
+      if (res.layer >= MSI)
+        res2.array = [
+          newOperator(Math.log10(res.layer)),
+          newOperator(1, 1),
+          newOperator(1, 2),
+        ];
+      else if (res.layer >= 1)
+        res2.array = [
+          newOperator(Math.abs(res.mag)),
+          newOperator(res.layer, 1),
+        ];
+      else res2.array = [newOperator(res.mag)];
+
+      res2.small = reciprocated;
+      res2.normalize();
+      return res2;
     } else if (isPowiainaNum01XArray(powlikeObject)) {
       const arrayobj = powlikeObject;
       obj.array[0] = newOperator(arrayobj[0]);
