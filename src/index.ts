@@ -827,7 +827,7 @@ export default class PowiainaNum implements IPowiainaNum {
     }
 
     /**if t lessthan log10 2^1024, use fromNumber. */
-    if (thisObject.lte(308.25471555991675)) {
+    if (thisObject.lt(308.25471555991675)) {
       return PowiainaNum.fromNumber(10 ** thisObject.toNumber());
     }
     /**calculate directly */
