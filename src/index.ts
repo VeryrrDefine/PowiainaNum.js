@@ -2151,6 +2151,10 @@ export default class PowiainaNum implements IPowiainaNum {
       other2: PowiainaNumSource,
       depth = 0
     ): PowiainaNum {
+      let ctt = PowiainaNum.beafFuncMap.get(
+        `${t.toString()} ${arrow.toString()} ${expans.toString()} ${megota.toString()} ${powiaina.toString()} ${other2.toString()} ${depth}`
+      );
+      if (ctt) return ctt.clone();
       // console.log(
       //   `${"-".repeat(depth)} {${base2},${power2},${arrow2},${expans2},${megota2}}`
       // );
@@ -2338,105 +2342,15 @@ export default class PowiainaNum implements IPowiainaNum {
         megota.toNumber()
       );
       r.normalize();
-      // if (
-      //   t.gt(getMSIForm(arrowsNum, expans.toNumber(), megota.toNumber())) ||
-      //   other.gt(MSI)
-      // ) {
-      //   if (t.gt(getMSIForm(arrowsNum, expans.toNumber(), megota.toNumber()))) {
-      //     r = t.clone();
-      //     r.setOperator(
-      //       r.getOperator(arrowsNum, expans.toNumber(), megota.toNumber()) - 1,
-      //       arrowsNum,
-      //       expans.toNumber(),
-      //       megota.toNumber()
-      //     );
-      //     r.normalize();
-      //   } else if (
-      //     t.gt(
-      //       getMSIForm(
-      //         ...convertOperator(
-      //           arrowsNum - 1,
-      //           expans.toNumber(),
-      //           megota.toNumber()
-      //         )
-      //       )
-      //     )
-      //   ) {
-      //     r = new PowiainaNum(
-      //       t.getOperator(
-      //         ...convertOperator(
-      //           arrowsNum - 1,
-      //           expans.toNumber(),
-      //           megota.toNumber()
-      //         )
-      //       )
-      //     );
-      //   } else {
-      //     r = PowiainaNum.ZERO;
-      //   }
-      //   const j = r.add(other);
-      //   j.setOperator(
-      //     j.getOperator(arrowsNum, expans.toNumber(), megota.toNumber()) + 1,
-      //     arrowsNum,
-      //     expans.toNumber(),
-      //     megota.toNumber()
-      //   );
-      //   j.normalize();
-      //   return j;
-      // }
-      // const y = other.toNumber();
-      // let f = Math.floor(y);
-      // const arrows_m1 = arrows.sub(PowiainaNum.ONE);
-      // r = PowiainaNum.BEAF(
-      //   t,
-      //   y - f,
-      //   arrows_m1.toNumber(),
-      //   expans,
-      //   megota,
-      //   powiaina2,
-      //   depth + 1
-      // );
-      // let i = 0;
-      // for (
-      //   const m = new PowiainaNum(
-      //     getMSIForm(
-      //       ...convertOperator(
-      //         arrowsNum - 1,
-      //         expans.toNumber(),
-      //         megota.toNumber()
-      //       )
-      //     )
-      //   );
-      //   f !== 0 && r.lt(m) && i < 100;
-      //   i++
-      // ) {
-      //   if (f > 0) {
-      //     r = PowiainaNum.BEAF(
-      //       base,
-      //       r,
-      //       arrows_m1.toNumber(),
-      //       expans,
-      //       megota,
-      //       powiaina2,
-      //       depth + 1
-      //     );
-      //     --f;
-      //   }
-      // }
-      // if (i == 100) f = 0;
-      // r.setOperator(
-      //   r.getOperator(
-      //     ...convertOperator(
-      //       arrowsNum - 1,
-      //       expans.toNumber(),
-      //       megota.toNumber()
-      //     )
-      //   ) + f,
-      //   ...convertOperator(arrowsNum - 1, expans.toNumber(), megota.toNumber())
-      // );
       return r;
     })(power, depth);
-    // console.log(`${"-".repeat(depth)} = ${result}`);
+
+    if (depth < PowiainaNum.maxOps + 10) {
+      PowiainaNum.beafFuncMap.set(
+        `${t.toString()} ${arrow.toString()} ${expans.toString()} ${megota.toString()} ${powiaina.toString()} ${power.toString()} ${depth}`,
+        result.clone()
+      );
+    }
     return result;
   }
   //#endregion
@@ -3957,6 +3871,7 @@ export default class PowiainaNum implements IPowiainaNum {
   //#endregion
 
   public static arrowFuncMap: Map<string, PowiainaNum> = new Map();
+  public static beafFuncMap: Map<string, PowiainaNum> = new Map();
 
   //#region configurations
 
