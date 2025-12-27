@@ -1937,7 +1937,7 @@ export default class PowiainaNum implements IPowiainaNum {
     // }
     if (new PowiainaNum(powiaina2).gte(3))
       return PowiainaNum.POSITIVE_INFINITY.clone();
-    
+
     if (readArg(0).eq(0) && readArg(1).eq(1) && readArg(2).eq(1)) {
       return base.mul(power);
     }
@@ -2002,8 +2002,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return x.toString();
     }
     function getMSIForm(arrow: number, expans: number, megota: number) {
-
-      let [a,e,m] = convertOperator(arrow, expans, megota);
+      let [a, e, m] = convertOperator(arrow, expans, megota);
       return `10{${infToBang(a)},${infToBang(e)},${m}}${MSI}`;
     }
 
@@ -2065,10 +2064,10 @@ export default class PowiainaNum implements IPowiainaNum {
           depth + 1
         );
       }
-      
+
       // megota < 9e15, not implemented
       if (megota.gt(MSI)) {
-        throw new Error("Not implemeneted")
+        throw new Error("Not implemeneted");
       }
       // expans > 9e15, that using 10{?, x}, x=expans;
       if (expans.gt(MSI)) {
@@ -2107,7 +2106,6 @@ export default class PowiainaNum implements IPowiainaNum {
           depth + 1
         );
 
-
       if (
         t
           .max(other)
@@ -2115,51 +2113,92 @@ export default class PowiainaNum implements IPowiainaNum {
       )
         return t.max(other);
 
-        // arrow < 9e15
+      // arrow < 9e15
 
-        // 10{x}2 = 10{x-1}10
-        if (t.gt(getMSIForm(arrowsNum+1, expans.toNumber() ,megota.toNumber())) || other.gt(MSI)) {
-          if (t.gt(getMSIForm(arrowsNum, expans.toNumber() ,megota.toNumber()))) {
-            r = t.clone();
-            r.setOperator(r.getOperator(arrowsNum, expans.toNumber(), megota.toNumber()) - 1, arrowsNum, expans.toNumber(), megota.toNumber());
-            r.normalize();
-          } else if (t.gt(getMSIForm(arrowsNum-1, expans.toNumber() ,megota.toNumber()))) {
-            r = new PowiainaNum(t.getOperator(arrowsNum - 1, expans.toNumber(), megota.toNumber()));
-          } else {
-            r = PowiainaNum.ZERO;
-          }
-          let j = r.add(other);
-          j.setOperator(j.getOperator(arrowsNum, expans.toNumber(), megota.toNumber()) + 1, arrowsNum, expans.toNumber(), megota.toNumber());
-          j.normalize();
-          return j;
-        }
-        if (depth >= PowiainaNum.maxOps + 10) {
-          return new PowiainaNum({
-            small: false,
-            sign: 1,
-            layer: 0,
-            array: [newOperator(10, 0), newOperator(1, arrowsNum, expans.toNumber(), megota.toNumber())],
-          });
-        }
-        const y = other.toNumber();
-        let f = Math.floor(y);
-        const arrows_m1 = arrows.sub(PowiainaNum.ONE);
-r = PowiainaNum.BEAF_core(t, y-f,  arrows_m1, expans, megota, powiaina, depth + 1)
-        // r = t.arrow(arrows_m1)(y - f, payload, depth + 1);
-        let i = 0;
-        for (
-          let m = getMSIForm(arrowsNum-1, expans.toNumber(), megota.toNumber()) ;
-          f !== 0 && r.lt(m) && i < 100;
-          i++
+      // 10{x}2 = 10{x-1}10
+      if (
+        t.gt(getMSIForm(arrowsNum + 1, expans.toNumber(), megota.toNumber())) ||
+        other.gt(MSI)
+      ) {
+        if (t.gt(getMSIForm(arrowsNum, expans.toNumber(), megota.toNumber()))) {
+          r = t.clone();
+          r.setOperator(
+            r.getOperator(arrowsNum, expans.toNumber(), megota.toNumber()) - 1,
+            arrowsNum,
+            expans.toNumber(),
+            megota.toNumber()
+          );
+          r.normalize();
+        } else if (
+          t.gt(getMSIForm(arrowsNum - 1, expans.toNumber(), megota.toNumber()))
         ) {
-          if (f > 0) {
-            r = PowiainaNum.BEAF_core(t, r,  arrows_m1, expans, megota, powiaina, depth + 1);
-            --f;
-          }
+          r = new PowiainaNum(
+            t.getOperator(arrowsNum - 1, expans.toNumber(), megota.toNumber())
+          );
+        } else {
+          r = PowiainaNum.ZERO;
         }
-        if (i == 100) f = 0;
-        r.setOperator(r.getOperator(arrowsNum - 1, expans.toNumber(), megota.toNumber()) + f, arrowsNum - 1, expans.toNumber(), megota.toNumber());
-        r.normalize();
+        let j = r.add(other);
+        j.setOperator(
+          j.getOperator(arrowsNum, expans.toNumber(), megota.toNumber()) + 1,
+          arrowsNum,
+          expans.toNumber(),
+          megota.toNumber()
+        );
+        j.normalize();
+        return j;
+      }
+      if (depth >= PowiainaNum.maxOps + 10) {
+        return new PowiainaNum({
+          small: false,
+          sign: 1,
+          layer: 0,
+          array: [
+            newOperator(10, 0),
+            newOperator(1, arrowsNum, expans.toNumber(), megota.toNumber()),
+          ],
+        });
+      }
+      const y = other.toNumber();
+      let f = Math.floor(y);
+      const arrows_m1 = arrows.sub(PowiainaNum.ONE);
+      r = PowiainaNum.BEAF_core(
+        t,
+        y - f,
+        arrows_m1,
+        expans,
+        megota,
+        powiaina,
+        depth + 1
+      );
+      // r = t.arrow(arrows_m1)(y - f, payload, depth + 1);
+      let i = 0;
+      for (
+        let m = getMSIForm(arrowsNum - 1, expans.toNumber(), megota.toNumber());
+        f !== 0 && r.lt(m) && i < 100;
+        i++
+      ) {
+        if (f > 0) {
+          r = PowiainaNum.BEAF_core(
+            t,
+            r,
+            arrows_m1,
+            expans,
+            megota,
+            powiaina,
+            depth + 1
+          );
+          --f;
+        }
+      }
+      if (i == 100) f = 0;
+      r.setOperator(
+        r.getOperator(arrowsNum - 1, expans.toNumber(), megota.toNumber()) + f,
+        arrowsNum - 1,
+        expans.toNumber(),
+        megota.toNumber()
+      );
+      r.normalize();
       // if (
       //   t.gt(getMSIForm(arrowsNum, expans.toNumber(), megota.toNumber())) ||
       //   other.gt(MSI)
