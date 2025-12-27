@@ -388,6 +388,72 @@ export function mergeSameArrays<T>(
     }
   }
 }
+
+function arrFracParaInv(
+  x: PowiainaNumSource,
+  y: PowiainaNumSource,
+  res2: PowiainaNumSource
+) {
+  const res = new PowiainaNum(x)
+    .pow(new PowiainaNum(res2).sub(y).add(1))
+    .mul(new PowiainaNum(2).pow(new PowiainaNum(y).sub(res2)));
+  return res;
+}
+
+function arrFracPara(
+  x: PowiainaNumSource,
+  y: PowiainaNumSource,
+  z: PowiainaNumSource
+) {
+  const lg2 = new PowiainaNum(2).logBase(x);
+  return new PowiainaNum(y)
+    .sub(1)
+    .add(
+      new PowiainaNum(z).logBase(x).sub(lg2).div(new PowiainaNum(1).sub(lg2))
+    );
+}
+
+function arrowpsdInv(
+  base: PowiainaNumSource,
+  height: PowiainaNumSource,
+  res4: PowiainaNumSource
+): PowiainaNum {
+  const x = new PowiainaNum(base);
+  const y = new PowiainaNum(height);
+  const z = new PowiainaNum(res4);
+  const res = arrFracParaInv(x, y, new PowiainaNum(z).omegalog(x.toNumber()));
+  if (z.gt(x)) {
+    let add2handled = arrowpsdInv(x, y.add(1), z);
+    let handled = add2handled.sub(2);
+    let bottom = arrowpsdInv(x, y, x);
+    let top = x.clone();
+    const anylog2 = handled.pow_base(top.div(bottom)).mul(bottom);
+
+    return arrowpsd(x, y, anylog2);
+  }
+  return res;
+}
+function arrowpsd(
+  base: PowiainaNumSource,
+  height: PowiainaNumSource,
+  other: PowiainaNumSource
+) {
+  const x = new PowiainaNum(base);
+  const y = new PowiainaNum(height);
+  const z = new PowiainaNum(other);
+  if (y.isInt()) return PowiainaNum.arrow(x, y, z);
+
+  if (z.gt(x)) {
+    let anylog2 = arrowpsdInv(x, y, z);
+    let bottom = arrowpsdInv(x, y, x);
+    let top = x.clone();
+
+    const handled = anylog2.div(bottom).logBase(top.div(bottom));
+
+    return arrowpsd(x, y.add(1), PowiainaNum.add(2, handled));
+  }
+  return PowiainaNum.arrFrac(x, arrFracPara(x, y, z));
+}
 //#endregion
 
 export default class PowiainaNum implements IPowiainaNum {
@@ -1406,7 +1472,40 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(t).iteratedlog(other2, base2);
   }
   //#endregion
+  public omegalog(bbase = 10) {
+    const target = this as PowiainaNum;
+    let dis = target.clone();
+    if (dis.isInfiNaN()) return dis;
+    if (dis.gte("10{1,2}e15.954589770191003")) return dis;
+    let base = new PowiainaNum(bbase).clone();
+    if (dis.getOperator(1 / 0) >= 1) {
+      dis.setOperator(dis.getOperator(1 / 0) - 1, 1 / 0, 1, 1);
+      return dis;
+    }
+    // if (dis.layer >= 1) {
+    // dis.layer -= 1
+    // return dis
+    // } else
 
+    // @ts-expect-error
+    if (dis.arr01[dis.array.length - 1][0] >= 98) {
+      // @ts-expect-error
+      let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
+      return zero;
+    } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
+      return new PowiainaNum(target).anyarrow_log(3)(bbase);
+    } else {
+      let addTest = 8;
+      let target = 0;
+      while (addTest >= 10 ** -10) {
+        if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
+          target += addTest;
+        }
+        addTest /= 2;
+      }
+      return new PowiainaNum(target);
+    }
+  }
   /**
    * Arrow operation, return a function
    * The function has a parameter `other`
@@ -1423,13 +1522,18 @@ export default class PowiainaNum implements IPowiainaNum {
   ) => PowiainaNum {
     const t = this.clone();
     const arrows = new PowiainaNum(arrows2);
-    if (!arrows.isInt() || arrows.lt(PowiainaNum.ZERO)) {
+    if (arrows.lt(PowiainaNum.ZERO)) {
       console.warn(
         "The arrow is <0 or not a integer, the returned function will return NaN."
       );
       return function () {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
         return PowiainaNum.NaN.clone();
+      };
+    }
+    if (!arrows.isInt()) {
+      return function (other) {
+        return arrowpsd(t, arrows, other);
       };
     }
     if (arrows.eq(0))
@@ -1629,6 +1733,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * base{height}base
    */
   public static arrFrac(base: PowiainaNumSource, height: PowiainaNumSource) {
+    if (new PowiainaNum(height).lt(2)) return PowiainaNum.pentate(base, height);
     const b = new PowiainaNum(base).clone();
     const h = new PowiainaNum(height).clone();
     return new PowiainaNum(b).arrow(h.floor().add(1))(
