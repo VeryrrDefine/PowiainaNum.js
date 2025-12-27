@@ -2151,9 +2151,9 @@ export default class PowiainaNum implements IPowiainaNum {
       other2: PowiainaNumSource,
       depth = 0
     ): PowiainaNum {
-      console.log(
-        `${"-".repeat(depth)} {${base2},${power2},${arrow2},${expans2},${megota2}}`
-      );
+      // console.log(
+      //   `${"-".repeat(depth)} {${base2},${power2},${arrow2},${expans2},${megota2}}`
+      // );
       const other = new PowiainaNum(other2);
       let r;
       if (t.isNaN() || other.isNaN()) return PowiainaNum.NaN.clone();
@@ -2436,7 +2436,7 @@ export default class PowiainaNum implements IPowiainaNum {
       // );
       return r;
     })(power, depth);
-    console.log(`${"-".repeat(depth)} = ${result}`);
+    // console.log(`${"-".repeat(depth)} = ${result}`);
     return result;
   }
   //#endregion
