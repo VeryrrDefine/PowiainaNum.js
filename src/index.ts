@@ -1528,22 +1528,7 @@ export default class PowiainaNum implements IPowiainaNum {
     let right = 9007199254740991;
 
     let result = NaN;
-    while (left <= right) {
-      const mid = Math.floor((left + right) / 2);
-      const comparison = PowiainaNum.arrFrac(bbase, mid).cmp(target);
 
-      if (comparison === 0) {
-        return mid;
-      } else if (comparison < 0) {
-        result = mid;
-        left = mid + 1;
-      } else {
-        right = mid - 1;
-      }
-      if (Math.abs(left - right) <= 1e-10) {
-        return mid;
-      }
-    }
     return result;
     // if (dis.arr01[dis.array.length - 1][0] >= 98) {
     //   // @ts-expect-error
@@ -2788,38 +2773,77 @@ export default class PowiainaNum implements IPowiainaNum {
 
   //#region operators
   /**
-   * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
+   * @returns number will return the index of the operator. return as x.5 if it's between the xth and x+1th operators.
    */
-  getOperatorIndex(arrow: number, expans = 1, megota = 1) {
-    for (let i = 0; i < this.array.length; i++) {
+  public static opGetOperatorIndex(
+    operators: Operator[],
+    arrow: number,
+    expans = 1,
+    megota = 1
+  ) {
+    for (let i = 0; i < operators.length; i++) {
       const cmp = compareTuples(
-        [this.array[i].megota, this.array[i].expans, this.array[i].arrow],
+        [operators[i].megota, operators[i].expans, operators[i].arrow],
         [megota, expans, arrow]
       );
       if (cmp == 0) return i; // I find it was [xx,xxx,*xxx*,xxx]!
       if (cmp == 1) return i - 0.5; // It's between [xx, xx,xx*,?,*xx]!
     }
-    return this.array.length - 0.5;
+    return operators.length - 0.5;
+  }
+  /**
+   * @returns number will return the index of the operator in array. return as x.5 if it's between the xth and x+1th operators.
+   */
+  getOperatorIndex(arrow: number, expans = 1, megota = 1) {
+    return PowiainaNum.opGetOperatorIndex(this.array, arrow, expans, megota);
+  }
+
+  /**
+   * @returns number repeats of operators with given arguments.
+   */
+  public static opGetOperator(
+    operators: Operator[],
+    arrow: number,
+    expans = 1,
+    megota = 1
+  ) {
+    const index = PowiainaNum.opGetOperatorIndex(
+      operators,
+      arrow,
+      expans,
+      megota
+    );
+    if (!operators[index]) return 0;
+    return operators[index].repeat;
   }
   /**
    * @returns number repeats of operators with given arguments.
    */
   getOperator(arrow: number, expans = 1, megota = 1) {
-    const index = this.getOperatorIndex(arrow, expans, megota);
-    if (!this.array[index]) return 0;
-    return this.array[index].repeat;
+    return PowiainaNum.opGetOperator(this.array, arrow, expans, megota);
   }
 
   /**
-   * Modify the repeat of operator
+   * Modify the repeat of operator(argument will modified)
    * @param number val the repeat of operator will modify to array.
    * @returns bool Is the operators array changed?
    */
-  setOperator(val: number, arrow: number, expans = 1, megota = 1) {
+  public static opSetOperator(
+    operators: Operator[],
+    val: number,
+    arrow: number,
+    expans = 1,
+    megota = 1
+  ) {
     // if (arrow!=0&&val==0) return false;
-    const index = this.getOperatorIndex(arrow, expans, megota);
-    if (!this.array[index]) {
-      this.array.splice(Math.ceil(index), 0, {
+    const index = PowiainaNum.opGetOperatorIndex(
+      operators,
+      arrow,
+      expans,
+      megota
+    );
+    if (!operators[index]) {
+      operators.splice(Math.ceil(index), 0, {
         arrow,
         expans,
         megota,
@@ -2828,13 +2852,21 @@ export default class PowiainaNum implements IPowiainaNum {
       });
       return true;
     }
-    this.array[index].repeat = val;
-    if (this.array[index].repeat == 0) {
-      this.array.splice(index, 1);
+    operators[index].repeat = val;
+    if (operators[index].repeat == 0) {
+      operators.splice(index, 1);
       return true;
     }
     // this.normalize()
     return false;
+  }
+  /**
+   * Modify the repeat of operator
+   * @param number val the repeat of operator will modify to array.
+   * @returns bool Is the operators array changed?
+   */
+  setOperator(val: number, arrow: number, expans = 1, megota = 1) {
+    return PowiainaNum.opSetOperator(this.array, val, arrow, expans, megota);
   }
   //#endregion
 
