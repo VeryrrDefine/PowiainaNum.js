@@ -1521,24 +1521,47 @@ export default class PowiainaNum implements IPowiainaNum {
     // return dis
     // } else
 
-    // @ts-expect-error
-    if (dis.arr01[dis.array.length - 1][0] >= 98) {
-      // @ts-expect-error
-      let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
-      return zero;
-    } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
+    if (target.lt(PowiainaNum.pentate(bbase, 2))) {
       return new PowiainaNum(target).anyarrow_log(3)(bbase);
-    } else {
-      let addTest = 8;
-      let target = 0;
-      while (addTest >= 10 ** -10) {
-        if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
-          target += addTest;
-        }
-        addTest /= 2;
-      }
-      return new PowiainaNum(target);
     }
+    let left = 2;
+    let right = 9007199254740991;
+
+    let result = NaN;
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2);
+      const comparison = PowiainaNum.arrFrac(bbase, mid).cmp(target);
+
+      if (comparison === 0) {
+        return mid;
+      } else if (comparison < 0) {
+        result = mid;
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+      if (Math.abs(left - right) <= 1e-10) {
+        return mid;
+      }
+    }
+    return result;
+    // if (dis.arr01[dis.array.length - 1][0] >= 98) {
+    //   // @ts-expect-error
+    //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
+    //   return zero;
+    // } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
+    //   return new PowiainaNum(target).anyarrow_log(3)(bbase);
+    // } else {
+    //   let addTest = 8;
+    //   let target = 0;
+    //   while (addTest >= 10 ** -10) {
+    //     if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
+    //       target += addTest;
+    //     }
+    //     addTest /= 2;
+    //   }
+    //   return new PowiainaNum(target);
+    // }
   }
   /**
    * Arrow operation, return a function
@@ -2806,6 +2829,10 @@ export default class PowiainaNum implements IPowiainaNum {
       return true;
     }
     this.array[index].repeat = val;
+    if (this.array[index].repeat == 0) {
+      this.array.splice(index, 1);
+      return true;
+    }
     // this.normalize()
     return false;
   }
