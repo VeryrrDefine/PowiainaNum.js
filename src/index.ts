@@ -1521,32 +1521,24 @@ export default class PowiainaNum implements IPowiainaNum {
     // return dis
     // } else
 
-    if (target.lt(PowiainaNum.pentate(bbase, 2))) {
+    // @ts-expect-error
+    if (dis.arr01[dis.array.length - 1][0] >= 98) {
+      // @ts-expect-error
+      let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
+      return zero;
+    } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
       return new PowiainaNum(target).anyarrow_log(3)(bbase);
+    } else {
+      let addTest = 8;
+      let target = 0;
+      while (addTest >= 10 ** -10) {
+        if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
+          target += addTest;
+        }
+        addTest /= 2;
+      }
+      return new PowiainaNum(target);
     }
-    let left = 2;
-    let right = 9007199254740991;
-
-    let result = NaN;
-
-    return result;
-    // if (dis.arr01[dis.array.length - 1][0] >= 98) {
-    //   // @ts-expect-error
-    //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
-    //   return zero;
-    // } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
-    //   return new PowiainaNum(target).anyarrow_log(3)(bbase);
-    // } else {
-    //   let addTest = 8;
-    //   let target = 0;
-    //   while (addTest >= 10 ** -10) {
-    //     if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
-    //       target += addTest;
-    //     }
-    //     addTest /= 2;
-    //   }
-    //   return new PowiainaNum(target);
-    // }
   }
   /**
    * Arrow operation, return a function
