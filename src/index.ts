@@ -2872,7 +2872,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (this.sign == -1) return -this.neg().toNumber();
     if (this.small) return 1 / this.rec().toNumber();
 
-    if (this.array.length > 2) return Infinity;
+    if (this.gte("e308.25471555991675")) return Infinity;
 
     if (this.array.length == 1) return this.array[0].repeat;
     else if (
