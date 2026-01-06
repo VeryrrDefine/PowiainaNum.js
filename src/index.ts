@@ -1607,7 +1607,7 @@ export default class PowiainaNum implements IPowiainaNum {
     }
     let result = PowiainaNum.omegacollect(clonedOperators);
 
-    return result[1].arrow + Math.log(result[0].repeat / 2) / Math.log(5);
+    return result[1].arrow - 1 + Math.log(result[0].repeat / 2) / Math.log(5);
     // if (dis.arr01[dis.array.length - 1][0] >= 98) {
     //   // @ts-expect-error
     //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
