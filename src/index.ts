@@ -3677,6 +3677,30 @@ export default class PowiainaNum implements IPowiainaNum {
           this.array[1].megota
         );
       }
+      // for any (10{y=finite>=2})^z x x<9e15, convert to (10{y})^(z-1) (10{y-1}^(x-1) 10)
+      if (
+        this.array.length >= 2 &&
+        this.array[1].arrow >= 2 &&
+        this.array[0].repeat < MSI &&
+        isFinite(this.array[1].arrow)
+      ) {
+        let x = this.array[0].repeat;
+        let y = this.array[1].arrow;
+        let z = this.array[1].repeat;
+
+        this.array[0].repeat = 10;
+        this.array.splice(
+          2,
+          0,
+          newOperator(z - 1, y, this.array[1].expans, this.array[1].megota)
+        );
+        this.array[1] = newOperator(
+          x - 1,
+          y - 1,
+          this.array[1].expans,
+          this.array[1].megota
+        );
+      }
       while (
         x.array.length >= 2 &&
         x.array[0].repeat == 1 &&
