@@ -1561,12 +1561,12 @@ export default class PowiainaNum implements IPowiainaNum {
     return operators;
   }
 
-  public omegalog(bbase = 10) {
+  public omegalog() {
     const target = this as PowiainaNum;
     let dis = target.clone();
     if (dis.isInfiNaN()) return dis;
     if (dis.gte("10{1,2}e15.954589770191003")) return dis;
-    let base = new PowiainaNum(bbase).clone();
+    let base = new PowiainaNum(10);
     if (dis.getOperator(1 / 0) >= 1) {
       dis.setOperator(dis.getOperator(1 / 0) - 1, 1 / 0, 1, 1);
       return dis;
@@ -1581,9 +1581,11 @@ export default class PowiainaNum implements IPowiainaNum {
     //   // @ts-expect-error
     //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
     //   return zero;
-    // } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
-    //   return new PowiainaNum(target).anyarrow_log(3)(bbase);
-    // } else {
+    // } else
+    if (target.lt(PowiainaNum.pentate(10, 2))) {
+      return new PowiainaNum(target).anyarrow_log(3)(10);
+    }
+    //  else {
     //   let addTest = 8;
     //   let target = 0;
     //   while (addTest >= 10 ** -10) {
@@ -1594,7 +1596,6 @@ export default class PowiainaNum implements IPowiainaNum {
     //   }
     //   return new PowiainaNum(target);
     // }
-
     let clonedOperators = [];
     for (let i = 0; i < target.array.length; i++) {
       clonedOperators[i] = {
