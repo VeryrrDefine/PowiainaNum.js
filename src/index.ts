@@ -1542,7 +1542,7 @@ export default class PowiainaNum implements IPowiainaNum {
         // Operator upgrade mode:
 
         // Check the -2th operator, is repeat >= 2?
-        if (operators[0].repeat >= 2) {
+        if (operators[1].repeat >= 2) {
           operators[1].arrow++;
           operators[0].repeat = operators[1].repeat + Math.log10(base);
           operators[1].repeat = 1;
