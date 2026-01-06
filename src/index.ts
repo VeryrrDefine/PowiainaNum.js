@@ -1506,6 +1506,57 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(t).iteratedlog(other2, base2);
   }
   //#endregion
+
+  /**
+   * Get the base of operators
+   */
+  private static oBase(operators: Operator[]) {
+    return operators[0].repeat;
+  }
+  /**
+   * Only works for operators level < ω.
+   */
+  public static omegacollect(operators: Operator[]) {
+    debugger;
+    // const result = {
+    //   bottom: NaN,
+    //   top: NaN,
+    // };
+    let maxWhile = 1000;
+    while (maxWhile--) {
+      let base = PowiainaNum.oBase(operators);
+      if (base >= 10) {
+        // Bottom upgrade mode: add 10^'s.
+        operators[0].repeat = Math.log10(base);
+        PowiainaNum.opSetOperator(
+          operators,
+          PowiainaNum.opGetOperator(operators, 1, 1, 1) + 1,
+          1,
+          1,
+          1
+        );
+      } else {
+        if (operators.length <= 2 && operators[1].repeat == 1) {
+          return operators;
+        }
+        // Operator upgrade mode:
+
+        // Check the -2th operator, is repeat >= 2?
+        if (operators[0].repeat >= 2) {
+          operators[1].arrow++;
+          operators[0].repeat = operators[1].repeat + Math.log10(base);
+          operators[1].repeat = 1;
+        } else {
+          // -2th repeat = 1, and base = 1;
+
+          operators[1].arrow = operators[2].arrow;
+        }
+        mergeSameArrays({ array: operators });
+      }
+    }
+    return operators;
+  }
+
   public omegalog(bbase = 10) {
     const target = this as PowiainaNum;
     let dis = target.clone();
@@ -1521,24 +1572,55 @@ export default class PowiainaNum implements IPowiainaNum {
     // return dis
     // } else
 
-    // @ts-expect-error
-    if (dis.arr01[dis.array.length - 1][0] >= 98) {
-      // @ts-expect-error
-      let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
-      return zero;
-    } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
-      return new PowiainaNum(target).anyarrow_log(3)(bbase);
-    } else {
-      let addTest = 8;
-      let target = 0;
-      while (addTest >= 10 ** -10) {
-        if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
-          target += addTest;
-        }
-        addTest /= 2;
-      }
-      return new PowiainaNum(target);
+    // // @ts-expect-error
+    // if (dis.arr01[dis.array.length - 1][0] >= 98) {
+    //   // @ts-expect-error
+    //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
+    //   return zero;
+    // } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
+    //   return new PowiainaNum(target).anyarrow_log(3)(bbase);
+    // } else {
+    //   let addTest = 8;
+    //   let target = 0;
+    //   while (addTest >= 10 ** -10) {
+    //     if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
+    //       target += addTest;
+    //     }
+    //     addTest /= 2;
+    //   }
+    //   return new PowiainaNum(target);
+    // }
+
+    let clonedOperators = [];
+    for (let i = 0; i < target.array.length; i++) {
+      clonedOperators[i] = {
+        arrow: target.array[i].arrow,
+        expans: target.array[i].expans,
+        megota: target.array[i].megota,
+        repeat: target.array[i].repeat,
+        valuereplaced: target.array[i].valuereplaced,
+      };
     }
+    let result = PowiainaNum.omegacollect(clonedOperators);
+
+    return result[1].arrow + Math.log10(result[0].repeat);
+    // if (dis.arr01[dis.array.length - 1][0] >= 98) {
+    //   // @ts-expect-error
+    //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
+    //   return zero;
+    // } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
+    //   return new PowiainaNum(target).anyarrow_log(3)(bbase);
+    // } else {
+    //   let addTest = 8;
+    //   let target = 0;
+    //   while (addTest >= 10 ** -10) {
+    //     if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
+    //       target += addTest;
+    //     }
+    //     addTest /= 2;
+    //   }
+    //   return new PowiainaNum(target);
+    // }
   }
   /**
    * Arrow operation, return a function
