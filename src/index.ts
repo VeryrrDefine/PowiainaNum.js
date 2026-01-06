@@ -1546,6 +1546,10 @@ export default class PowiainaNum implements IPowiainaNum {
           operators[1].arrow++;
           operators[0].repeat = operators[1].repeat + Math.log10(base);
           operators[1].repeat = 1;
+        } else if (base !== 1) {
+          operators[1].arrow++;
+          operators[0].repeat = operators[1].repeat + Math.log10(base);
+          operators[1].repeat = 1;
         } else {
           // -2th repeat = 1, and base = 1;
 
