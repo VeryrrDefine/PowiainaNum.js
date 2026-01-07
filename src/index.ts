@@ -436,7 +436,7 @@ function arrowpsdInv(
   const x = new PowiainaNum(base);
   const y = new PowiainaNum(height);
   const z = new PowiainaNum(res4);
-  const res = arrFracParaInv(x, y, new PowiainaNum(z).omegalog());
+  const res = arrFracParaInv(x, y, new PowiainaNum(z).omegalog(x.toNumber()));
   if (z.gt(x)) {
     let add2handled = arrowpsdInv(x, y.add(1), z);
     let handled = add2handled.sub(2);
