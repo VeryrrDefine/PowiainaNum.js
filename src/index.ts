@@ -1561,7 +1561,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return operators;
   }
 
-  public omegalog(bbase = 10) {
+  public omegalog(bbase = 10, EPSILON = 1e-6) {
     const target = this as PowiainaNum;
     let dis = target.clone();
     if (dis.isInfiNaN()) return dis;
@@ -1595,21 +1595,44 @@ export default class PowiainaNum implements IPowiainaNum {
     //   return new PowiainaNum(target);
     // }
 
-    let clonedOperators = [];
-    for (let i = 0; i < target.array.length; i++) {
-      clonedOperators[i] = {
-        arrow: target.array[i].arrow,
-        expans: target.array[i].expans,
-        megota: target.array[i].megota,
-        repeat: target.array[i].repeat,
-        valuereplaced: target.array[i].valuereplaced,
-      };
-    }
-    let result = PowiainaNum.omegacollect(clonedOperators);
+    if (bbase == 10) {
+      let clonedOperators = [];
+      for (let i = 0; i < target.array.length; i++) {
+        clonedOperators[i] = {
+          arrow: target.array[i].arrow,
+          expans: target.array[i].expans,
+          megota: target.array[i].megota,
+          repeat: target.array[i].repeat,
+          valuereplaced: target.array[i].valuereplaced,
+        };
+      }
+      let result = PowiainaNum.omegacollect(clonedOperators);
 
-    return new PowiainaNum(
-      result[1].arrow - 1 + Math.log(result[0].repeat / 2) / Math.log(5)
-    );
+      return new PowiainaNum(
+        result[1].arrow - 1 + Math.log(result[0].repeat / 2) / Math.log(5)
+      );
+    }
+    let left = 2;
+    let right = 9007199254740991;
+
+    let result = NaN;
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2);
+      const comparison = PowiainaNum.arrFrac(bbase, mid).cmp(target);
+
+      if (comparison === 0) {
+        return mid;
+      } else if (comparison < 0) {
+        result = mid;
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+      if (Math.abs(left - right) <= EPSILON) {
+        return mid;
+      }
+    }
+    return result;
     // if (dis.arr01[dis.array.length - 1][0] >= 98) {
     //   // @ts-expect-error
     //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
