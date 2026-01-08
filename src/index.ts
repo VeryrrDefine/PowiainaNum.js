@@ -1702,7 +1702,7 @@ export default class PowiainaNum implements IPowiainaNum {
       if (ctt) return ctt.clone();
 
       let res = (function () {
-        let r;
+        let calcBase;
         if (t.isNaN() || other.isNaN() || payload.isNaN())
           return PowiainaNum.NaN.clone();
         if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
@@ -1720,9 +1720,9 @@ export default class PowiainaNum implements IPowiainaNum {
 
         // arrow > 9e15, that using 10{x}, x=arrow;
         if (arrows.gt(PowiainaNum.MSI)) {
-          r = arrows.clone();
-          r.setOperator(r.getOperator(Infinity) + 1, Infinity);
-          return r;
+          calcBase = arrows.clone();
+          calcBase.setOperator(calcBase.getOperator(Infinity) + 1, Infinity);
+          return calcBase;
         }
         let arrowsNum = arrows.toNumber();
         // arrow < 9e15
@@ -1733,15 +1733,18 @@ export default class PowiainaNum implements IPowiainaNum {
           return t.max(other);
         if (t.gt(PowiainaNum.arrowMSI(arrowsNum)) || other.gt(MSI)) {
           if (t.gt(PowiainaNum.arrowMSI(arrowsNum))) {
-            r = t.clone();
-            r.setOperator(r.getOperator(arrowsNum) - 1, arrowsNum);
-            r.normalize();
+            calcBase = t.clone();
+            calcBase.setOperator(
+              calcBase.getOperator(arrowsNum) - 1,
+              arrowsNum
+            );
+            calcBase.normalize();
           } else if (t.gt(PowiainaNum.arrowMSI(arrowsNum - 1))) {
-            r = new PowiainaNum(t.getOperator(arrowsNum - 1));
+            calcBase = new PowiainaNum(t.getOperator(arrowsNum - 1));
           } else {
-            r = PowiainaNum.ZERO;
+            calcBase = PowiainaNum.ZERO;
           }
-          let j = r.add(other);
+          let j = calcBase.add(other);
           j.setOperator(j.getOperator(arrowsNum) + 1, arrowsNum);
           j.normalize();
           return j;
@@ -1757,22 +1760,27 @@ export default class PowiainaNum implements IPowiainaNum {
         const y = other.toNumber();
         let f = Math.floor(y);
         const arrows_m1 = arrows.sub(PowiainaNum.ONE);
-        r = t.arrow(arrows_m1)(y - f, payload, depth + 1);
+
+        //一般情况计算10{x}y, y-f是0. 因此calcBase会是1.
+        calcBase = t.arrow(arrows_m1)(y - f, payload, depth + 1);
         let i = 0;
         for (
           let m = PowiainaNum.arrowMSI(arrowsNum - 1);
-          f !== 0 && r.lt(m) && i < 100;
+          f !== 0 && calcBase.lt(m) && i < 100;
           i++
         ) {
           if (f > 0) {
-            r = t.arrow(arrows_m1)(r, payload, depth + 1);
+            calcBase = t.arrow(arrows_m1)(calcBase, payload, depth + 1);
             --f;
           }
         }
         if (i == 100) f = 0;
-        r.setOperator(r.getOperator(arrowsNum - 1) + f, arrowsNum - 1);
-        r.normalize();
-        return r;
+        calcBase.setOperator(
+          calcBase.getOperator(arrowsNum - 1) + f,
+          arrowsNum - 1
+        );
+        calcBase.normalize();
+        return calcBase;
       })();
       if (depth < PowiainaNum.maxOps + 10) {
         PowiainaNum.arrowFuncMap.set(
