@@ -1561,7 +1561,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return operators;
   }
 
-  public omegalog(bbase = 10, EPSILON = 1e-6) {
+  public omegalog(bbase = 10, EPSILON = 1e-6): PowiainaNum {
     const target = this as PowiainaNum;
     let dis = target.clone();
     if (dis.isInfiNaN()) return dis;
@@ -1581,9 +1581,12 @@ export default class PowiainaNum implements IPowiainaNum {
     //   // @ts-expect-error
     //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
     //   return zero;
-    // } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
-    //   return new PowiainaNum(target).anyarrow_log(3)(bbase);
-    // } else {
+    // }
+    // else
+    if (target.lt(PowiainaNum.pentate(bbase, 2))) {
+      return new PowiainaNum(target).anyarrow_log(3)(bbase);
+    }
+    // else {
     //   let addTest = 8;
     //   let target = 0;
     //   while (addTest >= 10 ** -10) {
@@ -1621,7 +1624,7 @@ export default class PowiainaNum implements IPowiainaNum {
       const comparison = PowiainaNum.arrFrac(bbase, mid).cmp(target);
 
       if (comparison === 0) {
-        return mid;
+        return new PowiainaNum(mid);
       } else if (comparison < 0) {
         result = mid;
         left = mid + 1;
@@ -1629,10 +1632,10 @@ export default class PowiainaNum implements IPowiainaNum {
         right = mid - 1;
       }
       if (Math.abs(left - right) <= EPSILON) {
-        return mid;
+        return new PowiainaNum(mid);
       }
     }
-    return result;
+    return new PowiainaNum(result);
     // if (dis.arr01[dis.array.length - 1][0] >= 98) {
     //   // @ts-expect-error
     //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
@@ -1904,6 +1907,9 @@ export default class PowiainaNum implements IPowiainaNum {
   private static arrowMSI(arrowsNum: number): PowiainaNum {
     return new PowiainaNum(`10{${arrowsNum}}${MSI}`);
   }
+  private static arrowexpansMSI(arrowsNum: number): PowiainaNum {
+    return new PowiainaNum(`10{${arrowsNum},2}${MSI}`);
+  }
   public chain(other: PowiainaNumSource, arrows: PowiainaNumSource) {
     return this.arrow(arrows)(other);
   }
@@ -1968,55 +1974,66 @@ export default class PowiainaNum implements IPowiainaNum {
    *
    * @url https://googology.fandom.com/wiki/Expansion
    */
-  public expansion(other2: PowiainaNumSource) {
+  public expansion(other2: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(other2);
     const t = this.clone();
-    if (other.lt(PowiainaNum.ZERO) || !other.isInt())
-      return PowiainaNum.NaN.clone();
+    if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
     if (other.eq(PowiainaNum.ONE)) return this.clone();
     if (this.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
-    if (!this.isInt()) {
-      if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
-    }
+
     if (this.eq(2)) return new PowiainaNum(4);
     if (other.eq(0)) return PowiainaNum.ONE.clone();
-    let r;
+    if (other.gt(0) && other.lt(1) && !other.isInt()) {
+      return t.pow(other);
+    }
+    if (other.gt(1) && other.lt(2) && !other.isInt()) {
+      let y = other.sub(1).pow_base(t);
+      if (y.lt(2)) return PowiainaNum.arrow(t, 3, y);
+      return PowiainaNum.arrFrac(t, y);
+    }
+    let calcBase;
     // I don't know is this added partrs work correctly...
     if (t.gt(`10{1,2}${MSI}`) || other.gt(MSI)) {
       if (t.gt(`10{1,2}${MSI}`)) {
-        r = t.clone();
-        r.setOperator(r.getOperator(1, 2) - 1, 1, 2);
-        r.normalize();
+        calcBase = t.clone();
+        calcBase.setOperator(calcBase.getOperator(1, 2) - 1, 1, 2);
+        calcBase.normalize();
       } else if (t.gt(`10{${MSI}}10`)) {
-        r = new PowiainaNum(t.getOperator(Infinity));
+        calcBase = new PowiainaNum(t.getOperator(Infinity));
       } else {
-        r = PowiainaNum.ZERO;
+        calcBase = PowiainaNum.ZERO;
       }
-      const j = r.add(other);
+      const j = calcBase.add(other);
       j.setOperator(j.getOperator(1, 2) + 1, 1, 2);
       j.normalize();
       return j;
     }
-    let f = other.toNumber() - 1;
-    r = t.clone();
-    let i;
-    for (i = 0; f !== 0 && r.lt(MSI) && i < 100; ++i) {
+
+    const y = other.toNumber() - 1;
+    let f = Math.floor(y);
+
+    calcBase = PowiainaNum.expansion(t, 1 + y - f);
+    let i = 0;
+    for (
+      let m = new PowiainaNum("10{1,2}e15.954589770191003");
+      f !== 0 && calcBase.lt(m) && i < 100;
+      i++
+    ) {
       if (f > 0) {
-        r = t.arrow(r)(t);
+        calcBase = PowiainaNum.arrFrac(t, calcBase);
         --f;
       }
     }
-    if (i == 100) f = 0;
-    r.setOperator(r.getOperator(Infinity) + f, Infinity);
-    r.normalize();
-    return r;
+
+    calcBase.setOperator(calcBase.getOperator(Infinity) + f, Infinity);
+    calcBase.normalize();
+    return calcBase;
   }
 
   public expansionArrow(arrow2: PowiainaNumSource) {
     const arrow = new PowiainaNum(arrow2);
     const t = this.clone();
-    if (arrow.lt(0) || !arrow.isInt() || arrow.isNaN() || this.isNaN())
+    if (arrow.lt(0) || !arrow.isInt())
       return function () {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
         return PowiainaNum.NaN.clone();
@@ -2103,6 +2120,122 @@ export default class PowiainaNum implements IPowiainaNum {
       r.setOperator(r.getOperator(arrowsNum - 1, 2) + f, arrowsNum - 1, 2);
       r.normalize();
       return r;
+    };
+  }
+
+  public expansion_log_inner(base2: PowiainaNumSource) {
+    let t = this.clone();
+    let base = new PowiainaNum(base2);
+    if (base.eq(2) && t.gt(4)) return PowiainaNum.NaN.clone();
+
+    if (t.gte(`10{2,2}${MSI}`)) {
+      return t;
+    }
+    if (t.gte(`10{1,2}${MSI}`)) {
+      t.setOperator(t.getOperator(1, 2) - 1, 1, 2);
+      return t;
+    }
+    let r = 0;
+    let x = t.clone();
+    let morexxxoperators = 0;
+    if (x.getOperator(1 / 0) >= 10) {
+      morexxxoperators = x.getOperator(1 / 0) - 10;
+      x.setOperator(10, 1 / 0);
+    }
+    for (let i = 0; i < 100; ++i) {
+      if (x.lt(PowiainaNum.ZERO)) {
+        x = PowiainaNum.arrFrac(base, x);
+        --r;
+      } else if (x.lte(1)) {
+        return new PowiainaNum(r + x.toNumber() - 1 + morexxxoperators);
+      } else {
+        // 第1-4次迭代，进入此处
+        ++r;
+        x = x.omegalog(base.toNumber());
+      }
+    }
+    if (x.gt(10)) return new PowiainaNum(r + morexxxoperators);
+
+    return x.add(morexxxoperators);
+  }
+  /**
+   * return `base`{{`arrow2`}}`x` = `this` which `x` is.
+   *
+   * @param arrow2
+   * @returns
+   */
+  public expansion_log2(
+    arrow2: PowiainaNumSource
+  ): (base: PowiainaNumSource, depth?: number) => PowiainaNum {
+    let x = this.clone();
+    const arrow = new PowiainaNum(arrow2);
+
+    const arrowsNum = arrow.toNumber();
+    if (arrow.gt(MSI)) {
+      throw new Error(powiainaNumError + "Not implemented");
+    }
+    if (!arrow.isInt() || arrow.lt(1))
+      return () => {
+        if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
+        return PowiainaNum.NaN.clone();
+      };
+    if (arrow.eq(1)) return (base) => x.expansion_log_inner(base);
+    if (x.isInfiNaN()) return () => x;
+    return function (base: PowiainaNumSource, depth = 0) {
+      const b = new PowiainaNum(base);
+      if (b.isNaN()) return b;
+      if (b.isInfi()) return PowiainaNum.ZERO.clone();
+
+      if (x.isZero()) return PowiainaNum.ONE.clone();
+      if (x.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
+      if (x.eq(b)) return PowiainaNum.ONE.clone();
+
+      if (x.max(b).gt(PowiainaNum.arrowexpansMSI(arrowsNum + 1))) {
+        if (x.gt(b)) return x;
+        return PowiainaNum.ZERO.clone();
+      }
+      if (x.max(b).gt(PowiainaNum.arrowexpansMSI(arrowsNum))) {
+        if (x.gt(b)) {
+          x.setOperator(x.getOperator(arrowsNum, 2) - 1, arrowsNum, 2);
+          x.normalize();
+          return x.sub(x.getOperator(arrowsNum - 1, 2));
+        }
+      }
+      if (x.lt(PowiainaNum.ZERO.clone())) {
+        if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
+        return PowiainaNum.NaN.clone();
+      }
+
+      // base^base^... = x? (? bases)
+
+      let r = 0;
+
+      // 计算x与base的差距
+      const distanceLayerOf =
+        x.getOperator(arrowsNum, 2) - b.getOperator(arrowsNum, 2);
+      if (distanceLayerOf > 3) {
+        const l = distanceLayerOf - 3;
+        r += l;
+        x.setOperator(x.getOperator(arrowsNum, 2) - l, arrowsNum, 2);
+      }
+
+      // 假设b=3， x=1e19
+      for (let i = 0; i < 100; ++i) {
+        if (x.lt(PowiainaNum.ZERO)) {
+          x = x.expansionArrow(arrowsNum - 1)(base);
+          --r;
+        } else if (x.lte(1)) {
+          return new PowiainaNum(r + x.toNumber() - 1);
+        } else {
+          // 第1-4次迭代，进入此处
+          ++r;
+          x = x.expansion_log2(arrowsNum - 1)(base, depth + 1);
+        }
+      }
+      if (x.gt(10)) return new PowiainaNum(r);
+
+      if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
+      return PowiainaNum.NaN.clone();
     };
   }
 
