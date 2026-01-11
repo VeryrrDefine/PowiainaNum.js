@@ -1,46 +1,42 @@
-import PowiainaNum from "../src/index";
-import P from "../src/index";
+import P, { newOperator } from "../src/index";
 
 describe("P", () => {
   describe("initialization", () => {
     it("should initialize with NaN by default", () => {
       let p = new P();
       expect(
-        p.array.length == 1 && isNaN(p.array[0].repeat) && !p.small,
+        p.array.length == 1 && isNaN(p.array[0].repeat) && !p.small
       ).toBeTruthy();
     });
     it("should initialize with numbers by default", () => {
       let p = new P(0.2);
       expect(
-        p.sign == 1 && p.array.length == 1 && p.array[0].repeat == 5 && p.small,
+        p.sign == 1 && p.array.length == 1 && p.array[0].repeat == 5 && p.small
       ).toBeTruthy();
       let q = new P(1.3);
       expect(
         q.sign == 1 &&
           q.array.length == 1 &&
           q.array[0].repeat == 1.3 &&
-          !q.small,
+          !q.small
       ).toBeTruthy();
       let r = new P(0);
       expect(
         r.sign == 0 &&
           r.array.length == 1 &&
           r.array[0].repeat == Infinity &&
-          r.small,
+          r.small
       ).toBeTruthy();
       let s = new P(-0.5);
       expect(
-        s.array.length == 1 &&
-          s.array[0].repeat == 2 &&
-          s.small &&
-          s.sign == -1,
+        s.array.length == 1 && s.array[0].repeat == 2 && s.small && s.sign == -1
       ).toBeTruthy();
       let t = new P(-1);
       expect(
         t.array.length == 1 &&
           t.array[0].repeat == 1 &&
           !t.small &&
-          t.sign == -1,
+          t.sign == -1
       ).toBeTruthy();
     });
     it("should initialize large numbers correctly", () => {
@@ -50,7 +46,7 @@ describe("P", () => {
           u.array[0].repeat == 18 &&
           u.array[1].arrow == 1 &&
           !u.small &&
-          u.sign == 1,
+          u.sign == 1
       ).toBeTruthy();
     });
     it("should initialize strings correctly", () => {
@@ -66,19 +62,19 @@ describe("P", () => {
       expect(testnum[0].sign).toBe(0);
       expect(testnum[0].small).toBeTruthy();
       expect(
-        testnum[0].array.length == 1 && testnum[0].array[0].repeat == Infinity,
+        testnum[0].array.length == 1 && testnum[0].array[0].repeat == Infinity
       ).toBeTruthy();
 
       expect(testnum[1].sign == 1).toBeTruthy();
       expect(testnum[1].small).toBeFalsy();
       expect(
-        testnum[1].array.length == 1 && testnum[1].array[0].repeat == 1,
+        testnum[1].array.length == 1 && testnum[1].array[0].repeat == 1
       ).toBeTruthy();
 
       expect(testnum[2].sign == -1).toBeTruthy();
       expect(testnum[2].small).toBeFalsy();
       expect(
-        testnum[2].array.length == 1 && testnum[2].array[0].repeat == 1,
+        testnum[2].array.length == 1 && testnum[2].array[0].repeat == 1
       ).toBeTruthy();
 
       expect(testnum[3].sign).toBe(1);
@@ -135,7 +131,7 @@ describe("P", () => {
       }
       it(`addition${i}`, () =>
         expect(
-          new PowiainaNum(randomnumbers[a]).add(randomnumbers[b]).toNumber(),
+          new P(randomnumbers[a]).add(randomnumbers[b]).toNumber()
         ).toBeCloseTo(randomnumbers[a] + randomnumbers[b], 7));
     }
   });
@@ -153,8 +149,40 @@ describe("P", () => {
       }
       it(`multiply${i}`, () =>
         expect(
-          new PowiainaNum(randomnumbers[a]).mul(randomnumbers[b]).toNumber(),
+          new P(randomnumbers[a]).mul(randomnumbers[b]).toNumber()
         ).toBeCloseTo(randomnumbers[a] * randomnumbers[b], -24));
     }
+  });
+
+  describe("operator", () => {
+    it("higherOmegaTest", () => {
+      let operators = newOperator(5, 1, 2, 1);
+      let result = P.higherOmega(operators);
+      expect(result[0] == 1).toBeTruthy();
+      expect(result[1] == 2).toBeTruthy();
+      expect(result[2] == Infinity).toBeTruthy();
+
+      operators = newOperator(5, 1 / 0, 13, 2);
+      result = P.higherOmega(operators);
+      expect(result[0] == 2).toBeTruthy();
+      expect(result[1] == 13).toBeTruthy();
+      expect(result[2] == Infinity).toBeTruthy();
+
+      //  && result[1]==2&&result[2]==Infinity
+    });
+    it("compareOperatorTest", () => {
+      expect(
+        P.cmpOperatorLevel(newOperator(5, 4, 3, 2), newOperator(4, 4, 3, 2))
+      ).toBe(0);
+      expect(
+        P.cmpOperatorLevel(newOperator(5, 5, 3, 2), newOperator(4, 4, 3, 2))
+      ).toBe(1);
+      expect(
+        P.cmpOperatorLevel(newOperator(5, 5, 3, 2), newOperator(4, 4, 3, 156))
+      ).toBe(-1);
+      expect(
+        P.cmpOperatorLevel(newOperator(5, 1 / 0, 3, 2), newOperator(5, 2, 4, 2))
+      ).toBe(-1);
+    });
   });
 });

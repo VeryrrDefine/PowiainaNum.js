@@ -59,7 +59,7 @@ const BE_REGEX =
 //#endregion
 
 //#region some useful functions
-function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
+export function newOperator(r: number, a = 0, e = 1, m = 1): Operator {
   return {
     repeat: r,
     arrow: a,
@@ -121,6 +121,10 @@ function parseLegacyPowiainaNumString(str: string) {
   return null;
 }
 
+/**
+ * 如果左边小于右边的，返回-1,等于就是0，大于就是1
+ * @returns
+ */
 function compareTuples<T extends Array<number>>(...tuples: [T, T]): -1 | 0 | 1 {
   for (let i = 0; i < Math.min(tuples[0].length, tuples[1].length); i++) {
     const a = tuples[0][i];
@@ -1513,16 +1517,47 @@ export default class PowiainaNum implements IPowiainaNum {
   private static oBase(operators: Operator[]) {
     return operators[0].repeat;
   }
+  public static operatorLevel(
+    operator?: Operator | [number, number, number]
+  ): [number, number, number] {
+    if (operator == undefined) return [0, 0, 0];
+    if (!Array.isArray(operator))
+      return [operator.megota, operator.expans, operator.arrow];
+    else {
+      return [...operator];
+    }
+  }
+  public static cmpOperatorLevel(
+    operator?: Operator | [number, number, number],
+    operator2?: Operator | [number, number, number]
+  ) {
+    return compareTuples(
+      this.operatorLevel(operator),
+      this.operatorLevel(operator2)
+    );
+  }
+  public static higherOmega(operator: Operator): [number, number, number] {
+    let level = this.operatorLevel(operator);
+    if (!isFinite(operator.expans)) return this.operatorLevel(operator);
+    else if (!isFinite(operator.arrow)) return this.operatorLevel(operator);
+    else {
+      return [operator.megota, operator.expans, 1 / 0];
+    }
+  }
   /**
-   * Only works for operators level < ω.
+   * Only works for operators level < ω2.
    */
   public static omegacollect(operators: Operator[]) {
-    debugger;
     // const result = {
     //   bottom: NaN,
     //   top: NaN,
     // };
-    let maxWhile = 1000;
+    function upgrade2(base: number) {
+      operators[1].arrow++;
+      operators[0].repeat = operators[1].repeat + Math.log10(base);
+      operators[1].repeat = 1;
+    }
+    let maxWhile = 1000000;
     while (maxWhile--) {
       let base = PowiainaNum.oBase(operators);
       if (base >= 10) {
@@ -1536,26 +1571,76 @@ export default class PowiainaNum implements IPowiainaNum {
           1
         );
       } else {
-        if (operators.length <= 2 && operators[1].repeat == 1) {
+        if (operators.length <= 2 && operators[1]?.repeat == 1) {
           return operators;
         }
         // Operator upgrade mode:
 
-        // Check the -2th operator, is repeat >= 2?
-        if (operators[1].repeat >= 2) {
-          operators[1].arrow++;
-          operators[0].repeat = operators[1].repeat + Math.log10(base);
-          operators[1].repeat = 1;
-        } else if (base !== 1) {
-          operators[1].arrow++;
-          operators[0].repeat = operators[1].repeat + Math.log10(base);
-          operators[1].repeat = 1;
-        } else {
-          // -2th repeat = 1, and base = 1;
+        let nextisOmega =
+          this.cmpOperatorLevel(this.higherOmega(operators[1]), operators[2]) <=
+          0;
 
-          operators[1].arrow = operators[2].arrow;
+        // some operator will upgrade to 10{!}:
+        // first, the 3th operator is >=ω.
+        // second, the 2th operator's repeat is 1.
+        // third: the 2th operator's arrow >=3 and it's not 10{!}(for converting)
+        // fourth, base < 10
+        if (
+          nextisOmega &&
+          operators[1].repeat == 1 &&
+          isFinite(operators[1].arrow) &&
+          operators[1].arrow >= 3
+        ) {
+          operators[0].repeat =
+            operators[1].arrow -
+            1 +
+            Math.log(operators[0].repeat / 2) / Math.log(5);
+          operators[1] = newOperator(
+            1,
+            1 / 0,
+            operators[1].expans,
+            operators[1].megota
+          );
+
+          mergeSameArrays({ array: operators });
+          continue;
         }
-        mergeSameArrays({ array: operators });
+        // Check the -2th operator, is repeat >= 2?
+        else if (isFinite(operators[1].arrow)) {
+          // 如果下一个是omega，而且operators[1].arrow<3的话，强行提到arrow>=3
+          if (operators[1].repeat >= 2) {
+            upgrade2(base);
+          } else if (nextisOmega && operators[1].arrow < 3) {
+            upgrade2(base);
+          } else if (base !== 1) {
+            upgrade2(base);
+          } else if (
+            this.cmpOperatorLevel(
+              this.higherOmega(operators[1]),
+              operators[2]
+            ) == 1
+          ) {
+            // -2th repeat = 1, and base = 1, 3rd operator is not higher.
+
+            operators[1].arrow = operators[2].arrow;
+          }
+          mergeSameArrays({ array: operators });
+          continue;
+        } else if (!isFinite(operators[1].arrow)) {
+          // if an operator is 10{!}, upgrade to a higher level
+          // 10{!}3 = 10{1,2}(1+Math.log10(3))
+          let infRepeat = operators[1].repeat;
+          let baseAfter = infRepeat + Math.log10(base);
+          operators[1] = newOperator(
+            1,
+            1,
+            operators[1].expans + 1,
+            operators[1].megota
+          );
+          operators[0].repeat = baseAfter;
+          mergeSameArrays({ array: operators });
+          continue;
+        }
       }
     }
     return operators;
@@ -1885,6 +1970,99 @@ export default class PowiainaNum implements IPowiainaNum {
     };
   }
 
+  public omega2log(bbase = 10, EPSILON = 1e-6): PowiainaNum {
+    const target = this as PowiainaNum;
+    let dis = target.clone();
+    if (dis.isInfiNaN()) return dis;
+    if (dis.gte("10{1,3}e15.954589770191003")) return dis;
+    let base = new PowiainaNum(bbase).clone();
+    if (dis.getOperator(1 / 0, 2) >= 1) {
+      dis.setOperator(dis.getOperator(1 / 0) - 1, 1 / 0, 2, 1);
+      return dis;
+    }
+    // if (dis.layer >= 1) {
+    // dis.layer -= 1
+    // return dis
+    // } else
+
+    // // @ts-expect-error
+    // if (dis.arr01[dis.array.length - 1][0] >= 98) {
+    //   // @ts-expect-error
+    //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
+    //   return zero;
+    // }
+    // else
+    if (target.lt(new PowiainaNum(bbase).expansionArrow(3)(2))) {
+      return new PowiainaNum(target).expansion_log2(3)(bbase);
+    }
+    // else {
+    //   let addTest = 8;
+    //   let target = 0;
+    //   while (addTest >= 10 ** -10) {
+    //     if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
+    //       target += addTest;
+    //     }
+    //     addTest /= 2;
+    //   }
+    //   return new PowiainaNum(target);
+    // }
+
+    if (bbase == 10) {
+      let clonedOperators = [];
+      for (let i = 0; i < target.array.length; i++) {
+        clonedOperators[i] = {
+          arrow: target.array[i].arrow,
+          expans: target.array[i].expans,
+          megota: target.array[i].megota,
+          repeat: target.array[i].repeat,
+          valuereplaced: target.array[i].valuereplaced,
+        };
+      }
+      let result = PowiainaNum.omegacollect(clonedOperators);
+
+      return new PowiainaNum(
+        result[1].arrow - 1 + Math.log(result[0].repeat / 2) / Math.log(5)
+      );
+    }
+    let left = 2;
+    let right = 9007199254740991;
+
+    let result = NaN;
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2);
+      const comparison = PowiainaNum.arrw2Frac(bbase, mid).cmp(target);
+
+      if (comparison === 0) {
+        return new PowiainaNum(mid);
+      } else if (comparison < 0) {
+        result = mid;
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+      if (Math.abs(left - right) <= EPSILON) {
+        return new PowiainaNum(mid);
+      }
+    }
+    return new PowiainaNum(result);
+    // if (dis.arr01[dis.array.length - 1][0] >= 98) {
+    //   // @ts-expect-error
+    //   let zero = new PowiainaNum(dis.array[dis.arr01.length - 1][0]);
+    //   return zero;
+    // } else if (target.lt(PowiainaNum.pentate(bbase, 2))) {
+    //   return new PowiainaNum(target).anyarrow_log(3)(bbase);
+    // } else {
+    //   let addTest = 8;
+    //   let target = 0;
+    //   while (addTest >= 10 ** -10) {
+    //     if (PowiainaNum.arrFrac(base, target + addTest).lte(dis)) {
+    //       target += addTest;
+    //     }
+    //     addTest /= 2;
+    //   }
+    //   return new PowiainaNum(target);
+    // }
+  }
   /**
    * base{height}base
    */
@@ -1896,6 +2074,19 @@ export default class PowiainaNum implements IPowiainaNum {
       b.div(2).pow(h.sub(h.floor())).mul(2)
     );
   }
+
+  /**
+   * base{{height}}base
+   */
+  public static arrw2Frac(base: PowiainaNumSource, height: PowiainaNumSource) {
+    if (new PowiainaNum(height).lt(2))
+      return new PowiainaNum(base).expansionArrow(3)(height);
+    const b = new PowiainaNum(base).clone();
+    const h = new PowiainaNum(height).clone();
+    return new PowiainaNum(b).expansionArrow(h.floor().add(1))(
+      b.div(2).pow(h.sub(h.floor())).mul(2)
+    );
+  }
   /**
    * Arrow height inverse (ExpantaNum.js), an alias of `anyarrow_log`
    * @param arrows
@@ -1903,6 +2094,15 @@ export default class PowiainaNum implements IPowiainaNum {
    */
   public arrow_height_inverse(arrows: PowiainaNumSource) {
     return this.anyarrow_log(arrows);
+  }
+
+  /**
+   * Arrow w2 height inverse, an alias of `expansion_log2`
+   * @param arrows
+   * @returns
+   */
+  public arrow_w2_height_inverse(arrows: PowiainaNumSource) {
+    return this.expansion_log2(arrows);
   }
   private static arrowMSI(arrowsNum: number): PowiainaNum {
     return new PowiainaNum(`10{${arrowsNum}}${MSI}`);
