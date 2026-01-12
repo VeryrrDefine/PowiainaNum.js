@@ -507,30 +507,40 @@ export default class PowiainaNum implements IPowiainaNum {
     this.sign = 0;
     this.layer = 0;
     if (PowiainaNum.blankArgumentConstructorReturnZero) {
-      this.resetFromObject(PowiainaNum.ZERO);
+      this.array = [
+        {
+          arrow: 0,
+          expans: 1,
+          megota: 1,
+          repeat: Infinity,
+        },
+      ];
+      this.small = true;
     }
-    try {
-      if (typeof arg1 == "undefined") {
-      } else if (typeof arg1 == "number") {
-        let obj = PowiainaNum.fromNumber(arg1);
-        this.resetFromObject(obj);
-      } else if (typeof arg1 == "object") {
-        let obj = PowiainaNum.fromObject(arg1);
-        this.resetFromObject(obj);
-      } else if (typeof arg1 == "string") {
-        let obj = PowiainaNum.fromString(arg1);
-        this.resetFromObject(obj);
-      } else if (typeof arg1 == "bigint") {
-        let obj = PowiainaNum.fromBigInt(arg1);
-        this.resetFromObject(obj);
-      } else {
-        let isn: never = arg1;
+    if (arg1 !== undefined) {
+      try {
+        if (typeof arg1 == "undefined") {
+        } else if (typeof arg1 == "number") {
+          let obj = PowiainaNum.fromNumber(arg1);
+          this.resetFromObject(obj);
+        } else if (typeof arg1 == "object") {
+          let obj = PowiainaNum.fromObject(arg1);
+          this.resetFromObject(obj);
+        } else if (typeof arg1 == "string") {
+          let obj = PowiainaNum.fromString(arg1);
+          this.resetFromObject(obj);
+        } else if (typeof arg1 == "bigint") {
+          let obj = PowiainaNum.fromBigInt(arg1);
+          this.resetFromObject(obj);
+        } else {
+          let isn: never = arg1;
+        }
+      } catch (e) {
+        console.error("Malformed input");
+        console.error(e);
+        if (PowiainaNum.throwErrorOnResultNaN && PowiainaNum.isNaN(this))
+          throw new Error("NaN");
       }
-    } catch (e) {
-      console.error("Malformed input");
-      console.error(e);
-      if (PowiainaNum.throwErrorOnResultNaN && PowiainaNum.isNaN(this))
-        throw new Error("NaN");
     }
   }
 
@@ -3442,7 +3452,6 @@ export default class PowiainaNum implements IPowiainaNum {
     return obj;
   }
 
-  [Symbol.toStringTag] = "PowiainaNum";
   /**
    * Convert `this` to a JSON object
    * @returns a JSON object
