@@ -3968,9 +3968,53 @@ export default class PowiainaNum implements IPowiainaNum {
           x.array[i].expans = x.array[i].expans - 1;
         }
       }
+      // for any (10{1,2})x, x< MSI turn into:
+      // if x = 0 , it's 1
+      // if x = 1, it's 10
+      // if x = 2, it's 10{10}10
+      // if x >= 3, it's 10{!}^x-2 10
+      // (10{x})^x 10
+      if (
+        x.array.length >= 2 &&
+        x.array[0].repeat < MSI &&
+        x.array[1].arrow == 1 &&
+        x.array[1].expans >= 2
+      ) {
+        if (x.array[0].repeat == 0) {
+          x.array.splice(0, 2, newOperator(1));
+        } else if (x.array[0].repeat == 1) {
+          x.array.splice(0, 2, newOperator(10));
+        } else if (x.array[0].repeat == 2) {
+          x.array.splice(
+            0,
+            2,
+            newOperator(10),
+            newOperator(10, 10, x.array[1].expans - 1, x.array[1].megota)
+          );
+        } else {
+          x.array.splice(
+            0,
+            2,
+            newOperator(10),
+            newOperator(10, 10, x.array[1].expans - 1, x.array[1].megota),
+            newOperator(
+              x.array[0].repeat - 2,
+              1 / 0,
+              x.array[1].expans - 1,
+              x.array[1].megota
+            )
+          );
+        }
+        // x.array[1].arrow = 1;
+        // x.array[1].expans++;
+        // x.array[0].repeat = x.array[1].repeat;
+        // x.array[1].repeat = 1;
+
+        renormalize = true;
+      }
       if (x.array.length > PowiainaNum.maxOps)
         x.array.splice(1, x.array.length - PowiainaNum.maxOps); // max operators check
-      // for any 10^a but a >log10(MSI), replace to regular 10^a
+      // for any 10^a but a <log10(MSI), replace to regular 10^a
       if (
         this.array.length >= 2 &&
         this.array[1].arrow == 1 &&
@@ -3981,11 +4025,13 @@ export default class PowiainaNum implements IPowiainaNum {
         this.setOperator(10 ** this.array[0].repeat, 0);
         renormalize = true;
       }
+      // for any a but a > MSI, replace to 10^a.
       if (this.getOperator(0) > MSI && isFinite(this.getOperator(0))) {
         this.setOperator(this.getOperator(1) + 1, 1);
         this.setOperator(Math.log10(this.getOperator(0)), 0);
         renormalize = true;
       }
+      // if an operator megota > MSI, layer++
       if (this.array[this.array.length - 1].megota > MSI) {
         this.layer++;
         this.array = [newOperator(this.array[this.array.length - 1].megota)];
