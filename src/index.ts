@@ -3981,20 +3981,23 @@ export default class PowiainaNum implements IPowiainaNum {
         x.array[1].expans >= 2
       ) {
         if (x.array[0].repeat == 0) {
-          x.array.splice(0, 2, newOperator(1));
+          x.array.splice(0, 1, newOperator(1));
+          x.array[1].repeat--;
         } else if (x.array[0].repeat == 1) {
-          x.array.splice(0, 2, newOperator(10));
+          x.array.splice(0, 1, newOperator(10));
+          x.array[1].repeat--;
         } else if (x.array[0].repeat == 2) {
           x.array.splice(
             0,
-            2,
+            1,
             newOperator(10),
             newOperator(10, 10, x.array[1].expans - 1, x.array[1].megota)
           );
+          x.array[2].repeat--;
         } else {
           x.array.splice(
             0,
-            2,
+            1,
             newOperator(10),
             newOperator(10, 10, x.array[1].expans - 1, x.array[1].megota),
             newOperator(
@@ -4004,6 +4007,7 @@ export default class PowiainaNum implements IPowiainaNum {
               x.array[1].megota
             )
           );
+          x.array[2].repeat--;
         }
         // x.array[1].arrow = 1;
         // x.array[1].expans++;
