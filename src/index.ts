@@ -1038,10 +1038,12 @@ export default class PowiainaNum implements IPowiainaNum {
       return this.rec();
     } else if (this.lte(MSI)) {
       if (this.lt(24)) {
-        return PowiainaNum.fromNumber(f_gamma(this.sign * this.getOperator(0)));
+        return PowiainaNum.fromNumber(
+          f_gamma(this.sign * this.array[0].repeat)
+        );
       }
 
-      let t = this.getOperator(0) - 1;
+      let t = this.array[0].repeat - 1;
       let l = 0.9189385332046727; //0.5*Math.log(2*Math.PI)
 
       l = l + (t + 0.5) * Math.log(t);
@@ -1107,7 +1109,7 @@ export default class PowiainaNum implements IPowiainaNum {
         return PowiainaNum.fromNumber(f_lambertw(this.toNumber()));
       } else if (this.lt(MSI)) {
         return PowiainaNum.fromNumber(
-          f_lambertw(this.sign * this.getOperator(0))
+          f_lambertw(this.sign * this.array[0].repeat)
         );
       } else if (this.lt("eee15")) {
         return d_lambertw(this);
@@ -3178,14 +3180,14 @@ export default class PowiainaNum implements IPowiainaNum {
 
   //#region judge-numbers
   isNaN(): boolean {
-    return isNaN(this.getOperator(0));
+    return isNaN(this.array[0].repeat);
   }
   isZero(): boolean {
-    return Boolean(this.small && !isFinite(this.getOperator(0)));
+    return Boolean(this.small && !isFinite(this.array[0].repeat));
   }
   isFinite(): boolean {
     return (
-      Boolean(this.small || isFinite(this.getOperator(0))) && !this.isNaN()
+      Boolean(this.small || isFinite(this.array[0].repeat)) && !this.isNaN()
     );
   }
 
@@ -3197,7 +3199,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   isInt(): boolean {
     if (this.isZero()) return true;
-    if (!this.small && Number.isInteger(this.getOperator(0))) return true;
+    if (!this.small && Number.isInteger(this.array[0].repeat)) return true;
     if (this.abs().gte(MSI / 2)) return true;
     return false;
   }
@@ -3334,7 +3336,7 @@ export default class PowiainaNum implements IPowiainaNum {
       this.array[1].megota == 1 &&
       this.array[1].repeat == 1
     )
-      return 10 ** this.getOperator(0);
+      return 10 ** this.array[0].repeat;
     return NaN;
   }
 
@@ -3467,18 +3469,20 @@ export default class PowiainaNum implements IPowiainaNum {
 
     if (input.startsWith("PN")) input = input.substring(2);
     if (input == "NaN") return PowiainaNum.NaN.clone();
-    input = input.replace(/J\^(\d+)/g, "(10{!})^$1");
-    input = input.replace(/J/g, "10{!}");
-    input = input.replace(/K\^(\d+)/g, "(10{1,2})^$1");
-    input = input.replace(/K/g, "10{1,2}");
-    input = input.replace(/L\^(\d+)/g, "(10{2,2})^$1");
-    input = input.replace(/L/g, "10{2,2}");
-    input = input.replace(/M\^(\d+)/g, "(10{!,2})^$1");
-    input = input.replace(/M/g, "10{!,2}");
-    input = input.replace(/N\^(\d+)/g, "(10{1,!})^$1");
-    input = input.replace(/N/g, "10{1,!}");
-    if (/^.*e-.*(e|\^).*/.test(input)) {
-      input = "/10^" + input.substring(input.indexOf("e-"));
+    if (!PowiainaNum.vanilla) {
+      input = input.replace(/J\^(\d+)/g, "(10{!})^$1");
+      input = input.replace(/J/g, "10{!}");
+      input = input.replace(/K\^(\d+)/g, "(10{1,2})^$1");
+      input = input.replace(/K/g, "10{1,2}");
+      input = input.replace(/L\^(\d+)/g, "(10{2,2})^$1");
+      input = input.replace(/L/g, "10{2,2}");
+      input = input.replace(/M\^(\d+)/g, "(10{!,2})^$1");
+      input = input.replace(/M/g, "10{!,2}");
+      input = input.replace(/N\^(\d+)/g, "(10{1,!})^$1");
+      input = input.replace(/N/g, "10{1,!}");
+      if (/^.*e-.*(e|\^).*/.test(input)) {
+        input = "/10^" + input.substring(input.indexOf("e-"));
+      }
     }
     if (!isNaN(Number(input))) {
       const res = Number(input);
@@ -3548,8 +3552,8 @@ export default class PowiainaNum implements IPowiainaNum {
       x.normalize();
       return x;
     }
-    input = replaceETo10(input);
-    input = removeCommasOutsideBraces(input);
+    if (!PowiainaNum.vanilla) input = replaceETo10(input);
+    if (!PowiainaNum.vanilla) input = removeCommasOutsideBraces(input);
     if (!isPowiainaNum.test(input)) {
       throw powiainaNumError + "malformed input: " + input;
     }
@@ -4030,9 +4034,9 @@ export default class PowiainaNum implements IPowiainaNum {
         renormalize = true;
       }
       // for any a but a > MSI, replace to 10^a.
-      if (this.getOperator(0) > MSI && isFinite(this.getOperator(0))) {
+      if (this.array[0].repeat > MSI && isFinite(this.array[0].repeat)) {
         this.setOperator(this.getOperator(1) + 1, 1);
-        this.setOperator(Math.log10(this.getOperator(0)), 0);
+        this.setOperator(Math.log10(this.array[0].repeat), 0);
         renormalize = true;
       }
       // if an operator megota > MSI, layer++
@@ -4212,11 +4216,7 @@ export default class PowiainaNum implements IPowiainaNum {
     this.array = [];
     for (let i = 0; i < powlikeObject.array.length; i++) {
       this.array[i] = {
-        arrow: powlikeObject.array[i].arrow,
-        expans: powlikeObject.array[i].expans,
-        megota: powlikeObject.array[i].megota,
-        repeat: powlikeObject.array[i].repeat,
-        valuereplaced: powlikeObject.array[i].valuereplaced,
+        ...powlikeObject.array[i],
       };
     }
     this.small = powlikeObject.small;
@@ -4467,5 +4467,10 @@ export default class PowiainaNum implements IPowiainaNum {
    * If you set this config to true, when calucation returns NaN, the program will throw error.
    */
   public static throwErrorOnResultNaN = false;
+
+  /**
+   * If you set this config to true, it will turn off replacement of string, e.g replace e^x to 10^^x
+   */
+  public static vanilla = false;
   //#endregion
 }
