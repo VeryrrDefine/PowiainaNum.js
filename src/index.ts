@@ -276,12 +276,12 @@ function replaceXToInfinity(x: "x" | number): number {
   return x;
 }
 function isFourLengthArray(
-  x: unknown[]
+  x: unknown[],
 ): x is [unknown, unknown, unknown, unknown] {
   return x.length == 4;
 }
 function isFourNumberArray(
-  x: [unknown, unknown, unknown, unknown]
+  x: [unknown, unknown, unknown, unknown],
 ): x is [number, number, number, number] {
   if (
     typeof x[0] == "number" &&
@@ -294,7 +294,7 @@ function isFourNumberArray(
   return false;
 }
 function isFourArrayWithFirstTermX(
-  x: [unknown, unknown, unknown, unknown]
+  x: [unknown, unknown, unknown, unknown],
 ): x is ["x", number, number, number] {
   if (
     x[0] === "x" &&
@@ -307,7 +307,7 @@ function isFourArrayWithFirstTermX(
   return false;
 }
 function isFourArrayWithThirdTermX(
-  x: [unknown, unknown, unknown, unknown]
+  x: [unknown, unknown, unknown, unknown],
 ): x is ["x", number, number, number] {
   if (
     typeof x[0] == "number" &&
@@ -379,7 +379,7 @@ function d_lambertw(z: PowiainaNum, tol = 1e10, principal = true) {
 export function arraySortFunction(a: Operator, b: Operator) {
   return compareTuples(
     [a.megota, a.expans, a.arrow],
-    [b.megota, b.expans, b.arrow]
+    [b.megota, b.expans, b.arrow],
   );
 }
 
@@ -392,7 +392,7 @@ export function mergeSameArrays<T>(
     array: Operator[];
   }
     ? T
-    : never
+    : never,
 ) {
   for (let i = 1; i < x.array.length - 1; ++i) {
     if (
@@ -411,7 +411,7 @@ export function mergeSameArrays<T>(
 function arrFracParaInv(
   x: PowiainaNumSource,
   y: PowiainaNumSource,
-  res2: PowiainaNumSource
+  res2: PowiainaNumSource,
 ) {
   const res = new PowiainaNum(x)
     .pow(new PowiainaNum(res2).sub(y).add(1))
@@ -422,20 +422,20 @@ function arrFracParaInv(
 function arrFracPara(
   x: PowiainaNumSource,
   y: PowiainaNumSource,
-  z: PowiainaNumSource
+  z: PowiainaNumSource,
 ) {
   const lg2 = new PowiainaNum(2).logBase(x);
   return new PowiainaNum(y)
     .sub(1)
     .add(
-      new PowiainaNum(z).logBase(x).sub(lg2).div(new PowiainaNum(1).sub(lg2))
+      new PowiainaNum(z).logBase(x).sub(lg2).div(new PowiainaNum(1).sub(lg2)),
     );
 }
 
 function arrowpsdInv(
   base: PowiainaNumSource,
   height: PowiainaNumSource,
-  res4: PowiainaNumSource
+  res4: PowiainaNumSource,
 ): PowiainaNum {
   const x = new PowiainaNum(base);
   const y = new PowiainaNum(height);
@@ -455,7 +455,7 @@ function arrowpsdInv(
 function arrowpsd(
   base: PowiainaNumSource,
   height: PowiainaNumSource,
-  other: PowiainaNumSource
+  other: PowiainaNumSource,
 ) {
   const x = new PowiainaNum(base);
   const y = new PowiainaNum(height);
@@ -679,7 +679,7 @@ export default class PowiainaNum implements IPowiainaNum {
 
   public static add(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).add(other);
   }
@@ -689,7 +689,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static plus(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).add(other);
   }
@@ -700,7 +700,7 @@ export default class PowiainaNum implements IPowiainaNum {
 
   public static sub(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).sub(other);
   }
@@ -709,7 +709,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static minus(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).sub(other);
   }
@@ -769,7 +769,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static mul(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).mul(other);
   }
@@ -778,7 +778,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static times(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).mul(other);
   }
@@ -789,7 +789,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static div(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).div(other);
   }
@@ -798,7 +798,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static divide(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).div(other);
   }
@@ -817,7 +817,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static modulus(
     x: PowiainaNumSource,
-    y: PowiainaNumSource
+    y: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(x).mod(y);
   }
@@ -915,7 +915,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static pow(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).pow(other);
   }
@@ -926,7 +926,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static root(
     t: PowiainaNumSource,
-    other: PowiainaNumSource
+    other: PowiainaNumSource,
   ): PowiainaNum {
     return new PowiainaNum(t).root(other);
   }
@@ -974,7 +974,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static log(
     t: PowiainaNumSource,
-    base: PowiainaNumSource = Math.E
+    base: PowiainaNumSource = Math.E,
   ): PowiainaNum {
     return new PowiainaNum(t).log(base);
   }
@@ -989,7 +989,7 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static logBase(
     t: PowiainaNumSource,
-    base: PowiainaNumSource = Math.E
+    base: PowiainaNumSource = Math.E,
   ): PowiainaNum {
     return new PowiainaNum(t).log(base);
   }
@@ -1049,7 +1049,7 @@ export default class PowiainaNum implements IPowiainaNum {
     } else if (this.lte(MSI)) {
       if (this.lt(24)) {
         return PowiainaNum.fromNumber(
-          f_gamma(this.sign * this.array[0].repeat)
+          f_gamma(this.sign * this.array[0].repeat),
         );
       }
 
@@ -1119,7 +1119,7 @@ export default class PowiainaNum implements IPowiainaNum {
         return PowiainaNum.fromNumber(f_lambertw(this.toNumber()));
       } else if (this.lt(MSI)) {
         return PowiainaNum.fromNumber(
-          f_lambertw(this.sign * this.array[0].repeat)
+          f_lambertw(this.sign * this.array[0].repeat),
         );
       } else if (this.lt("eee15")) {
         return d_lambertw(this);
@@ -1135,7 +1135,7 @@ export default class PowiainaNum implements IPowiainaNum {
 
       if (this.lt(9e15)) {
         return PowiainaNum.fromNumber(
-          f_lambertw(this.sign * this.array[0].repeat, 1e-10, false)
+          f_lambertw(this.sign * this.array[0].repeat, 1e-10, false),
         );
       } else if (this.lt(PowiainaNum.E_MSI)) {
         return d_lambertw(this, 1e-10, false);
@@ -1165,13 +1165,13 @@ export default class PowiainaNum implements IPowiainaNum {
     resourcesAvailable: PowiainaNumSource,
     priceStart: PowiainaNumSource,
     priceRatio: PowiainaNumSource,
-    currentOwned: PowiainaNumSource
+    currentOwned: PowiainaNumSource,
   ): PowiainaNum {
     return this.affordGeometricSeries_core(
       new PowiainaNum(resourcesAvailable),
       new PowiainaNum(priceStart),
       new PowiainaNum(priceRatio),
-      currentOwned
+      currentOwned,
     );
   }
 
@@ -1180,7 +1180,7 @@ export default class PowiainaNum implements IPowiainaNum {
     priceStart: PowiainaNum,
     priceRatio: PowiainaNum,
     currentOwned: PowiainaNumSource,
-    withNaNProtect = true
+    withNaNProtect = true,
   ): PowiainaNum {
     const actualStart = priceStart.mul(priceRatio.pow(currentOwned));
     return resourcesAvailable
@@ -1203,13 +1203,13 @@ export default class PowiainaNum implements IPowiainaNum {
     numItems: PowiainaNumSource,
     priceStart: PowiainaNumSource,
     priceRatio: PowiainaNumSource,
-    currentOwned: PowiainaNumSource
+    currentOwned: PowiainaNumSource,
   ): PowiainaNum {
     return this.sumGeometricSeries_core(
       numItems,
       new PowiainaNum(priceStart),
       new PowiainaNum(priceRatio),
-      currentOwned
+      currentOwned,
     );
   }
 
@@ -1217,7 +1217,7 @@ export default class PowiainaNum implements IPowiainaNum {
     numItems: PowiainaNumSource,
     priceStart: PowiainaNum,
     priceRatio: PowiainaNum,
-    currentOwned: PowiainaNumSource
+    currentOwned: PowiainaNumSource,
   ): PowiainaNum {
     return priceStart
       .mul(priceRatio.pow(currentOwned))
@@ -1234,13 +1234,13 @@ export default class PowiainaNum implements IPowiainaNum {
     resourcesAvailable: PowiainaNumSource,
     priceStart: PowiainaNumSource,
     priceAdd: PowiainaNumSource,
-    currentOwned: PowiainaNumSource
+    currentOwned: PowiainaNumSource,
   ): PowiainaNum {
     return this.affordArithmeticSeries_core(
       new PowiainaNum(resourcesAvailable),
       new PowiainaNum(priceStart),
       new PowiainaNum(priceAdd),
-      new PowiainaNum(currentOwned)
+      new PowiainaNum(currentOwned),
     );
   }
 
@@ -1248,7 +1248,7 @@ export default class PowiainaNum implements IPowiainaNum {
     resourcesAvailable: PowiainaNum,
     priceStart: PowiainaNum,
     priceAdd: PowiainaNum,
-    currentOwned: PowiainaNum
+    currentOwned: PowiainaNum,
   ): PowiainaNum {
     // n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
     // where a is actualStart, d is priceAdd and S is resourcesAvailable
@@ -1273,20 +1273,20 @@ export default class PowiainaNum implements IPowiainaNum {
     numItems: PowiainaNumSource,
     priceStart: PowiainaNumSource,
     priceAdd: PowiainaNumSource,
-    currentOwned: PowiainaNumSource
+    currentOwned: PowiainaNumSource,
   ): PowiainaNum {
     return this.sumArithmeticSeries_core(
       new PowiainaNum(numItems),
       new PowiainaNum(priceStart),
       new PowiainaNum(priceAdd),
-      new PowiainaNum(currentOwned)
+      new PowiainaNum(currentOwned),
     );
   }
   public static sumArithmeticSeries_core(
     numItems: PowiainaNum,
     priceStart: PowiainaNum,
     priceAdd: PowiainaNum,
-    currentOwned: PowiainaNum
+    currentOwned: PowiainaNum,
   ): PowiainaNum {
     const actualStart = priceStart.add(currentOwned.mul(priceAdd)); // (n/2)*(2*a+(n-1)*d)
 
@@ -1469,7 +1469,7 @@ export default class PowiainaNum implements IPowiainaNum {
   public static tetrate(
     t: PowiainaNumSource,
     other2: PowiainaNumSource,
-    payload: PowiainaNumSource = 1
+    payload: PowiainaNumSource = 1,
   ) {
     return new PowiainaNum(t).tetrate(other2, payload);
   }
@@ -1505,7 +1505,7 @@ export default class PowiainaNum implements IPowiainaNum {
    */
   public iteratedlog(
     other2: PowiainaNumSource = 1,
-    base2: PowiainaNumSource = 10
+    base2: PowiainaNumSource = 10,
   ) {
     const t = this.clone();
     const base = new PowiainaNum(base2);
@@ -1517,7 +1517,7 @@ export default class PowiainaNum implements IPowiainaNum {
   public static iteratedlog(
     t: PowiainaNumSource,
     other2: PowiainaNumSource = 1,
-    base2: PowiainaNumSource = 10
+    base2: PowiainaNumSource = 10,
   ) {
     return new PowiainaNum(t).iteratedlog(other2, base2);
   }
@@ -1530,7 +1530,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return operators[0].repeat;
   }
   public static operatorLevel(
-    operator?: Operator | [number, number, number]
+    operator?: Operator | [number, number, number],
   ): [number, number, number] {
     if (operator == undefined) return [0, 0, 0];
     if (!Array.isArray(operator))
@@ -1541,11 +1541,11 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   public static cmpOperatorLevel(
     operator?: Operator | [number, number, number],
-    operator2?: Operator | [number, number, number]
+    operator2?: Operator | [number, number, number],
   ) {
     return compareTuples(
       this.operatorLevel(operator),
-      this.operatorLevel(operator2)
+      this.operatorLevel(operator2),
     );
   }
   public static higherOmega(operator: Operator): [number, number, number] {
@@ -1580,7 +1580,7 @@ export default class PowiainaNum implements IPowiainaNum {
           PowiainaNum.opGetOperator(operators, 1, 1, 1) + 1,
           1,
           1,
-          1
+          1,
         );
       } else {
         if (operators.length <= 2 && operators[1]?.repeat == 1) {
@@ -1611,7 +1611,7 @@ export default class PowiainaNum implements IPowiainaNum {
             1,
             1 / 0,
             operators[1].expans,
-            operators[1].megota
+            operators[1].megota,
           );
 
           mergeSameArrays({ array: operators });
@@ -1629,7 +1629,7 @@ export default class PowiainaNum implements IPowiainaNum {
           } else if (
             this.cmpOperatorLevel(
               this.higherOmega(operators[1]),
-              operators[2]
+              operators[2],
             ) == 1
           ) {
             // -2th repeat = 1, and base = 1, 3rd operator is not higher.
@@ -1647,7 +1647,7 @@ export default class PowiainaNum implements IPowiainaNum {
             1,
             1,
             operators[1].expans + 1,
-            operators[1].megota
+            operators[1].megota,
           );
           operators[0].repeat = baseAfter;
           mergeSameArrays({ array: operators });
@@ -1680,8 +1680,8 @@ export default class PowiainaNum implements IPowiainaNum {
     //   return zero;
     // }
     // else
-    if (target.lt(PowiainaNum.pentate(bbase, 2))) {
-      return new PowiainaNum(target).anyarrow_log(3)(bbase);
+    if (target.lt(PowiainaNum.pentate(base, 2))) {
+      return new PowiainaNum(target).anyarrow_log(3)(base);
     }
     // else {
     //   let addTest = 8;
@@ -1709,7 +1709,7 @@ export default class PowiainaNum implements IPowiainaNum {
       let result = PowiainaNum.omegacollect(clonedOperators);
 
       return new PowiainaNum(
-        result[1].arrow - 1 + Math.log(result[0].repeat / 2) / Math.log(5)
+        result[1].arrow - 1 + Math.log(result[0].repeat / 2) / Math.log(5),
       );
     }
     let left = 2;
@@ -1718,7 +1718,7 @@ export default class PowiainaNum implements IPowiainaNum {
     let result = NaN;
     while (left <= right) {
       const mid = Math.floor((left + right) / 2);
-      const comparison = PowiainaNum.arrFrac(bbase, mid).cmp(target);
+      const comparison = PowiainaNum.arrFrac(base, mid).cmp(target);
 
       if (comparison === 0) {
         return new PowiainaNum(mid);
@@ -1759,17 +1759,17 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns A function
    */
   public arrow(
-    arrows2: PowiainaNumSource
+    arrows2: PowiainaNumSource,
   ): (
     other: PowiainaNumSource,
     payload?: PowiainaNumSource,
-    depth?: number
+    depth?: number,
   ) => PowiainaNum {
     const t = this.clone();
     const arrows = new PowiainaNum(arrows2);
     if (arrows.lt(PowiainaNum.ZERO)) {
       console.warn(
-        "The arrow is <0 or not a integer, the returned function will return NaN."
+        "The arrow is <0 or not a integer, the returned function will return NaN.",
       );
       return function () {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
@@ -1797,7 +1797,7 @@ export default class PowiainaNum implements IPowiainaNum {
       let other = new PowiainaNum(other2);
       const payload = new PowiainaNum(payload2);
       let ctt = PowiainaNum.arrowFuncMap.get(
-        `${t.toString()} ${arrows.toString()} ${other.toString()} ${depth}`
+        `${t.toString()} ${arrows.toString()} ${other.toString()} ${depth}`,
       );
       if (ctt) return ctt.clone();
 
@@ -1836,7 +1836,7 @@ export default class PowiainaNum implements IPowiainaNum {
             calcBase = t.clone();
             calcBase.setOperator(
               calcBase.getOperator(arrowsNum) - 1,
-              arrowsNum
+              arrowsNum,
             );
             calcBase.normalize();
           } else if (t.gt(PowiainaNum.arrowMSI(arrowsNum - 1))) {
@@ -1877,7 +1877,7 @@ export default class PowiainaNum implements IPowiainaNum {
         if (i == 100) f = 0;
         calcBase.setOperator(
           calcBase.getOperator(arrowsNum - 1) + f,
-          arrowsNum - 1
+          arrowsNum - 1,
         );
         calcBase.normalize();
         return calcBase;
@@ -1885,7 +1885,7 @@ export default class PowiainaNum implements IPowiainaNum {
       if (depth < PowiainaNum.maxOps + 10) {
         PowiainaNum.arrowFuncMap.set(
           `${t.toString()} ${arrows.toString()} ${other.toString()} ${depth}`,
-          res.clone()
+          res.clone(),
         );
       }
       return res;
@@ -1895,7 +1895,7 @@ export default class PowiainaNum implements IPowiainaNum {
   public static arrow(
     x: PowiainaNumSource,
     z: PowiainaNumSource,
-    y: PowiainaNumSource
+    y: PowiainaNumSource,
   ) {
     return new PowiainaNum(x).arrow(z)(y);
   }
@@ -1906,7 +1906,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns
    */
   public anyarrow_log(
-    arrow2: PowiainaNumSource
+    arrow2: PowiainaNumSource,
   ): (base: PowiainaNumSource, depth?: number) => PowiainaNum {
     let x = this.clone();
     const arrow = new PowiainaNum(arrow2);
@@ -2033,7 +2033,7 @@ export default class PowiainaNum implements IPowiainaNum {
       let result = PowiainaNum.omegacollect(clonedOperators);
 
       return new PowiainaNum(
-        result[1].arrow - 1 + Math.log(result[0].repeat / 2) / Math.log(5)
+        result[1].arrow - 1 + Math.log(result[0].repeat / 2) / Math.log(5),
       );
     }
     let left = 2;
@@ -2083,7 +2083,7 @@ export default class PowiainaNum implements IPowiainaNum {
     const b = new PowiainaNum(base).clone();
     const h = new PowiainaNum(height).clone();
     return new PowiainaNum(b).arrow(h.floor().add(1))(
-      b.div(2).pow(h.sub(h.floor())).mul(2)
+      b.div(2).pow(h.sub(h.floor())).mul(2),
     );
   }
 
@@ -2096,7 +2096,7 @@ export default class PowiainaNum implements IPowiainaNum {
     const b = new PowiainaNum(base).clone();
     const h = new PowiainaNum(height).clone();
     return new PowiainaNum(b).expansionArrow(h.floor().add(1))(
-      b.div(2).pow(h.sub(h.floor())).mul(2)
+      b.div(2).pow(h.sub(h.floor())).mul(2),
     );
   }
   /**
@@ -2157,21 +2157,21 @@ export default class PowiainaNum implements IPowiainaNum {
   public static pentate(
     x: PowiainaNumSource,
     other: PowiainaNumSource,
-    payload?: PowiainaNumSource
+    payload?: PowiainaNumSource,
   ) {
     return new PowiainaNum(x).arrow(3)(other, payload);
   }
   public static hexate(
     x: PowiainaNumSource,
     other: PowiainaNumSource,
-    payload?: PowiainaNumSource
+    payload?: PowiainaNumSource,
   ) {
     return new PowiainaNum(x).arrow(4)(other, payload);
   }
   public static pent(
     x: PowiainaNumSource,
     other: PowiainaNumSource,
-    payload?: PowiainaNumSource
+    payload?: PowiainaNumSource,
   ) {
     return new PowiainaNum(x).arrow(3)(other, payload);
   }
@@ -2377,7 +2377,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns
    */
   public expansion_log2(
-    arrow2: PowiainaNumSource
+    arrow2: PowiainaNumSource,
   ): (base: PowiainaNumSource, depth?: number) => PowiainaNum {
     let x = this.clone();
     const arrow = new PowiainaNum(arrow2);
@@ -2505,7 +2505,7 @@ export default class PowiainaNum implements IPowiainaNum {
       getArgs(2),
       getArgs(3),
       getArgs(4),
-      getArgs(5)
+      getArgs(5),
     );
   }
   public static BEAF_core(
@@ -2515,7 +2515,7 @@ export default class PowiainaNum implements IPowiainaNum {
     expans2: PowiainaNumSource = 1,
     megota2: PowiainaNumSource = 1,
     powiaina2: PowiainaNumSource = 1,
-    depth = 0
+    depth = 0,
   ): PowiainaNum {
     // console.warn(
     //   "This function is unstable when calculating numbers greater than *megotion*",
@@ -2580,7 +2580,7 @@ export default class PowiainaNum implements IPowiainaNum {
     function convertOperator(
       arrows: number,
       expans: number,
-      megota: number
+      megota: number,
     ): [number, number, number] {
       const a = arrows;
       const e = expans;
@@ -2613,10 +2613,10 @@ export default class PowiainaNum implements IPowiainaNum {
     const arrows = new PowiainaNum(readArg(0));
     const result = (function (
       other2: PowiainaNumSource,
-      depth = 0
+      depth = 0,
     ): PowiainaNum {
       let ctt = PowiainaNum.beafFuncMap.get(
-        `${t.toString()} ${arrow.toString()} ${expans.toString()} ${megota.toString()} ${powiaina.toString()} ${other2.toString()} ${depth}`
+        `${t.toString()} ${arrow.toString()} ${expans.toString()} ${megota.toString()} ${powiaina.toString()} ${other2.toString()} ${depth}`,
       );
       if (ctt) return ctt.clone();
       // console.log(
@@ -2644,7 +2644,7 @@ export default class PowiainaNum implements IPowiainaNum {
           expans.sub(1),
           megota,
           powiaina2,
-          depth + 1
+          depth + 1,
         );
         // {this, this, power, expans-1, megota}
       }
@@ -2656,7 +2656,7 @@ export default class PowiainaNum implements IPowiainaNum {
           power,
           megota.sub(1),
           powiaina2,
-          depth + 1
+          depth + 1,
         );
         // {this, this, this, power, megota-1}
       }
@@ -2668,7 +2668,7 @@ export default class PowiainaNum implements IPowiainaNum {
           t,
           expans,
           new PowiainaNum(powiaina2).sub(1),
-          depth + 1
+          depth + 1,
         );
       }
 
@@ -2683,7 +2683,7 @@ export default class PowiainaNum implements IPowiainaNum {
           r.getOperator(1, Infinity, megota.toNumber()) + 1,
           1,
           Infinity,
-          megota.toNumber()
+          megota.toNumber(),
         );
         return r;
       }
@@ -2694,7 +2694,7 @@ export default class PowiainaNum implements IPowiainaNum {
           r.getOperator(Infinity, expans.toNumber(), megota.toNumber()) + 1,
           Infinity,
           expans.toNumber(),
-          megota.toNumber()
+          megota.toNumber(),
         );
         return r;
       }
@@ -2710,7 +2710,7 @@ export default class PowiainaNum implements IPowiainaNum {
           expans,
           megota,
           powiaina2,
-          depth + 1
+          depth + 1,
         );
 
       if (
@@ -2733,14 +2733,14 @@ export default class PowiainaNum implements IPowiainaNum {
             r.getOperator(arrowsNum, expans.toNumber(), megota.toNumber()) - 1,
             arrowsNum,
             expans.toNumber(),
-            megota.toNumber()
+            megota.toNumber(),
           );
           r.normalize();
         } else if (
           t.gt(getMSIForm(arrowsNum - 1, expans.toNumber(), megota.toNumber()))
         ) {
           r = new PowiainaNum(
-            t.getOperator(arrowsNum - 1, expans.toNumber(), megota.toNumber())
+            t.getOperator(arrowsNum - 1, expans.toNumber(), megota.toNumber()),
           );
         } else {
           r = PowiainaNum.ZERO;
@@ -2750,7 +2750,7 @@ export default class PowiainaNum implements IPowiainaNum {
           j.getOperator(arrowsNum, expans.toNumber(), megota.toNumber()) + 1,
           arrowsNum,
           expans.toNumber(),
-          megota.toNumber()
+          megota.toNumber(),
         );
         j.normalize();
         return j;
@@ -2776,7 +2776,7 @@ export default class PowiainaNum implements IPowiainaNum {
         expans,
         megota,
         powiaina,
-        depth + 1
+        depth + 1,
       );
       // r = t.arrow(arrows_m1)(y - f, payload, depth + 1);
       let i = 0;
@@ -2793,7 +2793,7 @@ export default class PowiainaNum implements IPowiainaNum {
             expans,
             megota,
             powiaina,
-            depth + 1
+            depth + 1,
           );
           --f;
         }
@@ -2803,7 +2803,7 @@ export default class PowiainaNum implements IPowiainaNum {
         r.getOperator(arrowsNum - 1, expans.toNumber(), megota.toNumber()) + f,
         arrowsNum - 1,
         expans.toNumber(),
-        megota.toNumber()
+        megota.toNumber(),
       );
       r.normalize();
       return r;
@@ -2812,7 +2812,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (depth < PowiainaNum.maxOps + 10) {
       PowiainaNum.beafFuncMap.set(
         `${t.toString()} ${arrow.toString()} ${expans.toString()} ${megota.toString()} ${powiaina.toString()} ${power.toString()} ${depth}`,
-        result.clone()
+        result.clone(),
       );
     }
     return result;
@@ -2971,7 +2971,7 @@ export default class PowiainaNum implements IPowiainaNum {
       }
       const cmp = compareTuples(
         [op1.megota, op1.expans, op1.arrow, op1.repeat],
-        [op2.megota, op2.expans, op2.arrow, op2.repeat]
+        [op2.megota, op2.expans, op2.arrow, op2.repeat],
       );
       if (cmp == 1) {
         result = 1;
@@ -3040,7 +3040,7 @@ export default class PowiainaNum implements IPowiainaNum {
 
   public eq_tolerance(
     value: PowiainaNumSource,
-    tolerance: number = 1e-7
+    tolerance: number = 1e-7,
   ): boolean {
     const dec = new PowiainaNum(value);
     return this.sub(dec).lte(this.max(dec).mul(tolerance));
@@ -3116,7 +3116,7 @@ export default class PowiainaNum implements IPowiainaNum {
     }
     const r = this.abs();
     r.array[0].repeat = Math[this.sign == 1 ? "floor" : "ceil"](
-      r.getOperator(0)
+      r.getOperator(0),
     );
     r.sign = this.sign;
     return r;
@@ -3132,7 +3132,7 @@ export default class PowiainaNum implements IPowiainaNum {
     }
     const r = this.abs();
     r.array[0].repeat = Math[this.sign == 1 ? "ceil" : "floor"](
-      r.getOperator(0)
+      r.getOperator(0),
     );
     r.sign = this.sign;
     return r;
@@ -3235,12 +3235,12 @@ export default class PowiainaNum implements IPowiainaNum {
     operators: Operator[],
     arrow: number,
     expans = 1,
-    megota = 1
+    megota = 1,
   ) {
     for (let i = 0; i < operators.length; i++) {
       const cmp = compareTuples(
         [operators[i].megota, operators[i].expans, operators[i].arrow],
-        [megota, expans, arrow]
+        [megota, expans, arrow],
       );
       if (cmp == 0) return i; // I find it was [xx,xxx,*xxx*,xxx]!
       if (cmp == 1) return i - 0.5; // It's between [xx, xx,xx*,?,*xx]!
@@ -3261,13 +3261,13 @@ export default class PowiainaNum implements IPowiainaNum {
     operators: Operator[],
     arrow: number,
     expans = 1,
-    megota = 1
+    megota = 1,
   ) {
     const index = PowiainaNum.opGetOperatorIndex(
       operators,
       arrow,
       expans,
-      megota
+      megota,
     );
     if (!operators[index]) return 0;
     return operators[index].repeat;
@@ -3289,14 +3289,14 @@ export default class PowiainaNum implements IPowiainaNum {
     val: number,
     arrow: number,
     expans = 1,
-    megota = 1
+    megota = 1,
   ) {
     // if (arrow!=0&&val==0) return false;
     const index = PowiainaNum.opGetOperatorIndex(
       operators,
       arrow,
       expans,
-      megota
+      megota,
     );
     if (!operators[index]) {
       operators.splice(Math.ceil(index), 0, {
@@ -3642,21 +3642,34 @@ export default class PowiainaNum implements IPowiainaNum {
           }
 
           if (arrows == 1 && expans == 1 && megota == 1) {
-            if (x.array.length >= 2 && x.array[1].arrow == 1) {
+            if (
+              x.array.length >= 2 &&
+              x.array[1].arrow == 1 &&
+              x.array[1].expans == 1 &&
+              x.array[1].megota == 1
+            ) {
               x.array[1].repeat += c;
             } else {
               x.array.splice(1, 0, newOperator(c, 1, expans, megota));
             }
           } else if (arrows == 2 && expans == 1 && megota == 1) {
             a =
-              x.array.length >= 2 && x.array[1].arrow == 1
+              x.array.length >= 2 &&
+              x.array[1].arrow == 1 &&
+              x.array[1].expans == 1 &&
+              x.array[1].megota == 1
                 ? x.array[1].repeat
                 : 0;
             b = x.array[0].repeat;
             if (b >= 1e10) ++a;
             if (b >= 10) ++a;
             x.array[0].repeat = a;
-            if (x.array.length >= 2 && x.array[1].arrow == 1)
+            if (
+              x.array.length >= 2 &&
+              x.array[1].arrow == 1 &&
+              x.array[1].expans == 1 &&
+              x.array[1].megota == 1
+            )
               x.array.splice(1, 1);
             d = x.getOperatorIndex(2);
             if (Number.isInteger(d)) x.array[d].repeat += c;
@@ -3664,9 +3677,9 @@ export default class PowiainaNum implements IPowiainaNum {
               x.array.splice(
                 Math.ceil(d),
                 0,
-                newOperator(c, 2, expans, megota)
+                newOperator(c, 2, expans, megota),
               );
-          } else if (isFinite(arrows)) {
+          } else if (isFinite(arrows) && expans == 1 && megota == 1) {
             a = x.getOperator(arrows - 1);
             b = x.getOperator(arrows - 2);
             if (b >= 10) ++a;
@@ -3757,7 +3770,7 @@ export default class PowiainaNum implements IPowiainaNum {
       | IPowiainaNum
       | ExpantaNumArray
       | PowiainaNumArray01X
-      | IBreakEternity
+      | IBreakEternity,
   ) {
     const obj = new PowiainaNum();
     obj.resetFromObject({
@@ -3820,7 +3833,7 @@ export default class PowiainaNum implements IPowiainaNum {
           b[1],
           replaceXToInfinity(b[0]),
           replaceXToInfinity(b[2]),
-          b[3]
+          b[3],
         );
       }
       obj.small = false;
@@ -3870,7 +3883,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return new PowiainaNum("10^^^(10^)^7625597484984 3638334640023.7783");
     else if (layers.lte(MSI)) {
       return new PowiainaNum(
-        `(10{!})^${layers.toNumber()} 10^^^(10^)^7625597484984 3638334640023.7783`
+        `(10{!})^${layers.toNumber()} 10^^^(10^)^7625597484984 3638334640023.7783`,
       );
     } else {
       return PowiainaNum.BEAF(3, layers, 1, 2);
@@ -4004,7 +4017,7 @@ export default class PowiainaNum implements IPowiainaNum {
             0,
             1,
             newOperator(10),
-            newOperator(10, 10, x.array[1].expans - 1, x.array[1].megota)
+            newOperator(10, 10, x.array[1].expans - 1, x.array[1].megota),
           );
           x.array[2].repeat--;
         } else {
@@ -4017,8 +4030,8 @@ export default class PowiainaNum implements IPowiainaNum {
               x.array[0].repeat - 2,
               1 / 0,
               x.array[1].expans - 1,
-              x.array[1].megota
-            )
+              x.array[1].megota,
+            ),
           );
           x.array[2].repeat--;
         }
@@ -4085,8 +4098,8 @@ export default class PowiainaNum implements IPowiainaNum {
               this.array[1].repeat - 1,
               1 / 0,
               this.array[1].expans,
-              this.array[1].megota
-            )
+              this.array[1].megota,
+            ),
           );
           this.array[1].repeat = 1;
           this.array[1].arrow = this.array[0].repeat;
@@ -4107,7 +4120,7 @@ export default class PowiainaNum implements IPowiainaNum {
           1,
           Infinity,
           this.array[1].expans,
-          this.array[1].megota
+          this.array[1].megota,
         );
       }
       // for any (10{y=finite>=2})^z x x<9e15, convert to (10{y})^(z-1) (10{y-1}^(x-1) 10)
@@ -4125,13 +4138,13 @@ export default class PowiainaNum implements IPowiainaNum {
         this.array.splice(
           2,
           0,
-          newOperator(z - 1, y, this.array[1].expans, this.array[1].megota)
+          newOperator(z - 1, y, this.array[1].expans, this.array[1].megota),
         );
         this.array[1] = newOperator(
           x - 1,
           y - 1,
           this.array[1].expans,
-          this.array[1].megota
+          this.array[1].megota,
         );
       }
       while (
@@ -4168,8 +4181,8 @@ export default class PowiainaNum implements IPowiainaNum {
             x.array[0].repeat - 1,
             x.array[1].arrow - 1,
             x.array[1].expans,
-            x.array[1].megota
-          )
+            x.array[1].megota,
+          ),
         );
         x.array[0].repeat = 10;
         renormalize = true;
@@ -4393,7 +4406,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * }3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3}3
    */
   public static readonly GRAHAMS_NUMBER = new PowiainaNum(
-    "(10{!})^63 10^^^(10^)^7625597484984 3638334640023.7783"
+    "(10{!})^63 10^^^(10^)^7625597484984 3638334640023.7783",
   );
   /**
    * Positive Infinity.
