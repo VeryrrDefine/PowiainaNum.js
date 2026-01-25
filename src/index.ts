@@ -359,7 +359,7 @@ function d_lambertw(z: PowiainaNum, tol = 1e10, principal = true) {
     if (z.eq(PowiainaNum.ONE)) return new PowiainaNum(OMEGA);
     w = PowiainaNum.log(z);
   } else {
-    if (z.eq(PowiainaNum.ZERO)) return PowiainaNum.NEGATIVE_INFINITY.clone();
+    if (z.eq(PowiainaNum.ZERO)) return PowiainaNum.NEGATIVE_INFINITY;
     w = PowiainaNum.log(z.neg());
   }
   for (let i = 0; i < 100; ++i) {
@@ -395,13 +395,11 @@ export function mergeSameArrays<T>(
     : never,
 ) {
   for (let i = 1; i < x.array.length - 1; ++i) {
-    if (
-      x.array[i].arrow == x.array[i + 1].arrow &&
-      x.array[i].expans == x.array[i + 1].expans &&
-      x.array[i].megota == x.array[i + 1].megota
-    ) {
+    let q = x.array[i];
+    let r = x.array[i + 1];
+    if (q.arrow == r.arrow && q.expans == r.expans && q.megota == r.megota) {
       // same array's merge
-      x.array[i].repeat += x.array[i + 1].repeat;
+      q.repeat += r.repeat;
       x.array.splice(i + 1, 1);
       --i;
     }
@@ -445,7 +443,7 @@ function arrowpsdInv(
     let add2handled = arrowpsdInv(x, y.add(1), z);
     let handled = add2handled.sub(2);
     let bottom = arrowpsdInv(x, y, x);
-    let top = x.clone();
+    let top = x;
     const anylog2 = handled.pow_base(top.div(bottom)).mul(bottom);
 
     return arrowpsd(x, y, anylog2);
@@ -465,7 +463,7 @@ function arrowpsd(
   if (z.gt(x)) {
     let anylog2 = arrowpsdInv(x, y, z);
     let bottom = arrowpsdInv(x, y, x);
-    let top = x.clone();
+    let top = x;
 
     const handled = anylog2.div(bottom).logBase(top.div(bottom));
 
@@ -491,6 +489,24 @@ function log10PosBigInt(input: bigint) {
 }
 //#endregion
 
+const arrays = {
+  ZERO: [
+    {
+      arrow: 0,
+      expans: 1,
+      megota: 1,
+      repeat: Infinity,
+    },
+  ],
+  NaN: [
+    {
+      arrow: 0,
+      expans: 1,
+      megota: 1,
+      repeat: NaN,
+    },
+  ],
+};
 export default class PowiainaNum implements IPowiainaNum {
   array: Operator[];
   small: boolean;
@@ -502,19 +518,12 @@ export default class PowiainaNum implements IPowiainaNum {
    * If no arguments, return `PowiainaNum.NaN`.
    */
   constructor(arg1?: PowiainaNumSource) {
-    this.array = [{ arrow: 0, expans: 1, megota: 1, repeat: NaN }];
+    this.array = arrays.NaN;
     this.small = false;
     this.sign = 0;
     this.layer = 0;
     if (PowiainaNum.blankArgumentConstructorReturnZero) {
-      this.array = [
-        {
-          arrow: 0,
-          expans: 1,
-          megota: 1,
-          repeat: Infinity,
-        },
-      ];
+      this.array = arrays.ZERO;
       this.small = true;
     }
     if (arg1 !== undefined) {
@@ -523,11 +532,11 @@ export default class PowiainaNum implements IPowiainaNum {
         } else if (typeof arg1 == "number") {
           let obj = PowiainaNum.fromNumber(arg1);
           this.resetFromObject(obj);
-        } else if (typeof arg1 == "object") {
-          let obj = PowiainaNum.fromObject(arg1);
-          this.resetFromObject(obj);
         } else if (typeof arg1 == "string") {
           let obj = PowiainaNum.fromString(arg1);
+          this.resetFromObject(obj);
+        } else if (typeof arg1 == "object") {
+          let obj = PowiainaNum.fromObject(arg1);
           this.resetFromObject(obj);
         } else if (typeof arg1 == "bigint") {
           let obj = PowiainaNum.fromBigInt(arg1);
@@ -550,7 +559,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns the sum of `this` and `other`
    */
   public add(other: PowiainaNumSource): PowiainaNum {
-    let x = this.clone().normalize();
+    let x = this.normalize();
     let y = new PowiainaNum(other);
 
     // inf + -inf = nan
@@ -561,16 +570,16 @@ export default class PowiainaNum implements IPowiainaNum {
         y.eq(PowiainaNum.POSITIVE_INFINITY))
     ) {
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     }
 
     // inf & nan check
-    if (!x.isFinite()) return x.clone();
-    if (!y.isFinite()) return y.clone();
+    if (!x.isFinite()) return x;
+    if (!y.isFinite()) return y;
 
     // if x or y = 0, return other.
-    if (x.isZero()) return y.clone();
-    if (y.isZero()) return x.clone();
+    if (x.isZero()) return y;
+    if (y.isZero()) return x;
 
     // x+ -x = 0
     if (
@@ -581,7 +590,7 @@ export default class PowiainaNum implements IPowiainaNum {
         return a.eq(b);
       })()
     )
-      return PowiainaNum.ZERO.clone();
+      return PowiainaNum.ZERO;
 
     // Run pure number calculates in there
     if (x.abs().lt(MSI) && y.abs().lt(MSI)) {
@@ -659,9 +668,9 @@ export default class PowiainaNum implements IPowiainaNum {
       resultLogarithm = Math.log10(-offsetedResult) - offset;
       signMult *= -1;
     }
-    if (offsetedResult == 0) return PowiainaNum.ZERO.clone();
+    if (offsetedResult == 0) return PowiainaNum.ZERO;
 
-    let resultPN = PowiainaNum.NaN.clone();
+    let resultPN = PowiainaNum.NaN;
 
     resultPN.sign = 1;
 
@@ -714,7 +723,7 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(t).sub(other);
   }
   public mul(other: PowiainaNumSource): PowiainaNum {
-    let x = this.clone();
+    let x = this;
     let y = new PowiainaNum(other);
 
     // inf * -inf = -inf
@@ -724,24 +733,24 @@ export default class PowiainaNum implements IPowiainaNum {
       (y.eq(PowiainaNum.POSITIVE_INFINITY) &&
         x.eq(PowiainaNum.NEGATIVE_INFINITY))
     )
-      return PowiainaNum.NEGATIVE_INFINITY.clone();
+      return PowiainaNum.NEGATIVE_INFINITY;
 
     if ((x.isInfiNaN() && y.isZero()) || (y.isInfiNaN() && x.isZero())) {
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     }
 
     if (
       x.eq(PowiainaNum.NEGATIVE_INFINITY) &&
       y.eq(PowiainaNum.NEGATIVE_INFINITY)
     )
-      return PowiainaNum.POSITIVE_INFINITY.clone();
+      return PowiainaNum.POSITIVE_INFINITY;
 
     // inf & nan check
-    if (!x.isFinite()) return x.clone();
-    if (!y.isFinite()) return y.clone();
+    if (!x.isFinite()) return x;
+    if (!y.isFinite()) return y;
 
-    if (x.isZero() || y.isZero()) return PowiainaNum.ZERO.clone();
+    if (x.isZero() || y.isZero()) return PowiainaNum.ZERO;
 
     // x* x^-1 = 0
     /* if (x.small==1-y.small&&(function(){
@@ -831,7 +840,7 @@ export default class PowiainaNum implements IPowiainaNum {
   public pow10(): PowiainaNum {
     const thisObject = this.clone();
     // inf & nan check
-    if (!this.isFinite()) return this.clone();
+    if (!this.isFinite()) return this;
 
     /** when 10^(t), t<0, use 10^(-t) reciprocate. */
     if (thisObject.isneg()) {
@@ -860,9 +869,9 @@ export default class PowiainaNum implements IPowiainaNum {
   public pow(x: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(x);
 
-    if (this.eq(1)) return PowiainaNum.ONE.clone();
-    if (!other.isFinite()) return other.clone();
-    if (!this.isFinite()) return this.clone();
+    if (this.eq(1)) return PowiainaNum.ONE;
+    if (!other.isFinite()) return other;
+    if (!this.isFinite()) return this;
 
     if (this.eq(10)) return other.pow10();
     if (other.isneg()) return this.pow(other.neg()).rec();
@@ -874,7 +883,7 @@ export default class PowiainaNum implements IPowiainaNum {
           }
         }
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
       let r = this.abs().pow(other);
       r.sign = (function () {
@@ -894,10 +903,10 @@ export default class PowiainaNum implements IPowiainaNum {
     }
 
     if (this.isZero() && other.isZero()) {
-      return PowiainaNum.ONE.clone();
+      return PowiainaNum.ONE;
     }
-    if (this.isZero()) return PowiainaNum.ZERO.clone();
-    if (other.isZero()) return PowiainaNum.ONE.clone();
+    if (this.isZero()) return PowiainaNum.ZERO;
+    if (other.isZero()) return PowiainaNum.ONE;
 
     // if this<0, check other' rec is oddd
     if (this.gt(0)) {
@@ -907,7 +916,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return this.neg().log10().mul(other).pow10().neg();
     }
     if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-    return PowiainaNum.NaN.clone();
+    return PowiainaNum.NaN;
   }
   public pow_base(x: PowiainaNumSource): PowiainaNum {
     const a = new PowiainaNum(x);
@@ -947,9 +956,9 @@ export default class PowiainaNum implements IPowiainaNum {
   public log10(): PowiainaNum {
     if (this.isneg()) {
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     }
-    if (this.isZero()) return PowiainaNum.NEGATIVE_INFINITY.clone();
+    if (this.isZero()) return PowiainaNum.NEGATIVE_INFINITY;
     if (this.small) {
       let x = this.clone();
       x.small = !x.small;
@@ -958,7 +967,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (this.array.length == 1)
       return new PowiainaNum(Math.log10(this.array[0].repeat));
 
-    if (this.gte(PowiainaNum.TETRATED_MSI)) return this.clone();
+    if (this.gte(PowiainaNum.TETRATED_MSI)) return this;
     let x = this.clone();
     x.array[1].repeat = x.array[1].repeat - 1;
     x.normalize();
@@ -1112,7 +1121,7 @@ export default class PowiainaNum implements IPowiainaNum {
     let principal = princ;
     if (this.lt(-0.3678794411710499)) {
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone(); //complex
+      return PowiainaNum.NaN; //complex
     } else if (principal) {
       if (this.abs().lt("1e-300")) return new PowiainaNum(this);
       else if (this.small) {
@@ -1130,7 +1139,7 @@ export default class PowiainaNum implements IPowiainaNum {
     } else {
       if (this.sign === -1) {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone(); //complex
+        return PowiainaNum.NaN; //complex
       }
 
       if (this.lt(9e15)) {
@@ -1302,45 +1311,45 @@ export default class PowiainaNum implements IPowiainaNum {
   //#region Tetration
   // Code from ExpantaNum.js
   public tetrate(other2: PowiainaNumSource, payload: PowiainaNumSource = 1) {
-    const t = this.clone();
+    const t = this;
     let other = new PowiainaNum(other2);
     const payl = new PowiainaNum(payload);
     if (t.isNaN() || other.isNaN() || payl.isNaN()) {
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     }
-    if (t.eq(1)) return PowiainaNum.ONE.clone();
+    if (t.eq(1)) return PowiainaNum.ONE;
     if (payl.neq(PowiainaNum.ONE) && t.gte(EXP_E_REC)) {
       other = other.add(payl.slog(t));
     }
     let negln;
     if (other.isInfi() && other.sign > 0) {
-      if (t.gte(EXP_E_REC)) return PowiainaNum.POSITIVE_INFINITY.clone();
+      if (t.gte(EXP_E_REC)) return PowiainaNum.POSITIVE_INFINITY;
       negln = this.log().neg();
       return negln.lambertw().div(negln);
     }
     if (other.lte(-2)) {
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     }
     if (t.isZero()) {
       if (other.isZero()) {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
       if (other.gte(MSI / 2) || other.toNumber() % 2 == 0)
-        return PowiainaNum.ZERO.clone();
-      return PowiainaNum.ONE.clone();
+        return PowiainaNum.ZERO;
+      return PowiainaNum.ONE;
     }
     if (t.eq(PowiainaNum.ONE)) {
       if (other.eq(PowiainaNum.ONE.neg())) {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
-      return PowiainaNum.ONE.clone();
+      return PowiainaNum.ONE;
     }
-    if (other.eq(PowiainaNum.ONE.neg())) return PowiainaNum.ZERO.clone();
-    if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
+    if (other.eq(PowiainaNum.ONE.neg())) return PowiainaNum.ZERO;
+    if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE;
     if (other.eq(PowiainaNum.ONE)) return t;
     if (other.eq(2)) return t.pow(t);
     if (t.eq(2)) {
@@ -1364,11 +1373,7 @@ export default class PowiainaNum implements IPowiainaNum {
     let r = t.pow(y - f);
     let l = PowiainaNum.NaN;
     let i = 0;
-    for (
-      let w = PowiainaNum.E_MSI.clone();
-      f !== 0 && r.lt(w) && i < 100;
-      ++i
-    ) {
+    for (let w = PowiainaNum.E_MSI; f !== 0 && r.lt(w) && i < 100; ++i) {
       if (f > 0) {
         r = t.pow(r);
         if (l.eq(r)) {
@@ -1398,26 +1403,26 @@ export default class PowiainaNum implements IPowiainaNum {
   }
   // Code from ExpantaNum.js
   public slog(base: PowiainaNumSource = 10): PowiainaNum {
-    let x = this.clone();
+    let x: PowiainaNum = this;
     const b = new PowiainaNum(base);
     if (x.isInfiNaN()) return x;
     if (b.isNaN()) return b;
-    if (b.isInfi()) return PowiainaNum.ZERO.clone();
+    if (b.isInfi()) return PowiainaNum.ZERO;
 
-    if (x.isZero()) return PowiainaNum.ONE.clone();
-    if (x.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
-    if (x.eq(b)) return PowiainaNum.ONE.clone();
+    if (x.isZero()) return PowiainaNum.ONE;
+    if (x.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO;
+    if (x.eq(b)) return PowiainaNum.ONE;
     if (b.lt(EXP_E_REC)) {
       let a = b.tetrate(Infinity);
-      if (x.eq(a)) return PowiainaNum.POSITIVE_INFINITY.clone();
+      if (x.eq(a)) return PowiainaNum.POSITIVE_INFINITY;
       if (x.gt(a)) {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
     }
     if (x.max(b).gt(PowiainaNum.PENTATED_MSI)) {
       if (x.gt(b)) return x;
-      return PowiainaNum.ZERO.clone();
+      return PowiainaNum.ZERO;
     }
     if (x.max(b).gt(PowiainaNum.TETRATED_MSI)) {
       if (x.gt(b)) {
@@ -1426,7 +1431,7 @@ export default class PowiainaNum implements IPowiainaNum {
         return x.sub(x.getOperator(1));
       }
     }
-    if (x.lt(PowiainaNum.ZERO.clone())) return b.pow(x).sub(2);
+    if (x.lt(PowiainaNum.ZERO)) return b.pow(x).sub(2);
 
     // base^base^... = x? (? bases)
 
@@ -1463,7 +1468,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (x.gt(10)) return new PowiainaNum(r);
 
     if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-    return PowiainaNum.NaN.clone();
+    return PowiainaNum.NaN;
   }
 
   public static tetrate(
@@ -1475,10 +1480,10 @@ export default class PowiainaNum implements IPowiainaNum {
   }
 
   public ssqrt() {
-    const x = this.clone();
+    const x = this;
     if (x.lt(1 / EXP_E_REC)) {
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     }
     if (!x.isFinite()) return x;
     if (x.gt(PowiainaNum.TETRATED_MSI)) return x;
@@ -1507,7 +1512,7 @@ export default class PowiainaNum implements IPowiainaNum {
     other2: PowiainaNumSource = 1,
     base2: PowiainaNumSource = 10,
   ) {
-    const t = this.clone();
+    const t = this;
     const base = new PowiainaNum(base2);
     const other = new PowiainaNum(other2);
     if (other.isZero()) return t;
@@ -1660,10 +1665,10 @@ export default class PowiainaNum implements IPowiainaNum {
 
   public omegalog(bbase = 10, EPSILON = 1e-6): PowiainaNum {
     const target = this as PowiainaNum;
-    let dis = target.clone();
+    let dis = target;
     if (dis.isInfiNaN()) return dis;
     if (dis.gte("10{1,2}e15.954589770191003")) return dis;
-    let base = new PowiainaNum(bbase).clone();
+    let base = new PowiainaNum(bbase);
     if (dis.getOperator(1 / 0) >= 1) {
       dis.setOperator(dis.getOperator(1 / 0) - 1, 1 / 0, 1, 1);
       return dis;
@@ -1765,7 +1770,7 @@ export default class PowiainaNum implements IPowiainaNum {
     payload?: PowiainaNumSource,
     depth?: number,
   ) => PowiainaNum {
-    const t = this.clone();
+    const t = this;
     const arrows = new PowiainaNum(arrows2);
     if (arrows.lt(PowiainaNum.ZERO)) {
       console.warn(
@@ -1773,7 +1778,7 @@ export default class PowiainaNum implements IPowiainaNum {
       );
       return function () {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       };
     }
     if (!arrows.isInt()) {
@@ -1799,28 +1804,28 @@ export default class PowiainaNum implements IPowiainaNum {
       let ctt = PowiainaNum.arrowFuncMap.get(
         `${t.toString()} ${arrows.toString()} ${other.toString()} ${depth}`,
       );
-      if (ctt) return ctt.clone();
+      if (ctt) return ctt;
 
       let res = (function () {
         let calcBase;
         if (t.isNaN() || other.isNaN() || payload.isNaN())
-          return PowiainaNum.NaN.clone();
-        if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
+          return PowiainaNum.NaN;
+        if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN;
         if (t.eq(PowiainaNum.ZERO)) {
-          if (other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
+          if (other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO;
 
           if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-          return PowiainaNum.NaN.clone();
+          return PowiainaNum.NaN;
         }
         if (payload.neq(PowiainaNum.ONE))
           other = other.add(payload.anyarrow_log(arrows)(t));
-        if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
-        if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
-        if (other.eq(PowiainaNum.ONE)) return t.clone();
+        if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE;
+        if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE;
+        if (other.eq(PowiainaNum.ONE)) return t;
 
         // arrow > 9e15, that using 10{x}, x=arrow;
         if (arrows.gt(PowiainaNum.MSI)) {
-          calcBase = arrows.clone();
+          calcBase = arrows;
           calcBase.setOperator(calcBase.getOperator(Infinity) + 1, Infinity);
           return calcBase;
         }
@@ -1833,7 +1838,7 @@ export default class PowiainaNum implements IPowiainaNum {
           return t.max(other);
         if (t.gt(PowiainaNum.arrowMSI(arrowsNum)) || other.gt(MSI)) {
           if (t.gt(PowiainaNum.arrowMSI(arrowsNum))) {
-            calcBase = t.clone();
+            calcBase = t;
             calcBase.setOperator(
               calcBase.getOperator(arrowsNum) - 1,
               arrowsNum,
@@ -1885,7 +1890,7 @@ export default class PowiainaNum implements IPowiainaNum {
       if (depth < PowiainaNum.maxOps + 10) {
         PowiainaNum.arrowFuncMap.set(
           `${t.toString()} ${arrows.toString()} ${other.toString()} ${depth}`,
-          res.clone(),
+          res,
         );
       }
       return res;
@@ -1908,7 +1913,7 @@ export default class PowiainaNum implements IPowiainaNum {
   public anyarrow_log(
     arrow2: PowiainaNumSource,
   ): (base: PowiainaNumSource, depth?: number) => PowiainaNum {
-    let x = this.clone();
+    let x: PowiainaNum = this;
     const arrow = new PowiainaNum(arrow2);
 
     const arrowsNum = arrow.toNumber();
@@ -1918,7 +1923,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (!arrow.isInt() || arrow.lt(0))
       return () => {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       };
     if (arrow.eq(0)) return (base) => x.div(base);
     if (arrow.eq(1)) return (base) => x.log(base);
@@ -1927,15 +1932,15 @@ export default class PowiainaNum implements IPowiainaNum {
     return function (base: PowiainaNumSource, depth = 0) {
       const b = new PowiainaNum(base);
       if (b.isNaN()) return b;
-      if (b.isInfi()) return PowiainaNum.ZERO.clone();
+      if (b.isInfi()) return PowiainaNum.ZERO;
 
-      if (x.isZero()) return PowiainaNum.ONE.clone();
-      if (x.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
-      if (x.eq(b)) return PowiainaNum.ONE.clone();
+      if (x.isZero()) return PowiainaNum.ONE;
+      if (x.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO;
+      if (x.eq(b)) return PowiainaNum.ONE;
 
       if (x.max(b).gt(PowiainaNum.arrowMSI(arrowsNum + 1))) {
         if (x.gt(b)) return x;
-        return PowiainaNum.ZERO.clone();
+        return PowiainaNum.ZERO;
       }
       if (x.max(b).gt(PowiainaNum.arrowMSI(arrowsNum))) {
         if (x.gt(b)) {
@@ -1944,9 +1949,9 @@ export default class PowiainaNum implements IPowiainaNum {
           return x.sub(x.getOperator(arrowsNum - 1));
         }
       }
-      if (x.lt(PowiainaNum.ZERO.clone())) {
+      if (x.lt(PowiainaNum.ZERO)) {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
 
       // base^base^... = x? (? bases)
@@ -1978,7 +1983,7 @@ export default class PowiainaNum implements IPowiainaNum {
       if (x.gt(10)) return new PowiainaNum(r);
 
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     };
   }
 
@@ -1987,7 +1992,7 @@ export default class PowiainaNum implements IPowiainaNum {
     let dis = target.clone();
     if (dis.isInfiNaN()) return dis;
     if (dis.gte("10{1,3}e15.954589770191003")) return dis;
-    let base = new PowiainaNum(bbase).clone();
+    let base = new PowiainaNum(bbase);
     if (dis.getOperator(1 / 0, 2) >= 1) {
       dis.setOperator(dis.getOperator(1 / 0) - 1, 1 / 0, 2, 1);
       return dis;
@@ -2080,8 +2085,8 @@ export default class PowiainaNum implements IPowiainaNum {
    */
   public static arrFrac(base: PowiainaNumSource, height: PowiainaNumSource) {
     if (new PowiainaNum(height).lt(2)) return PowiainaNum.pentate(base, height);
-    const b = new PowiainaNum(base).clone();
-    const h = new PowiainaNum(height).clone();
+    const b = new PowiainaNum(base);
+    const h = new PowiainaNum(height);
     return new PowiainaNum(b).arrow(h.floor().add(1))(
       b.div(2).pow(h.sub(h.floor())).mul(2),
     );
@@ -2093,8 +2098,8 @@ export default class PowiainaNum implements IPowiainaNum {
   public static arrw2Frac(base: PowiainaNumSource, height: PowiainaNumSource) {
     if (new PowiainaNum(height).lt(2))
       return new PowiainaNum(base).expansionArrow(3)(height);
-    const b = new PowiainaNum(base).clone();
-    const h = new PowiainaNum(height).clone();
+    const b = new PowiainaNum(base);
+    const h = new PowiainaNum(height);
     return new PowiainaNum(b).expansionArrow(h.floor().add(1))(
       b.div(2).pow(h.sub(h.floor())).mul(2),
     );
@@ -2188,13 +2193,13 @@ export default class PowiainaNum implements IPowiainaNum {
    */
   public expansion(other2: PowiainaNumSource): PowiainaNum {
     const other = new PowiainaNum(other2);
-    const t = this.clone();
-    if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
-    if (other.eq(PowiainaNum.ONE)) return this.clone();
-    if (this.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
+    const t = this;
+    if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN;
+    if (other.eq(PowiainaNum.ONE)) return this;
+    if (this.eq(PowiainaNum.ONE)) return PowiainaNum.ONE;
 
     if (this.eq(2)) return new PowiainaNum(4);
-    if (other.eq(0)) return PowiainaNum.ONE.clone();
+    if (other.eq(0)) return PowiainaNum.ONE;
     if (other.gt(0) && other.lt(1) && !other.isInt()) {
       return t.pow(other);
     }
@@ -2244,11 +2249,11 @@ export default class PowiainaNum implements IPowiainaNum {
 
   public expansionArrow(arrow2: PowiainaNumSource) {
     const arrow = new PowiainaNum(arrow2);
-    const t = this.clone();
+    const t = this;
     if (arrow.lt(0) || !arrow.isInt())
       return function () {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       };
     if (arrow.eq(0))
       return function (other: PowiainaNumSource) {
@@ -2263,24 +2268,24 @@ export default class PowiainaNum implements IPowiainaNum {
     return function (other2: PowiainaNumSource, depth = 0): PowiainaNum {
       const other = new PowiainaNum(other2);
       let r;
-      if (t.isNaN() || other.isNaN()) return PowiainaNum.NaN.clone();
+      if (t.isNaN() || other.isNaN()) return PowiainaNum.NaN;
       if (other.lt(PowiainaNum.ZERO)) {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
       if (t.eq(PowiainaNum.ZERO)) {
-        if (other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
+        if (other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO;
 
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
-      if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
-      if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
-      if (other.eq(PowiainaNum.ONE)) return t.clone();
+      if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE;
+      if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE;
+      if (other.eq(PowiainaNum.ONE)) return t;
 
       // arrow > 9e15, that using 10{x,2}, x=arrow;
       if (arrows.gt(PowiainaNum.MSI)) {
-        r = arrows.clone();
+        r = arrows;
         r.setOperator(r.getOperator(Infinity, 2) + 1, Infinity, 2);
         return r;
       }
@@ -2336,9 +2341,9 @@ export default class PowiainaNum implements IPowiainaNum {
   }
 
   public expansion_log_inner(base2: PowiainaNumSource) {
-    let t = this.clone();
+    let t = this;
     let base = new PowiainaNum(base2);
-    if (base.eq(2) && t.gt(4)) return PowiainaNum.NaN.clone();
+    if (base.eq(2) && t.gt(4)) return PowiainaNum.NaN;
 
     if (t.gte(`10{2,2}${MSI}`)) {
       return t;
@@ -2348,7 +2353,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return t;
     }
     let r = 0;
-    let x = t.clone();
+    let x: PowiainaNum = t;
     let morexxxoperators = 0;
     if (x.getOperator(1 / 0) >= 10) {
       morexxxoperators = x.getOperator(1 / 0) - 10;
@@ -2379,7 +2384,7 @@ export default class PowiainaNum implements IPowiainaNum {
   public expansion_log2(
     arrow2: PowiainaNumSource,
   ): (base: PowiainaNumSource, depth?: number) => PowiainaNum {
-    let x = this.clone();
+    let x: PowiainaNum = this.clone();
     const arrow = new PowiainaNum(arrow2);
 
     const arrowsNum = arrow.toNumber();
@@ -2389,22 +2394,22 @@ export default class PowiainaNum implements IPowiainaNum {
     if (!arrow.isInt() || arrow.lt(1))
       return () => {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       };
     if (arrow.eq(1)) return (base) => x.expansion_log_inner(base);
     if (x.isInfiNaN()) return () => x;
     return function (base: PowiainaNumSource, depth = 0) {
       const b = new PowiainaNum(base);
       if (b.isNaN()) return b;
-      if (b.isInfi()) return PowiainaNum.ZERO.clone();
+      if (b.isInfi()) return PowiainaNum.ZERO;
 
-      if (x.isZero()) return PowiainaNum.ONE.clone();
-      if (x.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
-      if (x.eq(b)) return PowiainaNum.ONE.clone();
+      if (x.isZero()) return PowiainaNum.ONE;
+      if (x.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO;
+      if (x.eq(b)) return PowiainaNum.ONE;
 
       if (x.max(b).gt(PowiainaNum.arrowexpansMSI(arrowsNum + 1))) {
         if (x.gt(b)) return x;
-        return PowiainaNum.ZERO.clone();
+        return PowiainaNum.ZERO;
       }
       if (x.max(b).gt(PowiainaNum.arrowexpansMSI(arrowsNum))) {
         if (x.gt(b)) {
@@ -2413,9 +2418,9 @@ export default class PowiainaNum implements IPowiainaNum {
           return x.sub(x.getOperator(arrowsNum - 1, 2));
         }
       }
-      if (x.lt(PowiainaNum.ZERO.clone())) {
+      if (x.lt(PowiainaNum.ZERO)) {
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
 
       // base^base^... = x? (? bases)
@@ -2447,7 +2452,7 @@ export default class PowiainaNum implements IPowiainaNum {
       if (x.gt(10)) return new PowiainaNum(r);
 
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     };
   }
 
@@ -2490,14 +2495,14 @@ export default class PowiainaNum implements IPowiainaNum {
       getArgs(5).eq(2) &&
       (getArgs(4).gte(2) || getArgs(3).gte(2) || getArgs(2).gte(2))
     )
-      return PowiainaNum.POSITIVE_INFINITY.clone();
+      return PowiainaNum.POSITIVE_INFINITY;
     if (
       args
         .slice(6)
         .map((x) => new PowiainaNum(x))
         .filter((x) => x.gt(1)).length !== 0
     )
-      return PowiainaNum.POSITIVE_INFINITY.clone();
+      return PowiainaNum.POSITIVE_INFINITY;
 
     return PowiainaNum.BEAF_core(
       getArgs(0),
@@ -2531,15 +2536,14 @@ export default class PowiainaNum implements IPowiainaNum {
     if (power.isZero()) return new PowiainaNum(1);
     if (base.lt(0)) {
       if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     }
     // // check infinite
     // let sufpowiaina = args.slice(4);
     // if (sufpowiaina.filter((f) => new PowiainaNum(f).gte(2)).length > 0) {
     //   return PowiainaNum.POSITIVE_INFINITY;
     // }
-    if (new PowiainaNum(powiaina2).gte(3))
-      return PowiainaNum.POSITIVE_INFINITY.clone();
+    if (new PowiainaNum(powiaina2).gte(3)) return PowiainaNum.POSITIVE_INFINITY;
 
     if (readArg(0).eq(0) && readArg(1).eq(1) && readArg(2).eq(1)) {
       return base.mul(power);
@@ -2567,10 +2571,10 @@ export default class PowiainaNum implements IPowiainaNum {
     const powiaina = readArg(3);
 
     if (powiaina.eq(2)) {
-      if (arrow != 1) return PowiainaNum.POSITIVE_INFINITY.clone();
-      if (expans.neq(1)) return PowiainaNum.POSITIVE_INFINITY.clone();
-      if (megota.neq(1)) return PowiainaNum.POSITIVE_INFINITY.clone();
-      if (power.gte(MSI)) return PowiainaNum.POSITIVE_INFINITY.clone();
+      if (arrow != 1) return PowiainaNum.POSITIVE_INFINITY;
+      if (expans.neq(1)) return PowiainaNum.POSITIVE_INFINITY;
+      if (megota.neq(1)) return PowiainaNum.POSITIVE_INFINITY;
+      if (power.gte(MSI)) return PowiainaNum.POSITIVE_INFINITY;
       const r = new PowiainaNum(10);
       r.layer = power.toNumber();
       r.normalize();
@@ -2609,7 +2613,7 @@ export default class PowiainaNum implements IPowiainaNum {
       return `10{${infToBang(a)},${infToBang(e)},${m}}${MSI}`;
     }
 
-    const t = base.clone();
+    const t = base;
     const arrows = new PowiainaNum(readArg(0));
     const result = (function (
       other2: PowiainaNumSource,
@@ -2618,23 +2622,23 @@ export default class PowiainaNum implements IPowiainaNum {
       let ctt = PowiainaNum.beafFuncMap.get(
         `${t.toString()} ${arrow.toString()} ${expans.toString()} ${megota.toString()} ${powiaina.toString()} ${other2.toString()} ${depth}`,
       );
-      if (ctt) return ctt.clone();
+      if (ctt) return ctt;
       // console.log(
       //   `${"-".repeat(depth)} {${base2},${power2},${arrow2},${expans2},${megota2}}`
       // );
       const other = new PowiainaNum(other2);
       let r;
-      if (t.isNaN() || other.isNaN()) return PowiainaNum.NaN.clone();
-      if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN.clone();
+      if (t.isNaN() || other.isNaN()) return PowiainaNum.NaN;
+      if (other.lt(PowiainaNum.ZERO)) return PowiainaNum.NaN;
       if (t.eq(PowiainaNum.ZERO)) {
-        if (other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO.clone();
+        if (other.eq(PowiainaNum.ONE)) return PowiainaNum.ZERO;
 
         if (PowiainaNum.throwErrorOnResultNaN) throw new Error("NaN");
-        return PowiainaNum.NaN.clone();
+        return PowiainaNum.NaN;
       }
-      if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE.clone();
-      if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE.clone();
-      if (other.eq(PowiainaNum.ONE)) return t.clone();
+      if (t.eq(PowiainaNum.ONE)) return PowiainaNum.ONE;
+      if (other.eq(PowiainaNum.ZERO)) return PowiainaNum.ONE;
+      if (other.eq(PowiainaNum.ONE)) return t;
 
       if (arrows.eq(0)) {
         return PowiainaNum.BEAF_core(
@@ -2812,7 +2816,7 @@ export default class PowiainaNum implements IPowiainaNum {
     if (depth < PowiainaNum.maxOps + 10) {
       PowiainaNum.beafFuncMap.set(
         `${t.toString()} ${arrow.toString()} ${expans.toString()} ${megota.toString()} ${powiaina.toString()} ${power.toString()} ${depth}`,
-        result.clone(),
+        result,
       );
     }
     return result;
@@ -2836,7 +2840,7 @@ export default class PowiainaNum implements IPowiainaNum {
     let max = PowiainaNum.NEGATIVE_INFINITY;
     for (let i = 0; i < args.length; i++) {
       if (max.lt(args[i])) {
-        max = new PowiainaNum(args[i]).clone();
+        max = new PowiainaNum(args[i]);
       }
     }
     return max;
@@ -2849,7 +2853,7 @@ export default class PowiainaNum implements IPowiainaNum {
     let max = PowiainaNum.POSITIVE_INFINITY;
     for (let i = 0; i < args.length; i++) {
       if (max.gt(args[i])) {
-        max = new PowiainaNum(args[i]).clone();
+        max = new PowiainaNum(args[i]);
       }
     }
     return max;
@@ -3051,7 +3055,7 @@ export default class PowiainaNum implements IPowiainaNum {
 
   /**this function is indistinguishable above 4503599627370496*/
   public sin(): PowiainaNum {
-    const x = this.clone();
+    const x = this;
     if (x.isneg()) {
       return x.neg().sin().neg();
     }
@@ -3109,10 +3113,10 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(t).rec();
   }
   public floor(): PowiainaNum {
-    if (this.isInt()) return this.clone();
+    if (this.isInt()) return this;
     if (this.small) {
-      if (this.sign == 1) return PowiainaNum.ZERO.clone();
-      else return PowiainaNum.ONE.neg().clone();
+      if (this.sign == 1) return PowiainaNum.ZERO;
+      else return PowiainaNum.ONE.neg();
     }
     const r = this.abs();
     r.array[0].repeat = Math[this.sign == 1 ? "floor" : "ceil"](
@@ -3125,10 +3129,10 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(x).floor();
   }
   public ceil(): PowiainaNum {
-    if (this.isInt()) return this.clone();
+    if (this.isInt()) return this;
     if (this.small) {
-      if (this.sign == 1) return PowiainaNum.ONE.clone();
-      else return PowiainaNum.ZERO.clone();
+      if (this.sign == 1) return PowiainaNum.ONE;
+      else return PowiainaNum.ZERO;
     }
     const r = this.abs();
     r.array[0].repeat = Math[this.sign == 1 ? "ceil" : "floor"](
@@ -3141,14 +3145,14 @@ export default class PowiainaNum implements IPowiainaNum {
     return new PowiainaNum(x).ceil();
   }
   public round(): PowiainaNum {
-    if (this.isInt()) return this.clone();
+    if (this.isInt()) return this;
     if (this.small) {
       if (this.sign == 1) {
-        if (this.rec().lte(2)) return PowiainaNum.ONE.clone();
-        else return PowiainaNum.ZERO.clone();
+        if (this.rec().lte(2)) return PowiainaNum.ONE;
+        else return PowiainaNum.ZERO;
       } else {
-        if (this.abs().rec().lte(2)) return PowiainaNum.ZERO.clone();
-        else return PowiainaNum.ONE.neg().clone();
+        if (this.abs().rec().lte(2)) return PowiainaNum.ZERO;
+        else return PowiainaNum.ONE.neg();
       }
     }
     const r = this.abs();
@@ -3173,7 +3177,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * @returns
    */
   public trunc() {
-    const y = this.clone();
+    const y = this;
     return y.gte(0) ? y.floor() : y.ceil();
   }
   public static trunc(x: PowiainaNumSource): PowiainaNum {
@@ -3477,7 +3481,7 @@ export default class PowiainaNum implements IPowiainaNum {
     // Judge the string was a number
 
     if (input.startsWith("PN")) input = input.substring(2);
-    if (input == "NaN") return PowiainaNum.NaN.clone();
+    if (input == "NaN") return PowiainaNum.NaN;
     if (!PowiainaNum.vanilla) {
       input = input.replace(/J\^(\d+)/g, "(10{!})^$1");
       input = input.replace(/J/g, "10{!}");
@@ -3878,7 +3882,7 @@ export default class PowiainaNum implements IPowiainaNum {
   public static grahalFunction(layers2: PowiainaNumSource): PowiainaNum {
     const layers = new PowiainaNum(layers2);
     if (!layers.isInt() || layers.lt(0) || layers.isNaN())
-      return PowiainaNum.NaN.clone();
+      return PowiainaNum.NaN;
     if (layers.eq(1))
       return new PowiainaNum("10^^^(10^)^7625597484984 3638334640023.7783");
     else if (layers.lte(MSI)) {
@@ -3962,25 +3966,26 @@ export default class PowiainaNum implements IPowiainaNum {
       this.array.sort(arraySortFunction);
 
       for (let i = 1; i < x.array.length - 1; ++i) {
+        let q = x.array[i];
+        let r = x.array[i + 1];
         if (
-          x.array[i].arrow == x.array[i + 1].arrow &&
-          x.array[i].expans == x.array[i + 1].expans &&
-          x.array[i].megota == x.array[i + 1].megota
+          q.arrow == r.arrow &&
+          q.expans == r.expans &&
+          q.megota == r.megota
         ) {
           // same array's merge
-          x.array[i].repeat += x.array[i + 1].repeat;
+          q.repeat += r.repeat;
           x.array.splice(i + 1, 1);
           --i;
           renormalize = true;
         }
       }
       for (let i = 1; i < x.array.length; ++i) {
+        let b = x.array[i];
         // If there is a 0 repeat operator, remove it.
         if (
-          x.array[i].arrow !== 0 &&
-          (x.array[i].repeat === 0 ||
-            x.array[i].repeat === null ||
-            x.array[i].repeat === undefined)
+          b.arrow !== 0 &&
+          (b.repeat === 0 || b.repeat === null || b.repeat === undefined)
         ) {
           x.array.splice(i, 1);
           --i;
@@ -3988,10 +3993,10 @@ export default class PowiainaNum implements IPowiainaNum {
         }
         // If there is a operator which arrow 0 and brace count >=2
         // replace it as arrow replacement operaotr
-        if (x.array[i].arrow == 0 && x.array[i].expans >= 2) {
-          x.array[i].arrow = Infinity;
-          x.array[i].valuereplaced = 0;
-          x.array[i].expans = x.array[i].expans - 1;
+        if (b.arrow == 0 && b.expans >= 2) {
+          b.arrow = Infinity;
+          b.valuereplaced = 0;
+          b.expans = b.expans - 1;
         }
       }
       // for any (10{1,2})x, x< MSI turn into:
@@ -4235,12 +4240,14 @@ export default class PowiainaNum implements IPowiainaNum {
     if (!powlikeObject.array) {
       return;
     }
-    this.array = [];
-    for (let i = 0; i < powlikeObject.array.length; i++) {
-      this.array[i] = {
-        ...powlikeObject.array[i],
+    this.array = powlikeObject.array.map(function (item) {
+      return {
+        arrow: item.arrow,
+        expans: item.expans,
+        megota: item.megota,
+        repeat: item.repeat,
       };
-    }
+    });
     this.small = powlikeObject.small;
     this.sign = powlikeObject.sign;
     this.layer = powlikeObject.layer;
@@ -4253,14 +4260,7 @@ export default class PowiainaNum implements IPowiainaNum {
    * Zero
    */
   public static readonly ZERO = new PowiainaNum({
-    array: [
-      {
-        arrow: 0,
-        expans: 1,
-        megota: 1,
-        repeat: Infinity,
-      },
-    ],
+    array: arrays.ZERO,
     small: true,
     layer: 0,
     sign: 0,
