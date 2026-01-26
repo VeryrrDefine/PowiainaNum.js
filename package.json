@@ -47,5 +47,8 @@
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-jest": "^29.4.1",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "powiaina_num.js": "^0.2.28"
   }
 }
