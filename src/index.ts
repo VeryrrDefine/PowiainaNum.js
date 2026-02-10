@@ -3586,8 +3586,10 @@ export default class PowiainaNum implements IPowiainaNum {
       input = input.substring(numSigns);
     }
     if (input == "NaN") x.array = [newOperator(NaN)];
-    else if (input == "Infinity") x.array = [newOperator(Infinity)];
-    else {
+    else if (input == "Infinity") {
+      x.sign = 1;
+      x.array = [newOperator(Infinity)];
+    } else {
       x.sign = 1;
       x.array = [newOperator(0)];
       let a, b, c, d;
