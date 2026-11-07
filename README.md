@@ -54,7 +54,7 @@ let k = new PowiainaNum("(e^114514)1919810") // break_eternity.js (e^x) form
 
 In browser, you can download `dist/PowiainaNum.min.js` or use 
 ```html
-<script src="https://unpkg.com/powiaina_num.js@alpha"></script>
+<script src="https://unpkg.com/powiaina_num.js"></script>
 ```
 
 Javascript operators will not work such as `+`, `-`, etc.
